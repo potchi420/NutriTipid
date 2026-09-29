@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NutriTipid - Good food on any budget</title>
 <meta name="description" content="NutriTipid builds 7-day meal plans from canteen and carinderia meals in Metro Manila. Price, calories, and macros checked against DOST-FNRI standards for any daily budget.">
+<link rel="icon" href="logo_tight.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -42,8 +43,7 @@ tailwind.config = {
 <header class="site-header">
   <div class="wrap header-row flex items-center justify-between">
     <a class="brand" href="#top" aria-label="NutriTipid home">
-      <span class="brand-mark" aria-hidden="true">n</span>
-      <span>NutriTipid</span>
+      <img src="logo_tight.svg" alt="NutriTipid" class="brand-logo" width="543" height="493" fetchpriority="high">
     </a>
     <nav class="main-nav" aria-label="Primary">
       <a href="#miss">Why trackers miss</a>
@@ -109,21 +109,21 @@ tailwind.config = {
         </div>
       </figure>
     </div>
+  </section>
 
-    <div class="board" aria-label="Canteen board prices this week">
-      <div class="wrap board-row">
-        <span class="board-title">From the board this week</span>
-        <div class="board-items tabular">
-          <span>Tapsilog <b>P45</b></span><i>·</i>
-          <span>Pares <b>P40</b></span><i>·</i>
-          <span>Sinigang <b>P35</b></span><i>·</i>
-          <span>Monggo <b>P38</b></span><i>·</i>
-          <span>Adobo <b>P25</b></span><i>·</i>
-          <span>Arroz caldo <b>P35</b></span>
-        </div>
+  <div class="board" aria-label="Canteen board prices this week">
+    <div class="wrap board-row">
+      <span class="board-title">From the board this week</span>
+      <div class="board-items tabular">
+        <span>Tapsilog <b>P45</b></span><i>·</i>
+        <span>Pares <b>P40</b></span><i>·</i>
+        <span>Sinigang <b>P35</b></span><i>·</i>
+        <span>Monggo <b>P38</b></span><i>·</i>
+        <span>Adobo <b>P25</b></span><i>·</i>
+        <span>Arroz caldo <b>P35</b></span>
       </div>
     </div>
-  </section>
+  </div>
 
   <!-- Problem: editorial dividers, sticky heading -->
   <section id="miss" class="wrap section">
@@ -394,8 +394,7 @@ tailwind.config = {
   <div class="wrap foot-grid">
     <div>
       <a class="brand" href="#top" aria-label="NutriTipid home">
-        <span class="brand-mark" aria-hidden="true">n</span>
-        <span>NutriTipid</span>
+        <img src="logo_tight.svg" alt="NutriTipid" class="brand-logo" width="543" height="493" loading="lazy">
       </a>
       <p>Budget constrained meal planning with linear programming for local Filipino diets.</p>
       <p>Supports SDG 2, SDG 3, SDG 9, and SDG 12.</p>

@@ -1,0 +1,9 @@
+# Local / OS
+.vs/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+
+# Capstone private handoff (kept locally, not committed)
+NutriTipid-Handoff.md
