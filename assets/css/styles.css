@@ -93,7 +93,7 @@ a{color:inherit}
 .icon-btn{
   display:none;background:transparent;border:1px solid var(--line);border-radius:6px;padding:9px 11px;cursor:pointer;color:var(--ink);
 }
-@media(max-width:900px){.icon-btn{display:inline-flex}.header-cta{display:none}}
+@media(max-width:900px){.icon-btn{display:inline-flex}}
 .mobile-menu{display:grid;grid-template-rows:0fr;border-top:1px solid transparent;padding-top:0;padding-bottom:0;transition:grid-template-rows .35s cubic-bezier(.22,.61,.36,1),border-color .3s ease,padding .35s ease}
 .mobile-menu.open{grid-template-rows:1fr;border-top-color:var(--line);padding-top:6px;padding-bottom:14px}
 .mobile-menu > .wrap{min-height:0;overflow:hidden}
@@ -135,14 +135,10 @@ a{color:inherit}
 }
 .hero-photo img{width:100%;height:340px;object-fit:cover}
 [data-theme="dark"] .hero-photo img{filter:brightness(.92)}
-.hero-photo figcaption{
-  padding:10px 16px;font-size:12.5px;color:var(--muted);
-  border-top:1px solid var(--line);background:var(--surface);
-}
-/* Receipt: dividers and dotted leaders, not nested cards */
+/* Receipt: overlapping card kicked right, flush with photo edge */
 .receipt{
-  margin-top:-34px;margin-left:28px;margin-right:28px;position:relative;
-  background:var(--surface);border:1px solid var(--line);border-radius:6px;
+  margin:-48px 0 0 48px;position:relative;
+  background:var(--surface);border:1px solid var(--line);border-radius:8px;
 }
 .receipt-head{
   display:flex;justify-content:space-between;align-items:baseline;
@@ -162,14 +158,14 @@ a{color:inherit}
 .receipt-foot{
   display:flex;justify-content:space-between;align-items:center;
   padding:14px 20px;border-top:1px dashed var(--line);background:var(--soft);
-  border-radius:0 0 6px 6px;
+  border-radius:0 0 7px 7px;
 }
 .receipt-foot .total{font-weight:800;font-size:16px;font-variant-numeric:tabular-nums}
 .receipt-foot .stamp{
   font-size:11.5px;font-weight:800;letter-spacing:.08em;color:var(--stamp);
   border:1.5px solid var(--stamp);border-radius:7px;padding:4px 9px;white-space:nowrap;
 }
-@media(max-width:520px){.receipt{margin-left:12px;margin-right:12px}.hero-photo img{height:260px}}
+@media(max-width:520px){.hero-photo img{height:260px}}
 
 /* Menu board strip: static list, no marquee */
 .board{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:64px;background:var(--surface)}
@@ -434,7 +430,7 @@ input[type="range"]{min-height:36px}
   .hero-sub{font-size:17px}
   .hero-cta{gap:14px}
   .hero-cta .btn{flex:1 1 100%}
-  .receipt{margin-left:12px;margin-right:12px}
+  .receipt{margin:-24px 0 0 24px}
   .receipt-row{padding-left:16px;padding-right:16px}
   .receipt-row .kcal{display:none}
   .receipt-row .dish{min-width:0;overflow:hidden;text-overflow:ellipsis}

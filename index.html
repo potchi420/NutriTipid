@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NutriTipid - Good food on any budget</title>
 <meta name="description" content="NutriTipid builds 7-day meal plans from canteen and carinderia meals in Metro Manila. Price, calories, and macros checked against DOST-FNRI standards for any daily budget.">
-<link rel="icon" href="logo_tight.svg" type="image/svg+xml">
+<link rel="icon" href="assets/img/logo_tight.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -36,14 +36,14 @@ tailwind.config = {
 }
 </script>
 <script>document.documentElement.classList.add('js')</script>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body class="antialiased">
 
 <header class="site-header">
   <div class="wrap header-row flex items-center justify-between">
     <a class="brand" href="#top" aria-label="NutriTipid home">
-      <img src="logo_tight.svg" alt="NutriTipid" class="brand-logo" width="543" height="493" fetchpriority="high">
+      <img src="assets/img/logo_tight.svg" alt="NutriTipid" class="brand-logo" width="543" height="493" fetchpriority="high">
     </a>
     <nav class="main-nav" aria-label="Primary">
       <a href="#miss">Why trackers miss</a>
@@ -57,7 +57,7 @@ tailwind.config = {
         <span aria-hidden="true" style="width:9px;height:9px;border-radius:99px;background:var(--primary);display:inline-block"></span>
         <span id="themeLabel">Dark</span>
       </button>
-      <a href="#budget" class="btn btn-primary btn-sm header-cta">Check my budget fit</a>
+      <a href="pages/login.html" class="btn btn-primary btn-sm header-cta">Log in</a>
       <button id="menuBtn" class="icon-btn" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
@@ -97,8 +97,7 @@ tailwind.config = {
       </div>
       <figure class="hero-figure">
         <div class="hero-photo">
-          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Tapsilog%20in%20saudi%20arabia.jpg?width=1200" srcset="https://commons.wikimedia.org/wiki/Special:FilePath/Tapsilog%20in%20saudi%20arabia.jpg?width=400 400w, https://commons.wikimedia.org/wiki/Special:FilePath/Tapsilog%20in%20saudi%20arabia.jpg?width=800 800w, https://commons.wikimedia.org/wiki/Special:FilePath/Tapsilog%20in%20saudi%20arabia.jpg?width=1200 1200w" sizes="(max-width:960px) 100vw, 540px" alt="A plate of tapsilog with rice, egg, and tapa" fetchpriority="high">
-          <figcaption>Tapsilog. Photo via Wikimedia Commons.</figcaption>
+          <img src="https://thefitchen.com/wp-content/uploads/2025/03/Pinakbet.jpg" alt="A bowl of pinakbet, Filipino vegetable stew" fetchpriority="high">
         </div>
         <div class="receipt" aria-label="Sample receipt for Thursday">
           <div class="receipt-head"><strong>THU PLAN</strong><span>P98 of P100</span></div>
@@ -394,7 +393,7 @@ tailwind.config = {
   <div class="wrap foot-grid">
     <div>
       <a class="brand" href="#top" aria-label="NutriTipid home">
-        <img src="logo_tight.svg" alt="NutriTipid" class="brand-logo" width="543" height="493" loading="lazy">
+        <img src="assets/img/logo_tight.svg" alt="NutriTipid" class="brand-logo" width="543" height="493" loading="lazy">
       </a>
       <p>Budget constrained meal planning with linear programming for local Filipino diets.</p>
       <p>Supports SDG 2, SDG 3, SDG 9, and SDG 12.</p>
@@ -419,6 +418,6 @@ tailwind.config = {
   </div>
 </footer>
 
-<script src="app.js"></script>
+<script src="assets/js/app.js"></script>
 </body>
 </html>
