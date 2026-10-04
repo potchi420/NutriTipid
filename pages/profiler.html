@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your profile - NutriTipid</title>
+<meta name="description" content="Tell NutriTipid your body metrics and daily budget to set mock optimization targets. Prototype only.">
+<link rel="icon" href="../assets/img/logo_tight.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+/* Theme: same saved choice as the rest of the site, no framework. */
+try {
+  var t = localStorage.getItem("nutritipid-theme");
+  if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.setAttribute("data-theme", "dark");
+} catch (e) {}
+</script>
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/auth.css">
+<link rel="stylesheet" href="../assets/css/planner.css">
+</head>
+<body class="auth-page">
+
+<main class="auth-wrap">
+  <a class="back-link" href="login.html">&larr; Back to log in</a>
+  <h1>Your profile</h1>
+  <p class="auth-sub">Mock Module 3. Stored in this browser only.</p>
+
+  <div class="auth-card">
+    <form id="profileForm" novalidate>
+      <div class="field-2">
+        <div>
+          <label class="auth-label" for="weight">Weight</label>
+          <div class="unit-row">
+            <input class="auth-input" id="weight" name="weight" type="number" min="0" value="62" required>
+            <select class="auth-input" id="weightUnit" name="weightUnit" aria-label="Weight unit">
+              <option value="kg" selected>kg</option>
+              <option value="lb">lb</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="auth-label" for="height">Height</label>
+          <div class="unit-row">
+            <input class="auth-input" id="height" name="height" type="number" min="0" value="165" required>
+            <select class="auth-input" id="heightUnit" name="heightUnit" aria-label="Height unit">
+              <option value="cm" selected>cm</option>
+              <option value="ft">ft</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <label class="auth-label" for="activity">Weekly activity</label>
+      <select class="auth-input" id="activity" name="activity">
+        <option value="1.2" selected>Sedentary (office job)</option>
+        <option value="1.375">Light Exercise (1-2 days/week)</option>
+        <option value="1.55">Moderate Exercise (3-5 days/week)</option>
+        <option value="1.725">Heavy Exercise (6-7 days/week)</option>
+        <option value="1.9">Athlete (2x per day)</option>
+      </select>
+
+      <label class="auth-label" for="goal">Goal for the term</label>
+      <select class="auth-input" id="goal" name="goal">
+        <option value="lose" selected>Lose weight steadily</option>
+        <option value="hold">Hold weight</option>
+        <option value="gain">Gain healthy weight</option>
+      </select>
+
+      <label class="auth-label" for="budget">Pesos per day</label>
+      <div class="big-peso tabular" id="budgetOut">P100</div>
+      <input id="budget" name="budget" type="range" min="50" max="500" step="5" value="100">
+      <div class="range-ends tabular"><span>P50</span><span>P500</span></div>
+
+      <button type="submit" class="btn btn-primary auth-submit">Generate my week &rarr;</button>
+      <p class="auth-msg" id="profileMsg" role="status"></p>
+    </form>
+  </div>
+</main>
+
+<script>
+/* Profiler prototype: mock only. Saves to localStorage, then planner. */
+(function () {
+  "use strict";
+  var form = document.getElementById("profileForm");
+  var weight = document.getElementById("weight");
+  var weightUnit = document.getElementById("weightUnit");
+  var height = document.getElementById("height");
+  var heightUnit = document.getElementById("heightUnit");
+  var activity = document.getElementById("activity");
+  var goal = document.getElementById("goal");
+  var budget = document.getElementById("budget");
+  var budgetOut = document.getElementById("budgetOut");
+  var msg = document.getElementById("profileMsg");
+
+  budget.addEventListener("input", function () {
+    budgetOut.textContent = "P" + budget.value;
+  });
+
+  function fail(text, el) {
+    msg.classList.add("is-error");
+    msg.textContent = text;
+    el.focus();
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    msg.classList.remove("is-error");
+    var w = Number(weight.value);
+    var wUnit = weightUnit.value;
+    var kg = wUnit === "lb" ? w * 0.453592 : w;
+    if (!(w > 0) || (wUnit === "kg" ? (w < 30 || w > 200) : (w < 66 || w > 440))) {
+      fail(wUnit === "kg" ? "Weight looks off. Use 30 to 200 kg for the mock." : "Weight looks off. Use 66 to 440 lb for the mock.", weight);
+      return;
+    }
+    var h = Number(height.value);
+    var hUnit = heightUnit.value;
+    var cm = hUnit === "ft" ? h * 30.48 : h;
+    if (!(h > 0) || (hUnit === "cm" ? (h < 130 || h > 220) : (h < 3 || h > 8))) {
+      fail(hUnit === "cm" ? "Height looks off. Use 130 to 220 cm for the mock." : "Height looks off. Use 3 to 8 ft for the mock.", height);
+      return;
+    }
+    try {
+      localStorage.setItem("nutritipid-profile", JSON.stringify({
+        weight: Math.round(kg * 10) / 10, height: Math.round(cm),
+        activity: activity.value,
+        activityLabel: activity.options[activity.selectedIndex].text,
+        goal: goal.value, budget: Number(budget.value)
+      }));
+    } catch (err) {}
+    window.location.href = "planner.html";
+  });
+})();
+</script>
+</body>
+</html>

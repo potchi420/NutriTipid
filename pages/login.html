@@ -127,7 +127,8 @@ try {
       setTimeout(function () {
         loginBtn.disabled = false;
         loginBtn.innerHTML = "Log In &rarr;";
-        ok("Mock login OK. Welcome back. Planner module is next.");
+        ok("Mock login OK. Taking you to your profile...");
+        setTimeout(function () { window.location.href = "profiler.html"; }, 900);
       }, 700);
     });
   }

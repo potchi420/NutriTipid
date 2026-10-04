@@ -52,30 +52,30 @@
   };
   var days = [
     {
-      total: "P98 of P100",
-      kcal: "1,420 kcal",
+      total: "P90 of P100",
+      kcal: "1,320 kcal",
       rows: [
-        ["Breakfast", "Arroz caldo with egg", "Ordered at the morning stall", "P35", "420 kcal", thumbs.arroz],
-        ["Lunch", "Monggo with half rice", "Fiber holds hunger longer", "P38", "520 kcal", thumbs.monggo],
-        ["Dinner", "Chicken adobo with half rice", "28g protein, spoon of sauce", "P25", "480 kcal", thumbs.adobo]
+        ["Breakfast", "Lugaw", "Ordered at the morning stall", "P15", "280 kcal", thumbs.champorado],
+        ["Lunch", "Monggo with half rice", "Fiber holds hunger longer", "P35", "520 kcal", thumbs.monggo],
+        ["Dinner", "Chicken adobo with half rice", "30g protein, spoon of sauce", "P40", "520 kcal", thumbs.adobo]
       ]
     },
     {
-      total: "P108 of P110",
-      kcal: "1,380 kcal",
+      total: "P120 of P125",
+      kcal: "1,400 kcal",
       rows: [
         ["Breakfast", "Tapsilog with half rice", "Egg cooked with less oil", "P45", "510 kcal", thumbs.tapsilog],
-        ["Lunch", "Sinigang with half rice", "Soup stretches one serving", "P35", "460 kcal", thumbs.sinigang],
-        ["Dinner", "Ginisang gulay with half rice", "Lowest cost dinner", "P28", "410 kcal", thumbs.gulay]
+        ["Lunch", "Sinigang with half rice", "Soup stretches one serving", "P50", "480 kcal", thumbs.sinigang],
+        ["Dinner", "Ginisang gulay with half rice", "Lowest cost dinner", "P25", "410 kcal", thumbs.gulay]
       ]
     },
     {
-      total: "P95 of P100",
-      kcal: "1,380 kcal",
+      total: "P110 of P115",
+      kcal: "1,400 kcal",
       rows: [
         ["Breakfast", "Champorado with tuyo", "Small serving, high energy", "P25", "380 kcal", thumbs.champorado],
         ["Lunch", "Pares with half rice", "Rich broth, rice split in half", "P40", "560 kcal", thumbs.pares],
-        ["Dinner", "Tinola with half rice", "Clear soup with chicken", "P30", "440 kcal", thumbs.sinigang]
+        ["Dinner", "Tinola with half rice", "Clear soup with chicken", "P45", "460 kcal", thumbs.sinigang]
       ]
     }
   ];
@@ -174,10 +174,10 @@
      rate, then the cheapest per protein is locked. Plays on first view,
      replayable. Reduced motion and no-JS keep the final state. */
   var solData = [
-    { name: "Tinola + half rice", cost: 30, protein: 12 },
-    { name: "Ginisang gulay + half rice", cost: 28, protein: 11 },
+    { name: "Tinola + half rice", cost: 45, protein: 12 },
+    { name: "Ginisang gulay + half rice", cost: 25, protein: 11 },
     { name: "Pares + half rice", cost: 40, protein: 15 },
-    { name: "Monggo + half rice", cost: 38, protein: 20 }
+    { name: "Monggo + half rice", cost: 35, protein: 20 }
   ];
   solData.forEach(function (d) { d.rate = d.cost / d.protein * 10; });
   var solMax = Math.max.apply(null, solData.map(function (d) { return d.rate; }));

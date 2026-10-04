@@ -148,7 +148,8 @@ try {
       setTimeout(function () {
         signupBtn.disabled = false;
         signupBtn.innerHTML = "Sign up free &rarr;";
-        ok("Mock account created. Head to log in and use your new details.");
+        ok("Mock account created. Taking you to your profile...");
+        setTimeout(function () { window.location.href = "profiler.html"; }, 900);
       }, 700);
     });
   }

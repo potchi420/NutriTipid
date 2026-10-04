@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your week - NutriTipid</title>
+<meta name="description" content="Mock 7-day meal plan built around your daily budget. Prototype only, mock data.">
+<link rel="icon" href="../assets/img/logo_tight.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+/* Theme: same saved choice as the rest of the site, no framework. */
+try {
+  var t = localStorage.getItem("nutritipid-theme");
+  if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.setAttribute("data-theme", "dark");
+} catch (e) {}
+</script>
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/auth.css">
+<link rel="stylesheet" href="../assets/css/planner.css">
+</head>
+<body class="auth-page">
+
+<main class="plan-wrap">
+  <a class="back-link" href="profiler.html">&larr; Back to profile</a>
+  <h1 id="planTitle">Your week on P100 a day.</h1>
+  <p class="auth-sub">Mock Module 5. Week view, read from this browser only.</p>
+
+  <div class="profile-chip tabular" id="profileChip">Sample profile &middot; <a href="profiler.html">Set yours</a></div>
+
+  <div class="panel solving" id="solving">
+    <p id="solvingText">Reading board prices...</p>
+    <div class="sol-progress" aria-hidden="true"><i id="solvingBar"></i></div>
+  </div>
+
+  <div id="planBody" class="is-hidden">
+    <div class="diary plan-diary">
+      <div class="diary-tabs" role="tablist" aria-label="Days of the week" id="dayTabs"></div>
+      <div id="planMeals"></div>
+      <div class="diary-foot flex flex-wrap items-center justify-between">
+        <span>Day total <b id="planTotal">P0</b></span>
+        <span class="muted tabular" id="planKcal">0 kcal</span>
+      </div>
+    </div>
+
+    <div class="week-grid">
+      <div class="panel">
+        <h3>Week spend</h3>
+        <div class="summary-num tabular" id="weekSpend">P0</div>
+        <p class="summary-label tabular" id="weekBudget">of P700 budget</p>
+        <div class="bar" style="margin-top:12px"><i class="g" id="weekBar" style="width:0%"></i></div>
+      </div>
+      <div class="panel">
+        <h3>FNRI fulfillment</h3>
+        <div class="summary-num tabular" id="fnriScore">0%</div>
+        <p class="summary-label">weekly average, mock score</p>
+        <div class="bar" style="margin-top:12px"><i class="y" id="fnriBar" style="width:0%"></i></div>
+      </div>
+    </div>
+    <p class="diary-note">Mock data only. Ulam prices follow the NU Manila eatery survey and carinderia SRP matrix, plus P5 half rice. Real planner plugs in here.</p>
+  </div>
+</main>
+
+<script>
+/* Planner prototype: mock only. No LP solver, deterministic picks. */
+(function () {
+  "use strict";
+
+  /* Mock Module 2 pool: 11 canteen meals. Ulam prices follow the NU
+     Manila eatery survey plus the carinderia SRP matrix (tinola 40,
+     adobo 35, menudo 40, sinigang 45, monggo 25 to 35, kangkong 20,
+     caldereta 50, rice 15 a cup). Combos add half rice at P5, since
+     vendors round to fives. */
+  var DISHES = [
+    { name: "Lugaw", price: 15, kcal: 280, protein: 7, dot: "L", color: "#8A6D1B" },
+    { name: "Arroz caldo w/ egg", price: 30, kcal: 420, protein: 14, dot: "A", color: "#1F9D55" },
+    { name: "Fried egg, half rice", price: 20, kcal: 350, protein: 12, dot: "E", color: "#B7791F" },
+    { name: "Chicken Tinola, half rice", price: 45, kcal: 460, protein: 24, dot: "T", color: "#3E8E7E" },
+    { name: "Chicken Adobo, half rice", price: 40, kcal: 520, protein: 30, dot: "A", color: "#5F6F65" },
+    { name: "Pork Menudo, half rice", price: 45, kcal: 540, protein: 22, dot: "M", color: "#7A4A21" },
+    { name: "Pork Sinigang, half rice", price: 50, kcal: 480, protein: 20, dot: "S", color: "#2E7D5B" },
+    { name: "Ginisang Monggo, half rice", price: 35, kcal: 520, protein: 20, dot: "M", color: "#E8A415", ink: "#1A2E22" },
+    { name: "Adobong Kangkong, half rice", price: 25, kcal: 320, protein: 9, dot: "K", color: "#4C7A45" },
+    { name: "Pork Caldereta, half rice", price: 55, kcal: 600, protein: 24, dot: "C", color: "#A34A24" },
+    { name: "Chop Suey, half rice", price: 35, kcal: 380, protein: 10, dot: "C", color: "#6B8F71" }
+  ];
+  var BREAKFASTS = ["Lugaw", "Arroz caldo w/ egg", "Fried egg, half rice"];
+  var DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  var MEALS = ["Breakfast", "Lunch", "Dinner"];
+
+  /* Profile or sample fallback. */
+  var budget = 100;
+  var chip = document.getElementById("profileChip");
+  try {
+    var saved = JSON.parse(localStorage.getItem("nutritipid-profile") || "null");
+    if (saved && saved.budget >= 50) {
+      budget = Math.round(saved.budget);
+      chip.innerHTML = "P" + budget + " a day &middot; " + saved.weight + "kg &middot; " +
+        (saved.goal === "lose" ? "cutting" : saved.goal === "gain" ? "bulking" : "holding") +
+        " &middot; <a href=\"profiler.html\">Edit</a>";
+    }
+  } catch (e) {}
+  document.getElementById("planTitle").textContent = "Your week on P" + budget + " a day.";
+
+  /* Mock solver: cheapest protein per peso inside a 30/40/30 split. */
+  function byName(n) {
+    for (var i = 0; i < DISHES.length; i++) if (DISHES[i].name === n) return DISHES[i];
+    return DISHES[0];
+  }
+  function mains() {
+    return DISHES.filter(function (d) { return BREAKFASTS.indexOf(d.name) < 0; })
+      .sort(function (a, b) { return (b.protein / b.price) - (a.protein / a.price); });
+  }
+  var MAINS = mains();
+  function cheapest(list) {
+    return list.reduce(function (a, b) { return b.price < a.price ? b : a; });
+  }
+  function pickFit(list, cap, offset) {
+    var fitting = list.filter(function (d) { return d.price <= cap; });
+    var pool = fitting.length ? fitting : [cheapest(list)];
+    return pool[offset % pool.length];
+  }
+  function buildDay(b, i) {
+    var caps = [Math.floor(b * 0.3), Math.floor(b * 0.4), Math.floor(b * 0.3)];
+    var bfList = BREAKFASTS.map(byName);
+    return [
+      { slot: MEALS[0], dish: pickFit(bfList, caps[0], i) },
+      { slot: MEALS[1], dish: pickFit(MAINS, caps[1], i + 1) },
+      { slot: MEALS[2], dish: pickFit(MAINS, caps[2], i + 2) }
+    ];
+  }
+  var week = DAYS.map(function (_, i) { return buildDay(budget, i); });
+  function totals(rows) {
+    return rows.reduce(function (t, r) {
+      t.price += r.dish.price; t.kcal += r.dish.kcal; t.protein += r.dish.protein;
+      return t;
+    }, { price: 0, kcal: 0, protein: 0 });
+  }
+
+  /* Render. */
+  var tabsEl = document.getElementById("dayTabs");
+  var mealsEl = document.getElementById("planMeals");
+  var totalEl = document.getElementById("planTotal");
+  var kcalEl = document.getElementById("planKcal");
+  DAYS.forEach(function (d, i) {
+    var b = document.createElement("button");
+    b.className = "day-tab";
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", i === 3 ? "true" : "false");
+    b.textContent = d;
+    b.addEventListener("click", function () { renderDay(i); });
+    tabsEl.appendChild(b);
+  });
+  function renderDay(i) {
+    var rows = week[i];
+    mealsEl.innerHTML = "";
+    rows.forEach(function (r) {
+      var div = document.createElement("div");
+      div.className = "meal";
+      var dot = document.createElement("span");
+      dot.className = "meal-dot";
+      dot.style.background = r.dish.color;
+      if (r.dish.ink) dot.style.color = r.dish.ink;
+      dot.textContent = r.dish.dot;
+      dot.setAttribute("aria-hidden", "true");
+      var who = document.createElement("div");
+      who.className = "who";
+      var strong = document.createElement("strong");
+      strong.textContent = r.slot + " - " + r.dish.name;
+      var note = document.createElement("span");
+      note.textContent = r.dish.protein + "g protein";
+      who.appendChild(strong); who.appendChild(note);
+      var nums = document.createElement("div");
+      nums.className = "nums";
+      var pb = document.createElement("b");
+      pb.textContent = "P" + r.dish.price;
+      var kk = document.createElement("span");
+      kk.textContent = r.dish.kcal + " kcal";
+      nums.appendChild(pb); nums.appendChild(kk);
+      div.appendChild(dot); div.appendChild(who); div.appendChild(nums);
+      mealsEl.appendChild(div);
+    });
+    var t = totals(rows);
+    totalEl.textContent = "P" + t.price + " of P" + budget;
+    kcalEl.textContent = t.kcal.toLocaleString() + " kcal";
+    Array.prototype.forEach.call(tabsEl.children, function (tb, j) {
+      tb.setAttribute("aria-selected", String(j === i));
+    });
+  }
+  function renderWeek() {
+    var spend = week.reduce(function (s, rows) { return s + totals(rows).price; }, 0);
+    var goal = budget * 7;
+    var fnri = Math.min(94, 68 + Math.round(budget / 8));
+    document.getElementById("weekSpend").textContent = "P" + spend;
+    document.getElementById("weekBudget").textContent = "of P" + goal + " budget";
+    document.getElementById("weekBar").style.width = Math.min(100, Math.round(spend / goal * 100)) + "%";
+    document.getElementById("fnriScore").textContent = fnri + "%";
+    document.getElementById("fnriBar").style.width = fnri + "%";
+  }
+
+  /* Mock solving beat, then reveal. Skipped under reduced motion. */
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var solving = document.getElementById("solving");
+  var solvingBar = document.getElementById("solvingBar");
+  var solvingText = document.getElementById("solvingText");
+  var planBody = document.getElementById("planBody");
+  function reveal() {
+    solving.classList.add("is-hidden");
+    planBody.classList.remove("is-hidden");
+    renderDay(3);
+    renderWeek();
+  }
+  if (reduced) {
+    reveal();
+  } else {
+    var steps = ["Reading board prices...", "Ranking cheapest protein...", "Locking Thursday..."];
+    var si = 0;
+    solvingText.textContent = steps[0];
+    var t0 = null;
+    function frame(t) {
+      if (!t0) t0 = t;
+      var p = Math.min((t - t0) / 1200, 1);
+      solvingBar.style.width = Math.round(p * 100) + "%";
+      var ni = Math.min(steps.length - 1, Math.floor(p * steps.length));
+      if (ni !== si) { si = ni; solvingText.textContent = steps[si]; }
+      if (p < 1) requestAnimationFrame(frame);
+      else setTimeout(reveal, 150);
+    }
+    requestAnimationFrame(frame);
+  }
+})();
+</script>
+</body>
+</html>
