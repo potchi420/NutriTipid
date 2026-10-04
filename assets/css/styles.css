@@ -173,16 +173,16 @@ a{color:inherit}
   display:flex;align-items:baseline;gap:18px;padding-top:14px;padding-bottom:14px;flex-wrap:wrap;
 }
 .board-title{font-size:13px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
-.board-items{display:flex;gap:26px;flex-wrap:wrap;font-size:14.5px}
+.board-items{flex:1;min-width:0;display:flex;gap:8px 20px;flex-wrap:wrap;align-items:baseline;justify-content:space-between;font-size:14px}
 .board-items span b{font-variant-numeric:tabular-nums}
-.board-items i{font-style:normal;color:var(--line);margin:0 2px}
+.board-items i{font-style:normal;color:var(--line);margin:0 1px}
 
 /* Sections: headings ARE the label, generous uneven rhythm */
 .section{padding-top:120px}
 .section:last-of-type{padding-bottom:120px}
 .section h2{
   margin:0;letter-spacing:-0.03em;line-height:1.06;font-weight:800;
-  font-size:clamp(30px,3.6vw,42px);max-width:22ch;
+  font-size:clamp(30px,3.6vw,42px);max-width:22
 }
 .section .standfirst{margin:20px 0 0;color:var(--muted);font-size:17.5px;line-height:1.65;max-width:62ch}
 @media(max-width:640px){.section{padding-top:88px}}
@@ -421,7 +421,9 @@ input[type="range"]{min-height:36px}
 @media(max-width:560px){
   .step-media img{height:220px}
   .cta img{min-height:220px}
-  .board-items{gap:10px 18px;font-size:14px}
+  .board-row{flex-direction:column;align-items:stretch;gap:10px}
+  .board-items{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;font-size:14px;justify-content:normal}
+  .board-items i{display:none}
   .solver{padding:16px}
   .mock{padding:16px}
 }
