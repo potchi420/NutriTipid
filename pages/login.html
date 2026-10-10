@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Log in - NutriTipid</title>
-<meta name="description" content="Log in to your NutriTipid account. Prototype only, mock data, no real authentication.">
+<meta name="description" content="Log in to your NutriTipid account.">
 <link rel="icon" href="../assets/img/logo_tight.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -99,7 +99,7 @@ try {
   }
 
   /* Decorative prototype links. */
-  [["googleBtn", "Prototype only: Google sign in is decorative."]]
+  [["googleBtn", "Google sign-in coming soon."]]
   .forEach(function (pair) {
     var el = document.getElementById(pair[0]);
     if (el) el.addEventListener("click", function (e) { e.preventDefault(); notice(pair[1]); });
@@ -112,12 +112,12 @@ try {
       var mail = email ? email.value.trim() : "";
       var pass = password ? password.value : "";
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
-        error("Enter a valid email address to continue with the mock login.");
+        error("Enter a valid email address to continue.");
         if (email) email.focus();
         return;
       }
       if (!pass) {
-        error("Enter any password. Mock login accepts anything.");
+        error("Enter your password to continue.");
         if (password) password.focus();
         return;
       }
@@ -127,8 +127,8 @@ try {
       setTimeout(function () {
         loginBtn.disabled = false;
         loginBtn.innerHTML = "Log In &rarr;";
-        ok("Mock login OK. Taking you to your profile...");
-        setTimeout(function () { window.location.href = "profiler.html"; }, 900);
+        ok("Welcome back. Taking you to your dashboard...");
+        setTimeout(function () { window.location.href = "dashboard.html"; }, 900);
       }, 700);
     });
   }

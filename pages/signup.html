@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sign up - NutriTipid</title>
-<meta name="description" content="Create your NutriTipid account. Prototype only, mock data, no real registration.">
+<meta name="description" content="Create your NutriTipid account.">
 <link rel="icon" href="../assets/img/logo_tight.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,7 +49,7 @@ try {
 
       <label class="agree-row" for="terms">
         <input type="checkbox" id="terms" name="terms">
-        <span>I agree to the prototype terms. No real data is stored anywhere.</span>
+        <span>I agree to the Terms and Privacy Policy.</span>
       </label>
 
       <button type="submit" class="btn btn-primary auth-submit" id="signupBtn">Sign up free &rarr;</button>
@@ -111,7 +111,7 @@ try {
   if (googleBtn) googleBtn.addEventListener("click", function (e) {
     e.preventDefault();
     msg.classList.remove("is-error", "is-ok");
-    msg.textContent = "Prototype only: Google sign up is decorative.";
+    msg.textContent = "Google sign-up coming soon.";
   });
 
   /* Mock submit: validates shape, then pretends. */
@@ -119,7 +119,7 @@ try {
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       if (!name.value.trim()) {
-        error("Enter your name to continue with the mock signup.");
+        error("Enter your name to continue.");
         name.focus();
         return;
       }
@@ -139,7 +139,7 @@ try {
         return;
       }
       if (!terms.checked) {
-        error("Tick the prototype terms box to continue.");
+        error("Tick the terms box to continue.");
         terms.focus();
         return;
       }
@@ -148,7 +148,7 @@ try {
       setTimeout(function () {
         signupBtn.disabled = false;
         signupBtn.innerHTML = "Sign up free &rarr;";
-        ok("Mock account created. Taking you to your profile...");
+        ok("Account created. Taking you to your profile...");
         setTimeout(function () { window.location.href = "profiler.html"; }, 900);
       }, 700);
     });

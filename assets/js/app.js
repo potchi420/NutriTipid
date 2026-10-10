@@ -6,10 +6,14 @@
   /* Theme: respect saved choice, fall back to OS setting */
   var themeBtn = document.getElementById("themeBtn");
   var themeLabel = document.getElementById("themeLabel");
+  var themeMoon = document.getElementById("themeMoon");
+  var themeSun = document.getElementById("themeSun");
   function setTheme(t) {
     root.setAttribute("data-theme", t);
     try { localStorage.setItem("nutritipid-theme", t); } catch (e) {}
     if (themeLabel) themeLabel.textContent = t === "dark" ? "Light" : "Dark";
+    if (themeMoon) themeMoon.classList.toggle("is-hidden", t === "dark");
+    if (themeSun) themeSun.classList.toggle("is-hidden", t !== "dark");
   }
   var saved = null;
   try { saved = localStorage.getItem("nutritipid-theme"); } catch (e) {}
