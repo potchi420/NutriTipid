@@ -3,6 +3,7 @@
    Shape: small radii boxes, 999px pills. Edge OR shadow, never both. Here: edge only, flat. */
 
 :root {
+  color-scheme: light;
   --bg: #ffffff;
   --surface: #ffffff;
   --soft: #f1f5f2;
@@ -16,6 +17,7 @@
   --stamp: #157a41;
 }
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg: #101614;
   --surface: #18211c;
   --soft: #151e19;

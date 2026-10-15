@@ -50,6 +50,26 @@ try {
   <h1>Weight Tracker.</h1>
   <p class="auth-sub">Log your weigh-ins and monitor progress toward your target.</p>
 
+  <section class="panel log-panel" aria-label="Log weigh-in">
+    <h3>Log Weigh-In</h3>
+    <form id="weighForm" novalidate>
+      <div class="log-form-row">
+        <div>
+          <label class="auth-label" for="weighDate">Date</label>
+          <input class="auth-input" id="weighDate" name="weighDate" type="date" value="2026-09-29" required>
+        </div>
+        <div>
+          <label class="auth-label" for="weighKg">Weight (kg)</label>
+          <input class="auth-input tabular" id="weighKg" name="weighKg" type="number" min="30" max="200" step="0.1" placeholder="e.g. 69.5" required>
+        </div>
+        <div>
+          <button type="submit" class="btn btn-primary log-submit">+ Add Entry</button>
+        </div>
+      </div>
+      <p class="auth-msg" id="weighMsg" role="status"></p>
+    </form>
+  </section>
+
   <div class="stat-grid">
     <div class="panel stat">
       <h3>Current weight</h3>
@@ -73,27 +93,13 @@ try {
     </div>
   </div>
 
-  <div class="tracker-grid">
-    <section class="panel" aria-label="Weight progress">
-      <h3>Weight Progress</h3>
-      <div class="chart-holder">
-        <svg id="weightChart" class="chart-svg" viewBox="0 0 560 260" role="img" aria-label="Weight trend from Sep 1 to Sep 29"></svg>
-      </div>
-      <p class="verdict" id="chartVerdict">Down 2.7kg since Sep 1. Steady pace.</p>
-    </section>
-
-    <section class="panel" aria-label="Log weigh-in">
-      <h3>Log Weigh-In</h3>
-      <form id="weighForm" novalidate>
-        <label class="auth-label" for="weighDate">Date</label>
-        <input class="auth-input" id="weighDate" name="weighDate" type="date" value="2026-09-29" required>
-        <label class="auth-label" for="weighKg">Weight (kg)</label>
-        <input class="auth-input tabular" id="weighKg" name="weighKg" type="number" min="30" max="200" step="0.1" placeholder="e.g. 69.5" required>
-        <button type="submit" class="btn btn-primary log-submit">+ Add Entry</button>
-        <p class="auth-msg" id="weighMsg" role="status"></p>
-      </form>
-    </section>
-  </div>
+  <section class="panel chart-panel" aria-label="Weight progress">
+    <h3>Weight Progress</h3>
+    <div class="chart-holder">
+      <svg id="weightChart" class="chart-svg" viewBox="0 0 560 260" role="img" aria-label="Weight trend from Sep 1 to Sep 29"></svg>
+    </div>
+    <p class="verdict" id="chartVerdict">Down 2.7kg since Sep 1. Steady pace.</p>
+  </section>
 
   <section aria-label="Weigh-in history" style="margin-top:24px">
     <div class="diary">
@@ -164,6 +170,13 @@ try {
   var kgInput = document.getElementById("weighKg");
   var msg = document.getElementById("weighMsg");
 
+  /* Date defaults to today. Stale hardcoded dates create bad entries. */
+  (function () {
+    var now = new Date();
+    function pad(n) { return String(n).padStart(2, "0"); }
+    dateInput.value = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate());
+  })();
+
   function fmtDate(d) {
     var parts = d.split("-");
     var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -193,6 +206,14 @@ try {
 
   function renderChart(rows) {
     var W = 560, H = 260, padL = 44, padR = 34, padT = 16, padB = 34;
+    chart.setAttribute("aria-label", "Weight trend from " + rows[0].label + " to " + rows[rows.length - 1].label);
+    /* Narrow screens shrink the whole SVG, so draw less, bigger. */
+    /* Narrow matches the phone layout. Measured per render so
+       resize and rotation re-pick the right density. */
+    var narrow = window.innerWidth < 640;
+    var tickFs = narrow ? 21 : 11;
+    var gridCount = narrow ? 2 : 4;
+    var dotR = narrow ? 6.5 : 5;
     var kgs = rows.map(function (r) { return r.kg; });
     var min = Math.floor(Math.min.apply(null, kgs) - 0.8);
     var max = Math.ceil(Math.max.apply(null, kgs) + 0.5);
@@ -211,12 +232,13 @@ try {
       l.setAttribute("class", grid ? "grid" : "axis");
       chart.appendChild(l);
     }
-    for (var g = 0; g <= 4; g++) {
-      var gv = min + (max - min) * g / 4;
+    for (var g = 0; g <= gridCount; g++) {
+      var gv = min + (max - min) * g / gridCount;
       line(padL, y(gv), W - padR, y(gv), true);
       var t = document.createElementNS(ns, "text");
       t.setAttribute("x", padL - 8); t.setAttribute("y", y(gv) + 4);
       t.setAttribute("text-anchor", "end"); t.setAttribute("class", "tick");
+      t.style.fontSize = tickFs + "px";
       t.textContent = Math.round(gv);
       chart.appendChild(t);
     }
@@ -228,7 +250,7 @@ try {
     rows.forEach(function (r, i) {
       var c = document.createElementNS(ns, "circle");
       c.setAttribute("cx", x(i)); c.setAttribute("cy", y(r.kg));
-      c.setAttribute("r", "5"); c.setAttribute("class", "dot");
+      c.setAttribute("r", dotR); c.setAttribute("class", "dot");
       var title = document.createElementNS(ns, "title");
       title.textContent = r.label + ": " + r.kg.toFixed(1) + "kg";
       c.appendChild(title);
@@ -239,8 +261,9 @@ try {
       else if (rows.length > 1 && i === rows.length - 1) lb.setAttribute("text-anchor", "end");
       else lb.setAttribute("text-anchor", "middle");
       lb.setAttribute("class", "tick");
+      lb.style.fontSize = tickFs + "px";
       lb.textContent = r.label;
-      chart.appendChild(lb);
+      if (!narrow || i === 0 || i === rows.length - 1) chart.appendChild(lb);
     });
   }
 
@@ -272,6 +295,12 @@ try {
     renderChart(rows);
     renderList(rows);
   }
+  var resizeTick = false;
+  window.addEventListener("resize", function () {
+    if (resizeTick) return;
+    resizeTick = true;
+    requestAnimationFrame(function () { resizeTick = false; render(); });
+  });
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
