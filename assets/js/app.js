@@ -8,12 +8,22 @@
   var themeLabel = document.getElementById("themeLabel");
   var themeMoon = document.getElementById("themeMoon");
   var themeSun = document.getElementById("themeSun");
-  function setTheme(t) {
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function applyTheme(t) {
     root.setAttribute("data-theme", t);
     try { localStorage.setItem("nutritipid-theme", t); } catch (e) {}
     if (themeLabel) themeLabel.textContent = t === "dark" ? "Light" : "Dark";
     if (themeMoon) themeMoon.classList.toggle("is-hidden", t === "dark");
     if (themeSun) themeSun.classList.toggle("is-hidden", t !== "dark");
+  }
+  function setTheme(t) {
+    /* One browser crossfade instead of animating every element.
+       Instant swap where unsupported or motion is reduced. */
+    if (!reduceMotion && document.startViewTransition) {
+      document.startViewTransition(function () { applyTheme(t); });
+    } else {
+      applyTheme(t);
+    }
   }
   var saved = null;
   try { saved = localStorage.getItem("nutritipid-theme"); } catch (e) {}

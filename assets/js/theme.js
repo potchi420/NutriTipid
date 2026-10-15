@@ -15,12 +15,20 @@
     return root.getAttribute("data-theme") === "dark" ? "dark" : "light";
   }
   paint(current());
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function swap(next) {
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("nutritipid-theme", next); } catch (e) {}
+    paint(next);
+  }
   if (btn) {
     btn.addEventListener("click", function () {
       var next = current() === "dark" ? "light" : "dark";
-      root.setAttribute("data-theme", next);
-      try { localStorage.setItem("nutritipid-theme", next); } catch (e) {}
-      paint(next);
+      if (!reduceMotion && document.startViewTransition) {
+        document.startViewTransition(function () { swap(next); });
+      } else {
+        swap(next);
+      }
     });
   }
 })();
