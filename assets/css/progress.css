@@ -1,0 +1,190 @@
+/* Progress dashboard: reports and analytics. Reads tokens from styles.css.
+   Link after styles.css. Reuses .panel, .bar, .meter, .diary, .back-link,
+   .auth-sub, .header-link, .text-link, .summary-num, .summary-label. */
+.progress-wrap {
+  width: min(880px, 100%);
+  margin: 0 auto;
+  padding: 32px max(24px, env(safe-area-inset-left)) 88px;
+}
+.progress-wrap h1 {
+  margin: 10px 0 0;
+  font-size: clamp(32px, 5vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-top: 24px;
+  align-items: start;
+}
+.stat-grid > *,
+.progress-grid > *,
+.progress-wrap > * {
+  min-width: 0;
+}
+.panel.stat {
+  padding: 20px;
+}
+.panel.stat h3 {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.stat-num {
+  margin-top: 10px;
+  font-size: clamp(26px, 3vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.stat-cap {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.progress-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 24px;
+  margin-top: 24px;
+  align-items: start;
+}
+.chart-holder {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.chart-svg .grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.chart-svg .tick {
+  fill: var(--muted);
+  font-size: 12px;
+  font-family: Inter, system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.chart-svg .trend {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.chart-svg .dot {
+  fill: var(--surface);
+  stroke: var(--primary);
+  stroke-width: 2.5;
+}
+.chart-svg .bar-meal {
+  fill: var(--primary);
+}
+.chart-svg .bar-budget {
+  fill: var(--accent);
+}
+.legend {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.meter-cap {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.meter + .meter {
+  margin-top: 18px;
+}
+.verdict {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.summary-num {
+  margin-top: 12px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.summary-label {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.sum-panel h3 {
+  margin-bottom: 16px;
+}
+.sum-scroll {
+  overflow-x: auto;
+}
+.sum-head,
+.sum-row {
+  display: grid;
+  grid-template-columns: 0.7fr 1fr 1.2fr 0.8fr 0.9fr;
+  gap: 12px;
+  align-items: center;
+  min-width: 560px;
+}
+.sum-head {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 4px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.sum-row {
+  padding: 12px 4px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.sum-row:last-child {
+  border-bottom: 0;
+}
+.sum-day {
+  font-weight: 600;
+}
+.pill {
+  justify-self: start;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--stamp);
+  border: 1.5px solid var(--stamp);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .stat-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .progress-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 480px) {
+  .progress-wrap {
+    padding-top: 24px;
+  }
+  .stat-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
