@@ -63,7 +63,7 @@ try {
       <div class="diary-tabs" role="tablist" aria-label="Days of the week" id="dayTabs"></div>
       <div id="planMeals"></div>
       <div class="diary-foot flex flex-wrap items-center justify-between">
-        <span>Day total <b id="planTotal">P0</b></span>
+        <span>Day total <b id="planTotal">P0</b><span class="over-bud tabular is-hidden" id="planOver"></span></span>
         <span class="muted tabular" id="planKcal">0 kcal</span>
       </div>
     </div>
@@ -85,6 +85,21 @@ try {
     <p style="margin-top:20px"><a href="dashboard.html" class="text-link">View full dashboard</a></p>
   </div>
 </main>
+
+<div class="swap-scrim" id="swapScrim" aria-hidden="true"></div>
+<section class="swap-sheet" id="swapSheet" role="dialog" aria-modal="true" aria-labelledby="swapTitle" tabindex="-1" aria-hidden="true">
+  <div class="swap-head">
+    <div>
+      <h3 id="swapTitle">Swap a meal</h3>
+      <p class="profile-chip tabular" id="swapOrig"></p>
+    </div>
+    <button type="button" class="swap-close" id="swapClose" aria-label="Close swap suggestions">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="swap-list" id="swapList"></div>
+  <p class="swap-note" id="swapNote">Suggestions rank protein per peso inside the same pool.</p>
+</section>
 
 <script>
 /* Planner prototype: mock only. No LP solver, deterministic picks. */
@@ -169,6 +184,7 @@ try {
   var mealsEl = document.getElementById("planMeals");
   var totalEl = document.getElementById("planTotal");
   var kcalEl = document.getElementById("planKcal");
+  var overEl = document.getElementById("planOver");
   var cur = 3;
   DAYS.forEach(function (d, i) {
     var b = document.createElement("button");
@@ -183,9 +199,12 @@ try {
     cur = i;
     var rows = week[i];
     mealsEl.innerHTML = "";
-    rows.forEach(function (r) {
+    rows.forEach(function (r, idx) {
       var div = document.createElement("div");
-      div.className = "meal";
+      div.className = "meal swappable";
+      div.setAttribute("role", "button");
+      div.tabIndex = 0;
+      div.setAttribute("aria-label", "Open swap suggestions for " + r.slot.toLowerCase() + ": " + r.dish.name);
       var tw = document.createElement("span");
       tw.className = "meal-thumb";
       tw.setAttribute("aria-hidden", "true");
@@ -208,6 +227,12 @@ try {
       var note = document.createElement("span");
       note.textContent = r.dish.protein + "g protein";
       who.appendChild(strong); who.appendChild(note);
+      if (r.swapped) {
+        var flag = document.createElement("span");
+        flag.className = "swap-flag";
+        flag.textContent = "swapped";
+        who.appendChild(flag);
+      }
       var nums = document.createElement("div");
       nums.className = "nums";
       var pb = document.createElement("b");
@@ -215,11 +240,31 @@ try {
       var kk = document.createElement("span");
       kk.textContent = r.dish.kcal + " kcal";
       nums.appendChild(pb); nums.appendChild(kk);
-      div.appendChild(tw); div.appendChild(who); div.appendChild(nums);
+      var ico = document.createElement("span");
+      ico.className = "swap-ico";
+      ico.setAttribute("aria-hidden", "true");
+      ico.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>';
+      div.appendChild(tw); div.appendChild(who); div.appendChild(nums); div.appendChild(ico);
+      div.addEventListener("click", function () {
+        if (suppressClick) return;
+        openSwap(idx);
+      });
+      div.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openSwap(idx);
+        }
+      });
       mealsEl.appendChild(div);
     });
     var t = totals(rows);
     totalEl.textContent = "P" + t.price + " of P" + budget;
+    if (t.price > budget) {
+      overEl.textContent = "P" + (t.price - budget) + " over";
+      overEl.classList.remove("is-hidden");
+    } else {
+      overEl.classList.add("is-hidden");
+    }
     kcalEl.textContent = t.kcal.toLocaleString() + " kcal";
     Array.prototype.forEach.call(tabsEl.children, function (tb, j) {
       tb.setAttribute("aria-selected", String(j === i));
@@ -227,14 +272,21 @@ try {
     var active = tabsEl.children[i];
     if (active && active.scrollIntoView) active.scrollIntoView({ inline: "center", block: "nearest" });
   }
-  /* Swipe across days. Buttons and tabs keep working without touch. */
+  /* Swipe across days. Buttons and tabs keep working without touch.
+     A settled swipe suppresses the click that would follow it, so the
+     swap drawer only opens on a clean tap. */
   var touchX = null;
+  var suppressClick = false;
   mealsEl.addEventListener("touchstart", function (e) { touchX = e.touches[0].clientX; }, { passive: true });
   mealsEl.addEventListener("touchend", function (e) {
     if (touchX === null) return;
     var dx = e.changedTouches[0].clientX - touchX;
     touchX = null;
-    if (Math.abs(dx) > 48) renderDay((cur + (dx < 0 ? 1 : 6)) % 7);
+    if (Math.abs(dx) > 48) {
+      suppressClick = true;
+      setTimeout(function () { suppressClick = false; }, 400);
+      renderDay((cur + (dx < 0 ? 1 : 6)) % 7);
+    }
   }, { passive: true });
   function renderWeek() {
     var spend = week.reduce(function (s, rows) { return s + totals(rows).price; }, 0);
@@ -277,6 +329,98 @@ try {
     }
     requestAnimationFrame(frame);
   }
+
+  /* Swap and portion module: same-pool alternatives ranked by
+     protein per peso, in-memory only like the rest of the plan. */
+  var swapSheet = document.getElementById("swapSheet");
+  var swapScrim = document.getElementById("swapScrim");
+  var swapList = document.getElementById("swapList");
+  var swapOrig = document.getElementById("swapOrig");
+  var swapNote = document.getElementById("swapNote");
+  var swapTitle = document.getElementById("swapTitle");
+  var swapClose = document.getElementById("swapClose");
+  var swapsUsed = 0;
+  var swapCtx = { day: 3, slot: 1 };
+  var lastFocus = null;
+  function poolFor(slot) { return slot === 0 ? BREAKFASTS.map(byName) : MAINS; }
+  function deltaText(o, c) {
+    var dp = c.price - o.price;
+    var dq = c.protein - o.protein;
+    var a = dp < 0 ? "Saves P" + (-dp) : dp > 0 ? "P" + dp + " more" : "Same price";
+    var b = dq > 0 ? "+" + dq + "g protein" : dq < 0 ? dq + "g protein" : "protein held";
+    return a + " \u00B7 " + b;
+  }
+  function openSwap(slot) {
+    var row = week[cur][slot];
+    if (!row) return;
+    swapCtx = { day: cur, slot: slot };
+    lastFocus = document.activeElement;
+    swapTitle.textContent = "Swap " + DAYS[cur] + " " + row.slot.toLowerCase();
+    swapOrig.textContent = row.dish.name + " \u00B7 P" + row.dish.price + " \u00B7 " + row.dish.protein + "g protein";
+    var cand = poolFor(slot).filter(function (d) { return d.name !== row.dish.name; })
+      .sort(function (x, y) { return (y.protein / y.price) - (x.protein / x.price); })
+      .slice(0, 3);
+    swapList.innerHTML = "";
+    cand.forEach(function (d) {
+      var div = document.createElement("div");
+      div.className = "meal swap-cand";
+      var who = document.createElement("div");
+      who.className = "who";
+      var strong = document.createElement("strong");
+      strong.textContent = d.name;
+      var note = document.createElement("span");
+      note.className = "reason";
+      note.textContent = deltaText(row.dish, d);
+      who.appendChild(strong); who.appendChild(note);
+      var nums = document.createElement("div");
+      nums.className = "nums";
+      var pb = document.createElement("b");
+      pb.textContent = "P" + d.price;
+      nums.appendChild(pb);
+      var use = document.createElement("button");
+      use.type = "button";
+      use.className = "swap-use";
+      use.textContent = "Use";
+      use.addEventListener("click", function () { acceptSwap(d); });
+      div.appendChild(who); div.appendChild(nums); div.appendChild(use);
+      swapList.appendChild(div);
+    });
+    swapNote.textContent = swapsUsed === 0
+      ? "Suggestions rank protein per peso inside the same pool."
+      : "Ranking is protein per peso. " + swapsUsed + " accepted this week.";
+    swapSheet.classList.add("is-open");
+    swapScrim.classList.add("is-open");
+    swapSheet.setAttribute("aria-hidden", "false");
+    swapScrim.setAttribute("aria-hidden", "false");
+    swapSheet.focus();
+  }
+  function closeSwap(refocus) {
+    swapSheet.classList.remove("is-open");
+    swapScrim.classList.remove("is-open");
+    swapSheet.setAttribute("aria-hidden", "true");
+    swapScrim.setAttribute("aria-hidden", "true");
+    if (refocus !== false && lastFocus && lastFocus.focus) lastFocus.focus();
+    lastFocus = null;
+  }
+  function acceptSwap(d) {
+    var rows = week[swapCtx.day];
+    if (rows[swapCtx.slot].dish.name !== d.name) {
+      rows[swapCtx.slot].dish = d;
+      rows[swapCtx.slot].swapped = true;
+      swapsUsed += 1;
+    }
+    lastFocus = null;
+    closeSwap(false);
+    renderDay(swapCtx.day);
+    renderWeek();
+    var back = mealsEl.children[swapCtx.slot];
+    if (back && back.focus) back.focus();
+  }
+  swapClose.addEventListener("click", function () { closeSwap(); });
+  swapScrim.addEventListener("click", function () { closeSwap(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && swapSheet.classList.contains("is-open")) closeSwap();
+  });
 })();
 </script>
   <nav class="tabbar" aria-label="App">

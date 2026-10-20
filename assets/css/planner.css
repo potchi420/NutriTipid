@@ -122,6 +122,204 @@ select.auth-input {
   background: var(--primary);
   border-radius: 99px;
 }
+/* Swap and portion module: bottom sheet drawer. Flat, hairline edges
+   only, same tokens and easing as the rest of the module. */
+.swap-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(16, 22, 20, 0.48);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.25s cubic-bezier(0.22, 0.61, 0.36, 1),
+    visibility 0s linear 0.25s;
+}
+.swap-scrim.is-open {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+[data-theme="dark"] .swap-scrim {
+  background: rgba(5, 9, 7, 0.6);
+}
+.swap-sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 70;
+  transform: translate(-50%, 100%);
+  width: min(560px, 100%);
+  max-height: 78vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  padding: 18px 20px calc(18px + env(safe-area-inset-bottom));
+  visibility: hidden;
+  transition:
+    transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+    visibility 0s linear 0.3s;
+}
+.swap-sheet.is-open {
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@media (min-width: 641px) {
+  .swap-sheet {
+    bottom: auto;
+    top: 50%;
+    transform: translate(-50%, calc(-50% + 16px));
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    opacity: 0;
+    transition:
+      transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+      opacity 0.25s cubic-bezier(0.22, 0.61, 0.36, 1),
+      visibility 0s linear 0.3s;
+  }
+  .swap-sheet.is-open {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+    transition:
+      transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+      opacity 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+}
+.swap-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.swap-head h3 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+.swap-head .profile-chip {
+  margin-top: 10px;
+}
+.swap-close {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+.swap-close:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.swap-close:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.swap-list {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.swap-cand .reason {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.swap-use {
+  flex: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 16px;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+.swap-use:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--soft);
+}
+.swap-use:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.meal.swappable {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.meal.swappable:hover {
+  background: var(--soft);
+}
+.meal.swappable:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+.swap-ico {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+}
+.meal.swappable:hover .swap-ico {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.swap-flag {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--stamp);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.over-bud {
+  color: #B3261E;
+  font-size: 13px;
+  font-weight: 700;
+  margin-left: 8px;
+}
+.swap-note {
+  margin: 14px 2px 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+@media (prefers-reduced-motion: reduce) {
+  .swap-scrim,
+  .swap-sheet {
+    transition: none;
+  }
+}
 @media (max-width: 900px) {
   .week-grid {
     grid-template-columns: 1fr;
