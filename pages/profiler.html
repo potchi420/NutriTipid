@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your profile - NutriTipid</title>
-<meta name="description" content="Tell NutriTipid your body metrics and daily budget.">
+<meta name="description" content="Body metrics, budget, and health notes in one place.">
 <link rel="icon" href="../assets/img/logo_tight.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,67 +46,132 @@ try {
   </div>
 </header>
 
-<main class="auth-wrap">
-
-<main class="auth-wrap">
+<main class="plan-wrap">
   <a class="back-link" href="dashboard.html">&larr; Back to dashboard</a>
   <h1>Your profile</h1>
-  <p class="auth-sub">Set your body metrics and daily budget.</p>
+  <p class="auth-sub">Body metrics, budget, and health notes in one place.</p>
 
-  <div class="auth-card">
-    <form id="profileForm" novalidate>
-      <div class="field-2">
-        <div>
-          <label class="auth-label" for="weight">Weight</label>
-          <div class="unit-row">
-            <input class="auth-input" id="weight" name="weight" type="number" min="0" value="62" required>
-            <select class="auth-input" id="weightUnit" name="weightUnit" aria-label="Weight unit">
-              <option value="kg" selected>kg</option>
-              <option value="lb">lb</option>
+  <div class="profile-head">
+    <span class="profile-avatar" id="accAvatar" aria-hidden="true">MS</span>
+    <div class="profile-id">
+      <strong id="accName">Maria Santos</strong>
+      <span id="accMeta">maria@example.com &middot; Student &middot; Member since Sep 2026</span>
+    </div>
+  </div>
+
+  <div class="profile-facts tabular">
+    <div class="fact">
+      <span>BMI</span>
+      <div class="fact-num"><b id="factBmi">22.6</b><i id="factCat">Normal</i></div>
+    </div>
+    <div class="fact">
+      <span>Latest weight</span>
+      <div class="fact-num"><b id="factWeight">62 kg</b></div>
+    </div>
+    <div class="fact">
+      <span>Pesos per day</span>
+      <div class="fact-num"><b id="factBudget">P100</b></div>
+    </div>
+  </div>
+
+  <form id="profileForm" novalidate>
+    <div class="week-grid profile-grid">
+
+      <div class="panel">
+        <h3>Body metrics &amp; goal</h3>
+        <div class="field-2">
+          <div>
+            <label class="auth-label" for="age">Age</label>
+            <input class="auth-input tabular" id="age" name="age" type="number" min="10" max="100" value="21" required>
+          </div>
+          <div>
+            <label class="auth-label" for="sex">Sex</label>
+            <select class="auth-input" id="sex" name="sex">
+              <option value="F" selected>Female</option>
+              <option value="M">Male</option>
+              <option value="Other">Other</option>
             </select>
           </div>
         </div>
-        <div>
-          <label class="auth-label" for="height">Height</label>
-          <div class="unit-row">
-            <input class="auth-input" id="height" name="height" type="number" min="0" value="165" required>
-            <select class="auth-input" id="heightUnit" name="heightUnit" aria-label="Height unit">
-              <option value="cm" selected>cm</option>
-              <option value="ft">ft</option>
-            </select>
+        <div class="field-2">
+          <div>
+            <label class="auth-label" for="weight">Weight</label>
+            <div class="unit-row">
+              <input class="auth-input" id="weight" name="weight" type="number" min="0" value="62" required>
+              <select class="auth-input" id="weightUnit" name="weightUnit" aria-label="Weight unit">
+                <option value="kg" selected>kg</option>
+                <option value="lb">lb</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="auth-label" for="height">Height</label>
+            <div class="unit-row">
+              <input class="auth-input" id="height" name="height" type="number" min="0" value="165" required>
+              <select class="auth-input" id="heightUnit" name="heightUnit" aria-label="Height unit">
+                <option value="cm" selected>cm</option>
+                <option value="ft">ft</option>
+              </select>
+            </div>
           </div>
         </div>
+
+        <label class="auth-label" for="activity">Weekly activity</label>
+        <select class="auth-input" id="activity" name="activity">
+          <option value="1.2" selected>Sedentary (office job)</option>
+          <option value="1.375">Light Exercise (1-2 days/week)</option>
+          <option value="1.55">Moderate Exercise (3-5 days/week)</option>
+          <option value="1.725">Heavy Exercise (6-7 days/week)</option>
+          <option value="1.9">Athlete (2x per day)</option>
+        </select>
+
+        <label class="auth-label" for="goal">Goal for the term</label>
+        <select class="auth-input" id="goal" name="goal">
+          <option value="lose" selected>Lose weight steadily</option>
+          <option value="hold">Hold weight</option>
+          <option value="gain">Gain healthy weight</option>
+        </select>
+
+        <label class="auth-label" for="budget">Pesos per day</label>
+        <div class="big-peso tabular" id="budgetOut">P100</div>
+        <input id="budget" name="budget" type="range" min="50" max="500" step="5" value="100">
+        <div class="range-ends tabular"><span>P50</span><span>P500</span></div>
       </div>
 
-      <label class="auth-label" for="activity">Weekly activity</label>
-      <select class="auth-input" id="activity" name="activity">
-        <option value="1.2" selected>Sedentary (office job)</option>
-        <option value="1.375">Light Exercise (1-2 days/week)</option>
-        <option value="1.55">Moderate Exercise (3-5 days/week)</option>
-        <option value="1.725">Heavy Exercise (6-7 days/week)</option>
-        <option value="1.9">Athlete (2x per day)</option>
-      </select>
+      <div class="panel">
+        <h3>Health &amp; sharing</h3>
+        <p class="form-note">Choices below steer your 7-day plan: meals flagged with your allergens are filtered out first.</p>
+        <span class="auth-label">Health conditions</span>
+        <div class="chip-row" id="conRow">
+          <button type="button" class="chip" data-val="Hypertension">Hypertension</button>
+          <button type="button" class="chip" data-val="Diabetes">Diabetes</button>
+          <button type="button" class="chip" data-val="Anemia">Anemia</button>
+          <button type="button" class="chip is-on" data-val="None">None</button>
+        </div>
+        <span class="auth-label">Allergies</span>
+        <div class="chip-row" id="allRow">
+          <button type="button" class="chip" data-val="Shrimp">Shrimp</button>
+          <button type="button" class="chip" data-val="Egg">Egg</button>
+          <button type="button" class="chip" data-val="Fish">Fish</button>
+          <button type="button" class="chip" data-val="Peanut">Peanut</button>
+          <button type="button" class="chip is-on" data-val="None">None</button>
+        </div>
+        <label class="agree-row" for="consentChk">
+          <input type="checkbox" id="consentChk" name="consentChk">
+          <span>University Clinic staff may view my progress read-only during counseling.</span>
+        </label>
+      </div>
 
-      <label class="auth-label" for="goal">Goal for the term</label>
-      <select class="auth-input" id="goal" name="goal">
-        <option value="lose" selected>Lose weight steadily</option>
-        <option value="hold">Hold weight</option>
-        <option value="gain">Gain healthy weight</option>
-      </select>
+    </div>
 
-      <label class="auth-label" for="budget">Pesos per day</label>
-      <div class="big-peso tabular" id="budgetOut">P100</div>
-      <input id="budget" name="budget" type="range" min="50" max="500" step="5" value="100">
-      <div class="range-ends tabular"><span>P50</span><span>P500</span></div>
-
-      <button type="submit" class="btn btn-primary auth-submit">Generate my week &rarr;</button>
-      <p class="auth-msg" id="profileMsg" role="status"></p>
-    </form>
-  </div>
+    <button type="submit" class="btn btn-primary auth-submit" style="margin-top:24px">Save my profile &rarr;</button>
+    <p class="auth-msg" id="profileMsg" role="status"></p>
+  </form>
 </main>
 
 <script>
-/* Profiler prototype: mock only. Saves to localStorage, then planner. */
+/* Profiler prototype: mock only. Saves to localStorage, then planner.
+   Rehydrates saved values so editing never shows blank defaults. */
 (function () {
   "use strict";
   var form = document.getElementById("profileForm");
@@ -114,25 +179,141 @@ try {
   var weightUnit = document.getElementById("weightUnit");
   var height = document.getElementById("height");
   var heightUnit = document.getElementById("heightUnit");
+  var age = document.getElementById("age");
+  var sex = document.getElementById("sex");
   var activity = document.getElementById("activity");
   var goal = document.getElementById("goal");
   var budget = document.getElementById("budget");
   var budgetOut = document.getElementById("budgetOut");
   var msg = document.getElementById("profileMsg");
+  var factBmi = document.getElementById("factBmi");
+  var factCat = document.getElementById("factCat");
+  var factWeight = document.getElementById("factWeight");
+  var factBudget = document.getElementById("factBudget");
 
-  budget.addEventListener("input", function () {
-    budgetOut.textContent = "P" + budget.value;
+  function readJson(key, fallback) {
+    try {
+      var v = JSON.parse(localStorage.getItem(key) || "null");
+      if (v && typeof v === "object") return v;
+    } catch (e) {}
+    return fallback;
+  }
+
+  /* Identity: saved by signup, sample fallback otherwise. */
+  var acc = readJson("nutritipid-account", { name: "Maria Santos", email: "maria@example.com", since: "2026-09-19" });
+  var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var nameInit = (acc.name || "").trim().split(/\s+/);
+  var initials = (nameInit.length > 1 ? nameInit[0][0] + nameInit[1][0] : nameInit[0] ? nameInit[0].slice(0, 2) : "?").toUpperCase();
+  document.getElementById("accAvatar").textContent = initials;
+  document.getElementById("accName").textContent = acc.name || "Maria Santos";
+  var sinceTxt = "Member since Sep 2026";
+  if (acc.since) {
+    var d = new Date(acc.since + "T00:00:00");
+    if (!isNaN(d.getTime())) sinceTxt = "Member since " + MONTHS[d.getMonth()] + " " + d.getFullYear();
+  }
+  document.getElementById("accMeta").textContent = (acc.email || "maria@example.com") + " \u00B7 Student \u00B7 " + sinceTxt;
+
+  /* Saved profile optional: same shape storage planners read. */
+  var saved = readJson("nutritipid-profile", null);
+  if (saved) {
+    if (typeof saved.weight === "number") weight.value = saved.weight;
+    if (saved.weightUnit === "lb") weightUnit.value = "lb";
+    if (typeof saved.height === "number") height.value = saved.height;
+    if (saved.heightUnit === "ft") heightUnit.value = "ft";
+    if (typeof saved.age === "number") age.value = saved.age;
+    if (saved.sex) sex.value = saved.sex;
+    if (saved.activity) activity.value = saved.activity;
+    if (saved.goal) goal.value = saved.goal;
+    if (typeof saved.budget === "number") budget.value = saved.budget;
+  }
+  budgetOut.textContent = "P" + budget.value;
+
+  function chipsIn(rowId) {
+    var out = [];
+    Array.prototype.forEach.call(document.getElementById(rowId).children, function (b) {
+      if (b.classList.contains("is-on")) out.push(b.getAttribute("data-val"));
+    });
+    return out;
+  }
+  function chipsOut(rowId, list) {
+    Array.prototype.forEach.call(document.getElementById(rowId).children, function (b) {
+      b.classList.toggle("is-on", list.indexOf(b.getAttribute("data-val")) >= 0);
+    });
+  }
+  function chipWire(rowId, saveList) {
+    var row = document.getElementById(rowId);
+    row.addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest(".chip") : null;
+      if (!b || !row.contains(b)) return;
+      var val = b.getAttribute("data-val");
+      if (val === "None") {
+        chipsOut(rowId, ["None"]);
+      } else {
+        var cur = chipsIn(rowId).filter(function (v) { return v !== "None"; });
+        var idx = cur.indexOf(val);
+        if (idx >= 0) cur.splice(idx, 1); else cur.push(val);
+        chipsOut(rowId, cur.length ? cur : ["None"]);
+      }
+    });
+  }
+  if (saved && Array.isArray(saved.conditions) && saved.conditions.length) chipsOut("conRow", saved.conditions);
+  if (saved && Array.isArray(saved.allergies) && saved.allergies.length) chipsOut("allRow", saved.allergies);
+  chipWire("conRow");
+  chipWire("allRow");
+  var consentChk = document.getElementById("consentChk");
+  if (saved && saved.consent) consentChk.checked = true;
+
+  /* BMI is the reason height and weight exist in the schema. */
+  function updMetrics() {
+    var w = Number(weight.value);
+    var h = Number(height.value);
+    var kg = weightUnit.value === "lb" ? w * 0.453592 : w;
+    var cm = heightUnit.value === "ft" ? h * 30.48 : h;
+    if (kg > 0 && cm > 0) {
+      var bmi = kg / Math.pow(cm / 100, 2);
+      factBmi.textContent = bmi.toFixed(1);
+      if (bmi < 18.5) { factCat.textContent = "Underweight"; factCat.className = "is-warn"; }
+      else if (bmi < 25) { factCat.textContent = "Normal"; factCat.className = "is-ok"; }
+      else if (bmi < 30) { factCat.textContent = "Overweight"; factCat.className = "is-warn"; }
+      else { factCat.textContent = "Obese"; factCat.className = "is-alert"; }
+    } else {
+      factBmi.textContent = "\u2014";
+      factCat.textContent = "";
+      factCat.className = "";
+    }
+    factBudget.textContent = "P" + budget.value;
+  }
+  [weight, weightUnit, height, heightUnit, budget].forEach(function (el) {
+    el.addEventListener("input", updMetrics);
+    el.addEventListener("change", updMetrics);
   });
+  updMetrics();
+
+  /* Latest weigh-in wins if the tracker has newer data. */
+  try {
+    var wStore = JSON.parse(localStorage.getItem("nutritipid-weight") || "null");
+    if (wStore && Array.isArray(wStore.entries) && wStore.entries.length) {
+      var latest = wStore.entries.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).pop();
+      if (latest && typeof latest.kg === "number") factWeight.textContent = latest.kg.toFixed(1) + " kg";
+    } else if (saved && typeof saved.weight === "number") {
+      factWeight.textContent = saved.weight.toFixed(1) + " kg";
+    }
+  } catch (e) {}
 
   function fail(text, el) {
     msg.classList.add("is-error");
     msg.textContent = text;
-    el.focus();
+    if (el && el.focus) el.focus();
   }
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     msg.classList.remove("is-error");
+    var a = Number(age.value);
+    if (!(a > 0) || a < 10 || a > 100) {
+      fail("Age looks off. Use 10 to 100.", age);
+      return;
+    }
     var w = Number(weight.value);
     var wUnit = weightUnit.value;
     var kg = wUnit === "lb" ? w * 0.453592 : w;
@@ -149,10 +330,14 @@ try {
     }
     try {
       localStorage.setItem("nutritipid-profile", JSON.stringify({
-        weight: Math.round(kg * 10) / 10, height: Math.round(cm),
+        age: a, sex: sex.value,
+        weight: Math.round(kg * 10) / 10, weightUnit: wUnit,
+        height: Math.round(cm), heightUnit: hUnit,
         activity: activity.value,
         activityLabel: activity.options[activity.selectedIndex].text,
-        goal: goal.value, budget: Number(budget.value)
+        goal: goal.value, budget: Number(budget.value),
+        conditions: chipsIn("conRow"), allergies: chipsIn("allRow"),
+        consent: consentChk.checked
       }));
     } catch (err) {}
     window.location.href = "dashboard.html";

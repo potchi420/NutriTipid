@@ -18,7 +18,6 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   margin-top: 24px;
-  align-items: start;
 }
 .stat-grid > *,
 .progress-grid > *,
@@ -54,7 +53,6 @@
   grid-template-columns: 1.15fr 0.85fr;
   gap: 24px;
   margin-top: 24px;
-  align-items: start;
 }
 .chart-holder {
   margin-top: 16px;
@@ -161,6 +159,11 @@
 .sum-day {
   font-weight: 600;
 }
+.sum-meta {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
 .pill {
   justify-self: start;
   font-size: 12.5px;
@@ -184,7 +187,10 @@
     padding-top: 24px;
   }
   .stat-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 16px;
+  }
+  .panel.stat {
+    padding: 16px;
   }
 }

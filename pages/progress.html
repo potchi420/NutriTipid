@@ -54,22 +54,22 @@ try {
   <div class="stat-grid">
     <div class="panel stat">
       <h3>Meal adherence</h3>
-      <div class="stat-num tabular">87%</div>
-      <p class="stat-cap">Meals eaten as planned</p>
+      <div class="stat-num tabular" id="statMeal">90%</div>
+      <p class="stat-cap" id="capMeal">19 of 21 meals as planned</p>
     </div>
     <div class="panel stat">
       <h3>Budget adherence</h3>
-      <div class="stat-num tabular">91%</div>
-      <p class="stat-cap">Days within budget</p>
+      <div class="stat-num tabular" id="statBudget">86%</div>
+      <p class="stat-cap tabular" id="capBudget">6 of 7 days within P100</p>
     </div>
     <div class="panel stat">
       <h3>Weekly spend</h3>
-      <div class="stat-num tabular">P733</div>
-      <p class="stat-cap tabular">P104 per day avg.</p>
+      <div class="stat-num tabular" id="statSpend">P689</div>
+      <p class="stat-cap tabular" id="capSpend">P98 per day avg.</p>
     </div>
     <div class="panel stat">
       <h3>P per 100 kcal</h3>
-      <div class="stat-num tabular">P4.92</div>
+      <div class="stat-num tabular" id="statEff">P6.25</div>
       <p class="stat-cap">This week efficiency</p>
     </div>
   </div>
@@ -81,27 +81,27 @@ try {
         <svg id="trendChart" class="chart-svg" viewBox="0 0 560 260" role="img" aria-label="Meal and budget adherence for week 1 to week 4"></svg>
       </div>
       <div class="legend">
-        <span><i class="dot-key" style="background:var(--accent)"></i>Budget Adherence</span>
         <span><i class="dot-key" style="background:var(--primary)"></i>Meal Adherence</span>
+        <span><i class="dot-key" style="background:var(--accent)"></i>Budget Adherence</span>
       </div>
     </section>
 
     <section class="panel" aria-label="Goal adherence">
       <h3>Goals</h3>
       <div class="meter">
-        <div class="top"><span>Calorie Goal Adherence</span><span class="tabular">117%</span></div>
-        <div class="bar"><i class="g" style="width:100%"></i></div>
-        <p class="meter-cap tabular">1,680 avg. vs 1,500 target</p>
+        <div class="top"><span>Calorie Goal Adherence</span><span class="tabular" id="goalCalNum">105%</span></div>
+        <div class="bar"><i class="g" id="goalCalBar" style="width:100%"></i></div>
+        <p class="meter-cap tabular" id="goalCalCap">1,574 avg. vs 1,500 target</p>
       </div>
       <div class="meter">
-        <div class="top"><span>Budget Goal Adherence</span><span class="tabular">91%</span></div>
-        <div class="bar"><i class="y" style="width:91%"></i></div>
-        <p class="meter-cap tabular">P104 avg. vs P115 target</p>
+        <div class="top"><span>Budget Goal Adherence</span><span class="tabular" id="goalBudNum">86%</span></div>
+        <div class="bar"><i class="y" id="goalBudBar" style="width:86%"></i></div>
+        <p class="meter-cap tabular" id="goalBudCap">P98 avg. vs P100 target</p>
       </div>
       <div class="meter">
-        <div class="top"><span>Protein Target Hit</span><span class="tabular">78%</span></div>
-        <div class="bar"><i class="g" style="width:78%"></i></div>
-        <p class="meter-cap">Avg 58g of 60g protein daily</p>
+        <div class="top"><span>Protein Target Hit</span><span class="tabular" id="goalProNum">86%</span></div>
+        <div class="bar"><i class="g" id="goalProBar" style="width:86%"></i></div>
+        <p class="meter-cap" id="goalProCap">6 of 7 days hit 60g &middot; avg 62g</p>
       </div>
     </section>
   </div>
@@ -129,6 +129,7 @@ try {
   <section aria-label="This week summary" style="margin-top:24px">
     <div class="panel sum-panel">
       <h3>This Week Summary</h3>
+      <p class="sum-meta tabular" id="swapLine">4 swaps accepted this week &middot; P28 kept in the plan.</p>
       <div class="sum-scroll">
         <div class="sum-head" aria-hidden="true">
           <span>Day</span><span>Calories</span><span>Budget (P)</span><span>Protein</span><span>Adherence</span>
@@ -152,19 +153,30 @@ try {
 (function () {
   "use strict";
 
-  /* Mock pool: fixed weeks, goals, and day rows. UI never says mock. */
+  /* Mock pool: fixed goals, week rows, and day rows. Every derived
+     number on the page is computed from these, so the page always
+     sums to itself. */
   var POOL = {
     weeks: [
-      { label: "Week 1", meal: 82, budget: 88 },
-      { label: "Week 2", meal: 85, budget: 90 },
-      { label: "Week 3", meal: 84, budget: 89 },
-      { label: "Week 4", meal: 87, budget: 91 }
+      { label: "Week 1", meal: 78, budget: 74 },
+      { label: "Week 2", meal: 81, budget: 80 },
+      { label: "Week 3", meal: 85, budget: 86 },
+      { label: "Week 4", meal: 90, budget: 86 }
     ],
     days: [
-      { day: "Mon", kcal: 1730, spent: 99, budget: 120, protein: 58, adh: 113 },
-      { day: "Tue", kcal: 1650, spent: 115, budget: 120, protein: 65, adh: 121 },
-      { day: "Wed", kcal: 1640, spent: 68, budget: 100, protein: 52, adh: 106 }
+      { day: "Mon", kcal: 1540, spent: 92, protein: 61 },
+      { day: "Tue", kcal: 1610, spent: 98, protein: 62 },
+      { day: "Wed", kcal: 1480, spent: 100, protein: 55 },
+      { day: "Thu", kcal: 1660, spent: 96, protein: 68 },
+      { day: "Fri", kcal: 1430, spent: 89, protein: 60 },
+      { day: "Sat", kcal: 1720, spent: 118, protein: 66 },
+      { day: "Sun", kcal: 1580, spent: 96, protein: 63 }
     ],
+    kcalTarget: 1500,
+    proteinTarget: 60,
+    mealsPlanned: 21,
+    mealsAsPlanned: 19,
+    swaps: { used: 4, saved: 28 },
     weight: [
       { label: "Sep 1", kg: 72.5 },
       { label: "Sep 5", kg: 72.1 },
@@ -173,6 +185,13 @@ try {
       { label: "Sep 29", kg: 69.8 }
     ]
   };
+
+  /* Same profile budget the planner reads, or the P100 sample. */
+  var budget = 100;
+  try {
+    var savedP = JSON.parse(localStorage.getItem("nutritipid-profile") || "null");
+    if (savedP && savedP.budget >= 50) budget = Math.round(savedP.budget);
+  } catch (e) {}
 
   function storedWeight() {
     try {
@@ -200,12 +219,19 @@ try {
     var rows = POOL.weeks;
     var gw = (W - padL - padR) / rows.length;
     var bw = 26;
+    /* Same density rule as the tracker: phones get fewer gridlines
+       and larger tick type so the scaled-down SVG stays readable. */
+    var narrow = window.innerWidth < 640;
+    var tickFs = narrow ? 21 : 12;
+    var gridMax = narrow ? 2 : 4;
     svg.innerHTML = "";
-    for (var g = 0; g <= 4; g++) {
-      var gv = g * 25;
+    for (var g = 0; g <= gridMax; g++) {
+      var gv = g * (100 / gridMax);
       var gy = padT + (H - padT - padB) * (1 - gv / 110);
       svg.appendChild(el("line", { x1: padL, y1: gy, x2: W - padR, y2: gy, "class": "grid" }));
-      svg.appendChild(el("text", { x: padL - 8, y: gy + 4, "text-anchor": "end", "class": "tick" }, gv + "%"));
+      var tk = el("text", { x: padL - 8, y: gy + 4, "text-anchor": "end", "class": "tick" }, gv + "%");
+      tk.style.fontSize = tickFs + "px";
+      svg.appendChild(tk);
     }
     rows.forEach(function (r, i) {
       var cx = padL + gw * i + gw / 2;
@@ -215,6 +241,7 @@ try {
       svg.appendChild(el("rect", { x: cx - bw - 3, y: padT + bh - mh, width: bw, height: mh, rx: 3, "class": "bar-meal" }));
       svg.appendChild(el("rect", { x: cx + 3, y: padT + bh - uh, width: bw, height: uh, rx: 3, "class": "bar-budget" }));
       var lb = el("text", { y: H - 14, "class": "tick" }, r.label);
+      lb.style.fontSize = tickFs + "px";
       lb.setAttribute("x", cx);
       if (i === 0) lb.setAttribute("text-anchor", "start");
       else if (i === rows.length - 1) lb.setAttribute("text-anchor", "end");
@@ -234,19 +261,27 @@ try {
     var max = Math.ceil(Math.max.apply(null, kgs) + 0.5);
     function x(i) { return padL + (W - padL - padR) * (rows.length === 1 ? 0.5 : i / (rows.length - 1)); }
     function y(kg) { return padT + (H - padT - padB) * (1 - (kg - min) / (max - min)); }
+    /* Tracker density rule: same narrow branch as weight-tracker.html. */
+    var narrow = window.innerWidth < 640;
+    var tickFs = narrow ? 21 : 12;
+    var gridCount = narrow ? 2 : 3;
+    var dotR = narrow ? 6.5 : 5;
     svg.innerHTML = "";
-    for (var g = 0; g <= 3; g++) {
-      var gv = min + (max - min) * g / 3;
+    for (var g = 0; g <= gridCount; g++) {
+      var gv = min + (max - min) * g / gridCount;
       svg.appendChild(el("line", { x1: padL, y1: y(gv), x2: W - padR, y2: y(gv), "class": "grid" }));
-      svg.appendChild(el("text", { x: padL - 8, y: y(gv) + 4, "text-anchor": "end", "class": "tick" }, String(Math.round(gv))));
+      var tk = el("text", { x: padL - 8, y: y(gv) + 4, "text-anchor": "end", "class": "tick" }, String(Math.round(gv)));
+      tk.style.fontSize = tickFs + "px";
+      svg.appendChild(tk);
     }
     svg.appendChild(el("polyline", { points: rows.map(function (r, i) { return x(i).toFixed(1) + "," + y(r.kg).toFixed(1); }).join(" "), "class": "trend" }));
     rows.forEach(function (r, i) {
-      var c = el("circle", { cx: x(i), cy: y(r.kg), r: 5, "class": "dot" });
+      var c = el("circle", { cx: x(i), cy: y(r.kg), r: dotR, "class": "dot" });
       c.appendChild(el("title", {}, r.label + ": " + r.kg.toFixed(1) + "kg"));
       svg.appendChild(c);
-      if (i === 0 || i === rows.length - 1 || i === Math.floor(rows.length / 2)) {
+      if (!narrow || i === 0 || i === rows.length - 1) {
         var lb = el("text", { x: x(i), y: H - 8, "class": "tick" }, r.label);
+        lb.style.fontSize = tickFs + "px";
         if (i === 0) lb.setAttribute("text-anchor", "start");
         else if (i === rows.length - 1) lb.setAttribute("text-anchor", "end");
         else lb.setAttribute("text-anchor", "middle");
@@ -258,14 +293,53 @@ try {
       Math.abs(change).toFixed(1) + "kg since " + rows[0].label + ". Steady pace.";
   }
 
+  /* Stat panels and goal meters: everything traces back to rows. */
+  function renderStats() {
+    var d = POOL.days;
+    var n = d.length;
+    var i = 0;
+    var spend = 0, kcal = 0, prot = 0, within = 0;
+    for (i = 0; i < n; i++) {
+      spend += d[i].spent;
+      kcal += d[i].kcal;
+      prot += d[i].protein;
+      if (d[i].spent <= budget) within++;
+    }
+    var mealPct = Math.round(POOL.mealsAsPlanned / POOL.mealsPlanned * 100);
+    var budPct = Math.round(within / n * 100);
+    var kcalPct = Math.round(kcal / (n * POOL.kcalTarget) * 100);
+    var effP = spend / (kcal / 100);
+    var hits = 0;
+    for (i = 0; i < n; i++) if (d[i].protein >= POOL.proteinTarget) hits++;
+    var proPct = Math.round(hits / n * 100);
+    document.getElementById("statMeal").textContent = mealPct + "%";
+    document.getElementById("capMeal").textContent = POOL.mealsAsPlanned + " of " + POOL.mealsPlanned + " meals as planned";
+    document.getElementById("statBudget").textContent = budPct + "%";
+    document.getElementById("capBudget").textContent = within + " of " + n + " days within P" + budget;
+    document.getElementById("statSpend").textContent = "P" + spend;
+    document.getElementById("capSpend").textContent = "P" + Math.round(spend / n) + " per day avg.";
+    document.getElementById("statEff").textContent = "P" + effP.toFixed(2);
+    document.getElementById("goalCalNum").textContent = kcalPct + "%";
+    document.getElementById("goalCalCap").textContent = Math.round(kcal / n).toLocaleString() + " avg. vs " + POOL.kcalTarget.toLocaleString() + " target";
+    document.getElementById("goalCalBar").style.width = Math.min(100, kcalPct) + "%";
+    document.getElementById("goalBudNum").textContent = budPct + "%";
+    document.getElementById("goalBudBar").style.width = budPct + "%";
+    document.getElementById("goalBudCap").textContent = "P" + Math.round(spend / n) + " avg. vs P" + budget + " target";
+    document.getElementById("goalProNum").textContent = proPct + "%";
+    document.getElementById("goalProBar").style.width = proPct + "%";
+    document.getElementById("goalProCap").textContent = hits + " of " + n + " days hit " + POOL.proteinTarget + "g \u00B7 avg " + Math.round(prot / n) + "g";
+    document.getElementById("swapLine").textContent = POOL.swaps.used + " swaps accepted this week \u00B7 P" + POOL.swaps.saved + " kept in the plan.";
+  }
+
   function renderRows() {
     var box = document.getElementById("sumRows");
     box.innerHTML = "";
     POOL.days.forEach(function (d) {
       var row = document.createElement("div");
       row.className = "sum-row";
-      [["sum-day", d.day], ["tabular", d.kcal + " kcal"],
-       ["tabular", "P" + d.spent + " / P" + d.budget], ["tabular", d.protein + "g"]
+      var adh = Math.round(d.kcal / POOL.kcalTarget * 100);
+      [["sum-day", d.day], ["tabular", d.kcal.toLocaleString() + " kcal"],
+       ["tabular", "P" + d.spent + " / P" + budget], ["tabular", d.protein + "g"]
       ].forEach(function (cell) {
         var s = document.createElement("span");
         s.className = cell[0];
@@ -274,7 +348,7 @@ try {
       });
       var pill = document.createElement("span");
       pill.className = "pill tabular";
-      pill.textContent = d.adh + "%";
+      pill.textContent = adh + "%";
       row.appendChild(pill);
       box.appendChild(row);
     });
@@ -282,7 +356,20 @@ try {
 
   renderTrend();
   renderWeight();
+  renderStats();
   renderRows();
+
+  /* Crossing the 640 line re-picks chart density. */
+  var resizeTick = false;
+  window.addEventListener("resize", function () {
+    if (resizeTick) return;
+    resizeTick = true;
+    requestAnimationFrame(function () {
+      resizeTick = false;
+      renderTrend();
+      renderWeight();
+    });
+  });
 })();
 </script>
 <script src="../assets/js/theme.js"></script>
