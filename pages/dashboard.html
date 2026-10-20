@@ -72,7 +72,6 @@ try {
   </div>
 
   <div id="mealSecs"></div>
-  <p class="auth-msg" id="dashMsg" role="status"></p>
 
   <div class="panel" style="margin-top:24px">
     <h3>Macros today</h3>
@@ -98,6 +97,18 @@ try {
     <p style="margin:14px 0 0"><a href="planner.html" class="text-link">Open meal planner</a></p>
   </div>
 </main>
+
+<div class="sheet-scrim" id="addScrim" aria-hidden="true"></div>
+<section class="sheet" id="addSheet" role="dialog" aria-modal="true" aria-labelledby="addTitle" tabindex="-1" aria-hidden="true">
+  <div class="sheet-head">
+    <h3 id="addTitle">Add to Breakfast</h3>
+    <button type="button" class="sheet-close" id="addClose" aria-label="Close add food list">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="sheet-list" id="addList"></div>
+  <p class="sheet-note" id="addNote">Nothing added yet. Planned meals stay fixed.</p>
+</section>
 
 <script>
 /* Dashboard home prototype: mock only. One week object, day cycler. */
@@ -131,7 +142,106 @@ try {
   var kcalIn = document.getElementById("kcalIn");
   var kcalBar = document.getElementById("kcalBar");
   var mealSecs = document.getElementById("mealSecs");
-  var dashMsg = document.getElementById("dashMsg");
+
+  /* Intake logging: planned board is fixed, added servings are editable.
+     Persisted like the tracker in plain per-day-slot lists. */
+  var intake = {};
+  try {
+    var savedIntake = JSON.parse(localStorage.getItem("nutritipid-intake") || "null");
+    if (savedIntake && typeof savedIntake === "object") intake = savedIntake;
+  } catch (e) {}
+  function slotList(day, slot) {
+    var d = intake[String(day)];
+    if (!d || typeof d !== "object") d = intake[String(day)] = {};
+    if (!Array.isArray(d[slot])) d[slot] = [];
+    return d[slot];
+  }
+  function saveIntake() {
+    try {
+      localStorage.setItem("nutritipid-intake", JSON.stringify(intake));
+    } catch (e) {}
+  }
+
+  var addSheet = document.getElementById("addSheet");
+  var addScrim = document.getElementById("addScrim");
+  var addList = document.getElementById("addList");
+  var addTitle = document.getElementById("addTitle");
+  var addNote = document.getElementById("addNote");
+  var addClose = document.getElementById("addClose");
+  var addCtx = { day: idx, slot: 0 };
+  var lastFocus = null;
+
+  function syncAddNote() {
+    var list = slotList(addCtx.day, addCtx.slot);
+    addNote.textContent = list.length
+      ? list.length + " serving" + (list.length === 1 ? "" : "s") + " added to " + SLOTS[addCtx.slot] + " today."
+      : "Nothing added yet. Planned meals stay fixed.";
+  }
+  function openAdd(slot) {
+    addCtx.day = idx;
+    addCtx.slot = slot;
+    lastFocus = document.activeElement;
+    addTitle.textContent = "Add to " + SLOTS[slot];
+    addList.innerHTML = "";
+    EAT.forEach(function (dish, di) {
+      var div = document.createElement("div");
+      div.className = "meal";
+      var dot = document.createElement("span");
+      dot.className = "meal-dot";
+      dot.style.background = dish.c;
+      if (dish.ink) dot.style.color = dish.ink;
+      dot.textContent = dish.dot;
+      dot.setAttribute("aria-hidden", "true");
+      var who = document.createElement("div");
+      who.className = "who";
+      var strong = document.createElement("strong");
+      strong.textContent = dish.n;
+      who.appendChild(strong);
+      var sub = document.createElement("span");
+      sub.textContent = dish.k + " kcal per serving";
+      who.appendChild(sub);
+      var nums = document.createElement("div");
+      nums.className = "nums";
+      var pb = document.createElement("b");
+      pb.textContent = "P" + dish.p;
+      nums.appendChild(pb);
+      var pill = document.createElement("button");
+      pill.type = "button";
+      pill.className = "sheet-btn";
+      pill.textContent = "Add";
+      pill.setAttribute("aria-label", "Add " + dish.n + " to " + SLOTS[slot]);
+      pill.addEventListener("click", function () {
+        addFood(di);
+      });
+      div.appendChild(dot); div.appendChild(who); div.appendChild(nums); div.appendChild(pill);
+      addList.appendChild(div);
+    });
+    syncAddNote();
+    addScrim.classList.add("is-open");
+    addScrim.setAttribute("aria-hidden", "false");
+    addSheet.classList.add("is-open");
+    addSheet.setAttribute("aria-hidden", "false");
+    addSheet.focus();
+  }
+  function closeAdd() {
+    addScrim.classList.remove("is-open");
+    addScrim.setAttribute("aria-hidden", "true");
+    addSheet.classList.remove("is-open");
+    addSheet.setAttribute("aria-hidden", "true");
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  function addFood(di) {
+    var list = slotList(addCtx.day, addCtx.slot);
+    list.push(di);
+    saveIntake();
+    syncAddNote();
+    render();
+  }
+  addClose.addEventListener("click", closeAdd);
+  addScrim.addEventListener("click", closeAdd);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && addSheet.classList.contains("is-open")) closeAdd();
+  });
 
   function dayTotals(dishes) {
     return dishes.reduce(function (t, d) {
@@ -140,20 +250,37 @@ try {
   }
 
   function render() {
-    var dishes = DAY_MEALS[idx].map(function (i) { return EAT[i]; });
-    var t = dayTotals(dishes);
+    var slots = SLOTS.map(function (_, s) {
+      var rows = [{ d: EAT[DAY_MEALS[idx][s]], extra: false, key: -1 }];
+      slotList(idx, s).forEach(function (di, pos) {
+        rows.push({ d: EAT[di], extra: true, key: pos });
+      });
+      return rows;
+    });
+    var all = [];
+    slots.forEach(function (rows) {
+      rows.forEach(function (item) { all.push(item.d); });
+    });
+    var t = dayTotals(all);
     var left = budget - t.price;
     dashTitle.textContent = idx === 3 ? "Today." : DAY_NAMES[idx] + ".";
     dateLabel.textContent = idx === 3 ? "Today" : DAY_NAMES[idx];
-    pesosLeft.textContent = "P" + left;
-    pesosCap.textContent = "of P" + budget + " today";
+    if (left < 0) {
+      pesosLeft.textContent = "\u2212P" + -left;
+      pesosLeft.classList.add("is-over");
+      pesosCap.textContent = "over today's P" + budget + " budget";
+    } else {
+      pesosLeft.textContent = "P" + left;
+      pesosLeft.classList.remove("is-over");
+      pesosCap.textContent = "of P" + budget + " today";
+    }
     pesosBar.style.width = Math.max(0, Math.min(100, Math.round(left / budget * 100))) + "%";
     kcalIn.textContent = t.kcal.toLocaleString();
     kcalBar.style.width = Math.min(100, Math.round(t.kcal / KCAL_TARGET * 100)) + "%";
 
     mealSecs.innerHTML = "";
-    SLOTS.forEach(function (slot, s) {
-      var d = dishes[s];
+    slots.forEach(function (rows, s) {
+      var slot = SLOTS[s];
       var sec = document.createElement("section");
       sec.className = "meal-sec";
       var head = document.createElement("div");
@@ -165,35 +292,62 @@ try {
       add.className = "add-btn";
       add.textContent = "+ Add";
       add.setAttribute("aria-label", "Add food to " + slot);
+      add.dataset.addslot = s;
       add.addEventListener("click", function () {
-        dashMsg.textContent = "Food logging coming soon.";
+        openAdd(s);
       });
       head.appendChild(h); head.appendChild(add);
       sec.appendChild(head);
       var box = document.createElement("div");
       box.className = "diary";
-      var row = document.createElement("div");
-      row.className = "meal";
-      var dot = document.createElement("span");
-      dot.className = "meal-dot";
-      dot.style.background = d.c;
-      if (d.ink) dot.style.color = d.ink;
-      dot.textContent = d.dot;
-      dot.setAttribute("aria-hidden", "true");
-      var who = document.createElement("div");
-      who.className = "who";
-      var strong = document.createElement("strong");
-      strong.textContent = d.n;
-      who.appendChild(strong);
-      var nums = document.createElement("div");
-      nums.className = "nums";
-      var pb = document.createElement("b");
-      pb.textContent = "P" + d.p;
-      var kk = document.createElement("span");
-      kk.textContent = d.k + " kcal";
-      nums.appendChild(pb); nums.appendChild(kk);
-      row.appendChild(dot); row.appendChild(who); row.appendChild(nums);
-      box.appendChild(row);
+      rows.forEach(function (item) {
+        var d = item.d;
+        var row = document.createElement("div");
+        row.className = "meal";
+        var dot = document.createElement("span");
+        dot.className = "meal-dot";
+        dot.style.background = d.c;
+        if (d.ink) dot.style.color = d.ink;
+        dot.textContent = d.dot;
+        dot.setAttribute("aria-hidden", "true");
+        var who = document.createElement("div");
+        who.className = "who";
+        var strong = document.createElement("strong");
+        strong.textContent = d.n;
+        who.appendChild(strong);
+        if (item.extra) {
+          var sub = document.createElement("span");
+          sub.textContent = "Extra serving";
+          who.appendChild(sub);
+        }
+        var nums = document.createElement("div");
+        nums.className = "nums";
+        var pb = document.createElement("b");
+        pb.textContent = "P" + d.p;
+        var kk = document.createElement("span");
+        kk.textContent = d.k + " kcal";
+        nums.appendChild(pb); nums.appendChild(kk);
+        row.appendChild(dot); row.appendChild(who); row.appendChild(nums);
+        if (item.extra) {
+          var rm = document.createElement("button");
+          rm.type = "button";
+          rm.className = "add-remove";
+          rm.setAttribute("aria-label", "Remove " + d.n + " from " + slot);
+          rm.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+          (function (slotKey, pos) {
+            rm.addEventListener("click", function () {
+              var list = slotList(idx, slotKey);
+              list.splice(pos, 1);
+              saveIntake();
+              render();
+              var slotAdd = mealSecs.querySelector('button[data-addslot="' + slotKey + '"]');
+              if (slotAdd) slotAdd.focus();
+            });
+          })(s, item.key);
+          row.appendChild(rm);
+        }
+        box.appendChild(row);
+      });
       sec.appendChild(box);
       mealSecs.appendChild(sec);
     });
@@ -239,7 +393,6 @@ try {
       row.appendChild(top); row.appendChild(bar);
       microRows.appendChild(row);
     });
-    dashMsg.textContent = "";
   }
 
   document.getElementById("prevDay").addEventListener("click", function () {

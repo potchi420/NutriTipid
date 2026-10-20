@@ -86,19 +86,19 @@ try {
   </div>
 </main>
 
-<div class="swap-scrim" id="swapScrim" aria-hidden="true"></div>
-<section class="swap-sheet" id="swapSheet" role="dialog" aria-modal="true" aria-labelledby="swapTitle" tabindex="-1" aria-hidden="true">
-  <div class="swap-head">
+<div class="sheet-scrim" id="swapScrim" aria-hidden="true"></div>
+<section class="sheet" id="swapSheet" role="dialog" aria-modal="true" aria-labelledby="swapTitle" tabindex="-1" aria-hidden="true">
+  <div class="sheet-head">
     <div>
       <h3 id="swapTitle">Swap a meal</h3>
       <p class="profile-chip tabular" id="swapOrig"></p>
     </div>
-    <button type="button" class="swap-close" id="swapClose" aria-label="Close swap suggestions">
+    <button type="button" class="sheet-close" id="swapClose" aria-label="Close swap suggestions">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>
   </div>
-  <div class="swap-list" id="swapList"></div>
-  <p class="swap-note" id="swapNote">Suggestions rank protein per peso inside the same pool.</p>
+  <div class="sheet-list" id="swapList"></div>
+  <p class="sheet-note" id="swapNote">Suggestions rank protein per peso inside the same pool.</p>
 </section>
 
 <script>
@@ -379,7 +379,7 @@ try {
       nums.appendChild(pb);
       var use = document.createElement("button");
       use.type = "button";
-      use.className = "swap-use";
+      use.className = "sheet-btn";
       use.textContent = "Use";
       use.addEventListener("click", function () { acceptSwap(d); });
       div.appendChild(who); div.appendChild(nums); div.appendChild(use);

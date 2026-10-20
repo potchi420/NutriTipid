@@ -1692,3 +1692,152 @@ input[type="range"] {
     padding-bottom: 104px;
   }
 }
+
+/* App sheet: shared bottom-sheet / centered-dialog chrome. Bottom sheet on
+   phones, centered card on desktop, one scrim. Content stays module-side
+   (swap food on planner, add food on dashboard, future confirm sheets). */
+.sheet-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(16, 22, 20, 0.48);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.25s cubic-bezier(0.22, 0.61, 0.36, 1),
+    visibility 0s linear 0.25s;
+}
+.sheet-scrim.is-open {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+[data-theme="dark"] .sheet-scrim {
+  background: rgba(5, 9, 7, 0.6);
+}
+.sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 70;
+  transform: translate(-50%, 100%);
+  width: min(560px, 100%);
+  max-height: 78vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  padding: 18px 20px calc(18px + env(safe-area-inset-bottom));
+  visibility: hidden;
+  transition:
+    transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+    visibility 0s linear 0.3s;
+}
+.sheet.is-open {
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@media (min-width: 641px) {
+  .sheet {
+    bottom: auto;
+    top: 50%;
+    transform: translate(-50%, calc(-50% + 16px));
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    opacity: 0;
+    transition:
+      transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+      opacity 0.25s cubic-bezier(0.22, 0.61, 0.36, 1),
+      visibility 0s linear 0.3s;
+  }
+  .sheet.is-open {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+    transition:
+      transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+      opacity 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+}
+.sheet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sheet-head h3 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+.sheet-close {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+.sheet-close:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.sheet-close:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.sheet-list {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.sheet-btn {
+  flex: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 16px;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+.sheet-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--soft);
+}
+.sheet-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.sheet-note {
+  margin: 14px 2px 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet-scrim,
+  .sheet {
+    transition: none;
+  }
+}
