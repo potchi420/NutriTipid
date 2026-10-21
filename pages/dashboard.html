@@ -66,7 +66,7 @@ try {
     <div class="panel">
       <h3>Calories in</h3>
       <div class="hero-num tabular" id="kcalIn">0</div>
-      <p class="hero-cap">target 1,500</p>
+      <p class="hero-cap" id="kcalCap">target 1,500</p>
       <div class="bar" style="margin-top:12px"><i class="y" id="kcalBar" style="width:0%"></i></div>
     </div>
   </div>
@@ -110,6 +110,7 @@ try {
   <p class="sheet-note" id="addNote">Nothing added yet. Planned meals stay fixed.</p>
 </section>
 
+<script src="../assets/js/profile.js"></script>
 <script>
 /* Dashboard home prototype: mock only. One week object, day cycler. */
 (function () {
@@ -125,7 +126,8 @@ try {
   var DAY_MEALS = [[0, 1, 2], [5, 3, 4], [1, 4, 0], [2, 5, 3], [0, 3, 1], [4, 2, 5], [3, 0, 4]];
   var DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   var SLOTS = ["Breakfast", "Lunch", "Dinner"];
-  var KCAL_TARGET = 1500;
+  var KCAL_TARGET = window.NutriTipid ? NutriTipid.kcalTarget() : 1500;
+  document.getElementById("kcalCap").textContent = "target " + KCAL_TARGET.toLocaleString();
 
   var budget = 100;
   try {

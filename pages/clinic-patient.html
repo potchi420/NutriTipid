@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patient report - NutriTipid</title>
+<meta name="description" content="Read-only weight and week report for clinic counseling.">
+<link rel="icon" href="../assets/img/logo_tight.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+/* Theme: same saved choice as the rest of the site, no framework. */
+try {
+  var t = localStorage.getItem("nutritipid-theme");
+  if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.setAttribute("data-theme", "dark");
+} catch (e) {}
+</script>
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/auth.css">
+<link rel="stylesheet" href="../assets/css/planner.css">
+<link rel="stylesheet" href="../assets/css/clinic.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-row">
+    <a class="brand" href="../index.html" aria-label="NutriTipid home">
+      <img src="../assets/img/logo_tight.svg" alt="NutriTipid" class="brand-logo" width="543" height="493">
+    </a>
+    <nav class="app-nav" aria-label="App">
+      <a href="clinic.html" class="header-link is-active" aria-current="page">Patients</a>
+    </nav>
+    <div class="header-actions">
+      <button id="themeBtn" class="theme-btn" aria-label="Switch color mode">
+        <svg id="themeMoon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg id="themeSun" class="is-hidden" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <span id="themeLabel">Dark</span>
+      </button>
+      <a href="login.html" class="header-link">Log out</a>
+    </div>
+  </div>
+</header>
+
+<main class="clinic-wrap">
+  <a class="back-link" href="clinic.html">&larr; Back to patients</a>
+
+  <div class="profile-head" id="patHead">
+    <span class="profile-avatar" id="patAvatar" aria-hidden="true">MS</span>
+    <div class="profile-id">
+      <strong id="patName">Maria Santos</strong>
+      <span id="patMeta">maria@example.com &middot; Student &middot; Sharing consented</span>
+    </div>
+    <span class="ro-pill" style="margin-left:auto; align-self:center">Read-only</span>
+  </div>
+
+  <div class="profile-facts tabular" id="patFacts">
+    <div class="fact">
+      <span>BMI</span>
+      <div class="fact-num"><b id="factBmi">&mdash;</b><i id="factCat"></i></div>
+    </div>
+    <div class="fact">
+      <span>Latest weight</span>
+      <div class="fact-num"><b id="factKg">&mdash;</b></div>
+    </div>
+    <div class="fact">
+      <span>Pesos per day</span>
+      <div class="fact-num"><b id="factBudget">&mdash;</b></div>
+    </div>
+  </div>
+
+  <div class="week-grid" id="reportBody">
+    <div class="panel">
+      <h3>Weight trend</h3>
+      <svg id="trendChart" class="clinic-chart" viewBox="0 0 560 260" role="img" aria-label="Weight trend from logged weigh-ins"></svg>
+      <p class="report-note" id="weightDelta"></p>
+    </div>
+    <div class="panel">
+      <h3>Week summary</h3>
+      <div class="meter" style="margin-top:14px">
+        <div class="top"><span>Calories</span><span class="tabular" id="calCap"></span></div>
+        <div class="bar" style="margin-top:8px"><i class="y" id="calBar" style="width:0%"></i></div>
+      </div>
+      <div class="meter" style="margin-top:14px">
+        <div class="top"><span>Budget</span><span class="tabular" id="budCap"></span></div>
+        <div class="bar" style="margin-top:8px"><i class="g" id="budBar" style="width:0%"></i></div>
+      </div>
+      <div class="meter" style="margin-top:14px">
+        <div class="top"><span>Protein</span><span class="tabular" id="proCap"></span></div>
+        <div class="bar" style="margin-top:8px"><i class="g" id="proBar" style="width:0%"></i></div>
+      </div>
+      <p class="report-note" id="sumNote"></p>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:24px" id="planPanel">
+    <h3>Their 7-day plan</h3>
+    <div id="planLines"></div>
+    <p class="report-note">Generated around their daily budget. Prices from the canteen board.</p>
+  </div>
+
+  <p class="form-note" id="viewNote" style="margin-top:14px">Read-only view. This visit is written to the access log.</p>
+</main>
+
+<script src="../assets/js/profile.js"></script>
+<script src="../assets/js/clinic.js"></script>
+<script>
+/* Patient report prototype: read-only Module 6 view for the clinic. */
+(function () {
+  "use strict";
+  var id = new URLSearchParams(window.location.search).get("p") || "maria";
+  var p = NutriTipidClinic.find(id);
+  var head = document.getElementById("patHead");
+  var facts = document.getElementById("patFacts");
+  var body = document.getElementById("reportBody");
+  var planPanel = document.getElementById("planPanel");
+  var viewNote = document.getElementById("viewNote");
+
+  if (!p || !p.consented) {
+    head.classList.add("is-hidden");
+    facts.classList.add("is-hidden");
+    body.classList.add("is-hidden");
+    planPanel.classList.add("is-hidden");
+    viewNote.textContent = p && !p.consented
+      ? p.name + " has not consented to clinic sharing. Ask them to switch sharing on in their profile."
+      : "No student record matches that link.";
+    viewNote.classList.add("is-error");
+    return;
+  }
+
+  /* Identity + facts. */
+  document.getElementById("patAvatar").textContent = p.initials;
+  document.getElementById("patAvatar").style.background = p.color;
+  document.getElementById("patName").textContent = p.name;
+  document.getElementById("patMeta").textContent = p.email + " \u00B7 Student \u00B7 Sharing consented";
+  if (p.bmi) {
+    document.getElementById("factBmi").textContent = p.bmi.toFixed(1);
+    var cat = document.getElementById("factCat");
+    cat.textContent = p.bmiCat[0];
+    cat.className = p.bmiCat[1];
+  }
+  if (p.weight.length) document.getElementById("factKg").textContent = p.weight[p.weight.length - 1].kg.toFixed(1) + " kg";
+  document.getElementById("factBudget").textContent = "P" + p.budget;
+
+  /* Week summary meters, all derived from the same rows. */
+  var s = p.summary;
+  document.getElementById("calCap").textContent = s.avgKcal.toLocaleString() + " avg. vs " + p.kcalTarget.toLocaleString() + " target";
+  document.getElementById("calBar").style.width = Math.min(100, s.kcalPct) + "%";
+  document.getElementById("budCap").textContent = s.withinBudget + " of " + s.n + " days within P" + p.budget;
+  document.getElementById("budBar").style.width = s.budgetPct + "%";
+  document.getElementById("proCap").textContent = s.proteinHits + " of " + s.n + " days hit " + p.proteinGoal + "g \u00B7 avg " + s.avgProtein + "g";
+  document.getElementById("proBar").style.width = s.proteinPct + "%";
+  document.getElementById("sumNote").textContent =
+    "P" + s.avgSpend + " per day avg. " + (p.weightDelta < 0 ? "Down " + Math.abs(p.weightDelta) : p.weightDelta > 0 ? "Up " + p.weightDelta : "Level") + " kg across " + p.weight.length + " weigh-ins.";
+
+  /* Weight chart: same density rules as the tracker view. */
+  var svg = document.getElementById("trendChart");
+  var NS = "http://www.w3.org/2000/svg";
+  function el(name, attrs, text) {
+    var node = document.createElementNS(NS, name);
+    for (var k in attrs) node.setAttribute(k, attrs[k]);
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+  function renderTrend() {
+    if (!p.weight.length) return;
+    svg.innerHTML = "";
+    var narrow = window.innerWidth < 640;
+    var W = 560, H = 260, L = 56, R = 18, T = 18, B = 44;
+    var vals = p.weight.map(function (w) { return w.kg; });
+    var lo = Math.floor(Math.min.apply(null, vals)) - 1;
+    var hi = Math.ceil(Math.max.apply(null, vals)) + 1;
+    var gridCount = narrow ? 2 : 4;
+    var tickFs = narrow ? 21 : 11;
+    var dotR = narrow ? 6.5 : 5;
+    var n = p.weight.length;
+    function x(i) { return L + (n === 1 ? (W - L - R) / 2 : (W - L - R) * i / (n - 1)); }
+    function y(k) { return T + (H - T - B) * (1 - (k - lo) / (hi - lo)); }
+    var gvCount = gridCount + 1;
+    for (var g = 0; g < gvCount; g++) {
+      var kv = lo + (hi - lo) * g / (gvCount - 1);
+      var gy = y(kv);
+      svg.appendChild(el("line", { x1: L, y1: gy, x2: W - R, y2: gy, class: "grid-line" }));
+      svg.appendChild(el("text", { x: L - 8, y: gy + 4, "text-anchor": "end", "font-size": tickFs, class: "tick" }, kv.toFixed(0)));
+    }
+    var d = "";
+    p.weight.forEach(function (w, i) { d += (i ? "L" : "M") + x(i).toFixed(1) + " " + y(w.kg).toFixed(1) + " "; });
+    svg.appendChild(el("path", { d: d, class: "trend-line" }));
+    p.weight.forEach(function (w, i) {
+      var showLabel = narrow ? (i === 0 || i === n - 1) : true;
+      var dot = el("circle", { cx: x(i), cy: y(w.kg), r: dotR, class: "pt" });
+      var title = el("title");
+      title.textContent = w.label + " \u00B7 " + w.kg.toFixed(1) + " kg";
+      dot.appendChild(title);
+      svg.appendChild(dot);
+      if (showLabel) {
+        svg.appendChild(el("text", { x: x(i), y: H - 12, "text-anchor": "middle", "font-size": tickFs, class: "tick" }, w.label));
+      }
+    });
+  }
+  var tick = false;
+  window.addEventListener("resize", function () {
+    if (tick) return;
+    tick = true;
+    requestAnimationFrame(function () { tick = false; renderTrend(); });
+  });
+  renderTrend();
+
+  /* Week plan rows. */
+  var planLines = document.getElementById("planLines");
+  p.plan.forEach(function (day) {
+    var row = document.createElement("div");
+    row.className = "plan-line";
+    var leftWrap = document.createElement("span");
+    leftWrap.className = "who";
+    var strong = document.createElement("strong");
+    strong.textContent = day.day;
+    var dishes = document.createElement("span");
+    dishes.className = "dishes";
+    dishes.textContent = day.dishes.join(" \u00B7 ");
+    leftWrap.appendChild(strong);
+    leftWrap.appendChild(dishes);
+    if (day.total > p.budget) {
+      var over = document.createElement("span");
+      over.className = "over";
+      over.textContent = "P" + (day.total - p.budget) + " over";
+      leftWrap.appendChild(over);
+    }
+    var right = document.createElement("b");
+    right.textContent = "P" + day.total;
+    row.appendChild(leftWrap); row.appendChild(right);
+    planLines.appendChild(row);
+  });
+
+  /* Audit: every view writes AccessLog. */
+  NutriTipidClinic.logView(p);
+  var stamp = NutriTipidClinic.recentLog()[0];
+  if (stamp) {
+    viewNote.textContent = "Read-only view. This visit was logged " + stamp.at +
+      " \u00B7 " + NutriTipidClinic.viewerName();
+  }
+})();
+</script>
+<script src="../assets/js/theme.js"></script>
+</body>
+</html>

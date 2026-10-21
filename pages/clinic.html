@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clinic patients - NutriTipid</title>
+<meta name="description" content="Read-only patient list for University Clinic counselors.">
+<link rel="icon" href="../assets/img/logo_tight.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+/* Theme: same saved choice as the rest of the site, no framework. */
+try {
+  var t = localStorage.getItem("nutritipid-theme");
+  if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.setAttribute("data-theme", "dark");
+} catch (e) {}
+</script>
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/auth.css">
+<link rel="stylesheet" href="../assets/css/clinic.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-row">
+    <a class="brand" href="../index.html" aria-label="NutriTipid home">
+      <img src="../assets/img/logo_tight.svg" alt="NutriTipid" class="brand-logo" width="543" height="493">
+    </a>
+    <nav class="app-nav" aria-label="App">
+      <a href="clinic.html" class="header-link is-active" aria-current="page">Patients</a>
+    </nav>
+    <div class="header-actions">
+      <button id="themeBtn" class="theme-btn" aria-label="Switch color mode">
+        <svg id="themeMoon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg id="themeSun" class="is-hidden" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <span id="themeLabel">Dark</span>
+      </button>
+      <a href="login.html" class="header-link">Log out</a>
+    </div>
+  </div>
+</header>
+
+<main class="clinic-wrap">
+  <h1>Patients.</h1>
+  <p class="auth-sub">Students who consented to clinic monitoring.</p>
+
+  <input class="auth-input" id="patientSearch" type="search" placeholder="Search a registered student" aria-label="Search a registered student" style="margin-top:20px">
+  <p class="patient-count" id="patientCount">3 patients opted in to sharing.</p>
+
+  <div class="diary" id="patientList"></div>
+
+  <div class="panel" style="margin-top:24px">
+    <h3>Recent access log</h3>
+    <div id="logList"></div>
+    <p class="report-note">Every patient view is written here. Clinic accounts are read-only.</p>
+  </div>
+</main>
+
+<script src="../assets/js/profile.js"></script>
+<script src="../assets/js/clinic.js"></script>
+<script>
+/* Clinic lobby prototype: mock only. Consented patients only. */
+(function () {
+  "use strict";
+  var listEl = document.getElementById("patientList");
+  var countEl = document.getElementById("patientCount");
+  var searchEl = document.getElementById("patientSearch");
+  var logEl = document.getElementById("logList");
+  var patients = NutriTipidClinic.patients();
+  var consentedCount = patients.filter(function (p) { return p.consented; }).length;
+
+  function row(p) {
+    if (!p.consented) {
+      var div = document.createElement("div");
+      div.className = "meal patient-row is-denied";
+      var av = document.createElement("span");
+      av.className = "clinic-avatar";
+      av.style.background = p.color;
+      av.textContent = p.initials;
+      av.setAttribute("aria-hidden", "true");
+      var who = document.createElement("div");
+      who.className = "who";
+      var strong = document.createElement("strong");
+      strong.textContent = p.name;
+      var note = document.createElement("span");
+      note.className = "denied-note";
+      note.textContent = "Consent to sharing not on record.";
+      who.appendChild(strong); who.appendChild(note);
+      var nums = document.createElement("div");
+      nums.className = "nums";
+      var pill = document.createElement("span");
+      pill.className = "share-pill is-denied";
+      pill.textContent = "Not sharing";
+      nums.appendChild(pill);
+      div.appendChild(av); div.appendChild(who); div.appendChild(nums);
+      return div;
+    }
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "meal patient-row";
+    btn.setAttribute("aria-label", "Open read-only report for " + p.name);
+    var s = p.summary || {};
+    var av2 = document.createElement("span");
+    av2.className = "clinic-avatar";
+    av2.style.background = p.color;
+    av2.textContent = p.initials;
+    av2.setAttribute("aria-hidden", "true");
+    var who2 = document.createElement("div");
+    who2.className = "who";
+    var strong2 = document.createElement("strong");
+    strong2.textContent = p.name;
+    var meta = document.createElement("span");
+    meta.textContent = p.email + " \u00B7 P" + p.budget + " a day";
+    who2.appendChild(strong2); who2.appendChild(meta);
+    if (p.bmi) {
+      var bmiChip = document.createElement("span");
+      bmiChip.className = "share-pill " + (p.bmiCat[1] || "");
+      bmiChip.textContent = p.bmi + " \u00B7 " + p.bmiCat[0];
+      who2.appendChild(bmiChip);
+    }
+    var nums2 = document.createElement("div");
+    nums2.className = "nums";
+    var kg = document.createElement("b");
+    kg.textContent = p.weight.length ? p.weight[p.weight.length - 1].kg.toFixed(1) + " kg" : "\u2014";
+    var cap = document.createElement("span");
+    cap.textContent = "Latest weight";
+    nums2.appendChild(kg); nums2.appendChild(cap);
+    btn.appendChild(av2); btn.appendChild(who2); btn.appendChild(nums2);
+    btn.addEventListener("click", function () {
+      window.location.href = "clinic-patient.html?p=" + p.id;
+    });
+    return btn;
+  }
+
+  function render(filter) {
+    listEl.innerHTML = "";
+    var shown = 0;
+    patients.forEach(function (p) {
+      if (filter && p.name.toLowerCase().indexOf(filter) < 0 && p.email.toLowerCase().indexOf(filter) < 0) return;
+      listEl.appendChild(row(p));
+      shown++;
+    });
+    if (!shown) {
+      var empty = document.createElement("p");
+      empty.className = "denied-note";
+      empty.style.padding = "16px 20px";
+      empty.textContent = "No students match that search.";
+      listEl.appendChild(empty);
+    }
+    var s = searchEl.value.trim().toLowerCase();
+    countEl.textContent = s
+      ? shown + " match" + (shown === 1 ? "" : "es") + "."
+      : consentedCount + " patients opted in to sharing.";
+  }
+  searchEl.addEventListener("input", function () { render(searchEl.value.trim().toLowerCase()); });
+  render("");
+
+  function renderLog() {
+    logEl.innerHTML = "";
+    var recent = NutriTipidClinic.recentLog().slice(0, 4);
+    if (!recent.length) {
+      var none = document.createElement("p");
+      none.className = "denied-note";
+      none.textContent = "No views logged yet.";
+      logEl.appendChild(none);
+      return;
+    }
+    recent.forEach(function (en) {
+      var r = document.createElement("div");
+      r.className = "log-row";
+      var left = document.createElement("span");
+      left.textContent = en.patient + " \u00B7 " + en.action;
+      var right = document.createElement("span");
+      right.className = "tabular";
+      right.textContent = en.at;
+      r.appendChild(left); r.appendChild(right);
+      logEl.appendChild(r);
+    });
+  }
+  renderLog();
+})();
+</script>
+<script src="../assets/js/theme.js"></script>
+</body>
+</html>

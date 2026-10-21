@@ -127,8 +127,21 @@ try {
       setTimeout(function () {
         loginBtn.disabled = false;
         loginBtn.innerHTML = "Log In &rarr;";
-        ok("Welcome back. Taking you to your dashboard...");
-        setTimeout(function () { window.location.href = "dashboard.html"; }, 900);
+        /* Email decides the role, like AppRole in the schema. */
+        var lowered = mail.toLowerCase();
+        var isClinic = lowered.indexOf("clinic") === 0;
+        var localPart = mail.split("@")[0] || "Student";
+        var pretty = localPart.charAt(0).toUpperCase() + localPart.slice(1).replace(/[._]/g, " ");
+        try {
+          localStorage.setItem("nutritipid-account", JSON.stringify({
+            name: isClinic ? "University Clinic" : pretty,
+            email: mail,
+            since: new Date().toISOString().slice(0, 10),
+            role: isClinic ? "clinic" : "user"
+          }));
+        } catch (err) {}
+        ok(isClinic ? "Welcome back. Opening your patient list..." : "Welcome back. Taking you to your dashboard...");
+        setTimeout(function () { window.location.href = isClinic ? "clinic.html" : "dashboard.html"; }, 900);
       }, 700);
     });
   }

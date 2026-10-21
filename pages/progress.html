@@ -148,6 +148,7 @@ try {
   <a href="profiler.html">Profile</a>
 </nav>
 
+<script src="../assets/js/profile.js"></script>
 <script>
 /* Progress dashboard: mock only. One deterministic pool, no backend. */
 (function () {
@@ -172,7 +173,7 @@ try {
       { day: "Sat", kcal: 1720, spent: 118, protein: 66 },
       { day: "Sun", kcal: 1580, spent: 96, protein: 63 }
     ],
-    kcalTarget: 1500,
+    kcalTarget: window.NutriTipid ? NutriTipid.kcalTarget() : 1500,
     proteinTarget: 60,
     mealsPlanned: 21,
     mealsAsPlanned: 19,

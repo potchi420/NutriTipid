@@ -136,6 +136,7 @@ try {
         <div class="big-peso tabular" id="budgetOut">P100</div>
         <input id="budget" name="budget" type="range" min="50" max="500" step="5" value="100">
         <div class="range-ends tabular"><span>P50</span><span>P500</span></div>
+        <p class="form-note" id="kcalNote">Your plan targets about 1,500 kcal a day.</p>
       </div>
 
       <div class="panel">
@@ -169,6 +170,7 @@ try {
   </form>
 </main>
 
+<script src="../assets/js/profile.js"></script>
 <script>
 /* Profiler prototype: mock only. Saves to localStorage, then planner.
    Rehydrates saved values so editing never shows blank defaults. */
@@ -282,10 +284,27 @@ try {
       factCat.className = "";
     }
     factBudget.textContent = "P" + budget.value;
+    updNote();
+  }
+  var kcalNote = document.getElementById("kcalNote");
+  function updNote() {
+    if (!window.NutriTipid) return;
+    var t = NutriTipid.kcalTarget({
+      age: Number(age.value),
+      sex: sex.value,
+      weight: weightUnit.value === "lb" ? Number(weight.value) * 0.453592 : Number(weight.value),
+      height: heightUnit.value === "ft" ? Number(height.value) * 30.48 : Number(height.value),
+      activity: activity.value,
+      goal: goal.value
+    });
+    kcalNote.textContent = "Your plan targets about " + t.toLocaleString() + " kcal a day.";
   }
   [weight, weightUnit, height, heightUnit, budget].forEach(function (el) {
     el.addEventListener("input", updMetrics);
     el.addEventListener("change", updMetrics);
+  });
+  [age, sex, activity, goal].forEach(function (el) {
+    el.addEventListener("change", updNote);
   });
   updMetrics();
 
