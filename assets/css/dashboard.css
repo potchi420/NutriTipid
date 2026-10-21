@@ -73,7 +73,7 @@
   justify-content: space-between;
   margin-bottom: 10px;
 }
-.meal-sec-head h3 {
+.meal-sec-head h2 {
   margin: 0;
   font-size: 18px;
   font-weight: 500;
@@ -86,13 +86,16 @@
   font: inherit;
   font-size: 14px;
   font-weight: 600;
-  color: var(--primary);
+  color: var(--stamp);
   cursor: pointer;
   white-space: nowrap;
 }
 .add-btn:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+[data-theme="dark"] .add-btn {
+  color: var(--primary);
 }
 .meal-dot {
   width: 44px;

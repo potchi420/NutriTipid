@@ -616,7 +616,7 @@ a {
   color: var(--muted);
   letter-spacing: 0.02em;
 }
-.fact h3 {
+.fact h2 {
   margin: 0;
   font-size: 17px;
   letter-spacing: -0.01em;
@@ -666,9 +666,9 @@ a {
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--primary);
+  color: var(--stamp);
 }
-.step h3 {
+.step h2 {
   margin: 10px 0 0;
   font-size: 24px;
   letter-spacing: -0.02em;
@@ -1000,7 +1000,7 @@ a {
 .swap-body {
   padding: 18px 20px;
 }
-.swap-body h3 {
+.swap-body h2 {
   margin: 0;
   font-size: 17px;
 }
@@ -1044,7 +1044,7 @@ a {
   background: var(--surface);
   padding: 24px;
 }
-.panel h3 {
+.panel h2 {
   margin: 0;
   font-size: 18px;
   letter-spacing: -0.01em;
@@ -1157,7 +1157,7 @@ input[type="range"] {
     gap: 36px;
   }
 }
-.two-col h3 {
+.two-col h2 {
   margin: 0;
   font-size: 21px;
   letter-spacing: -0.02em;
@@ -1682,9 +1682,8 @@ input[type="range"] {
     padding: 8px 4px;
     border-radius: 8px;
   }
-  .tabbar a.is-active {
-    color: var(--primary);
-    font-weight: 700;
+.tabbar a.is-active {
+    color: var(--stamp);
   }
   .dash-wrap,
   .plan-wrap,
@@ -1768,7 +1767,7 @@ input[type="range"] {
   justify-content: space-between;
   gap: 12px;
 }
-.sheet-head h3 {
+.sheet-head h2 {
   margin: 0;
   font-size: 18px;
   letter-spacing: -0.01em;
@@ -1821,8 +1820,8 @@ input[type="range"] {
     background-color 0.15s ease;
 }
 .sheet-btn:hover {
-  color: var(--primary);
-  border-color: var(--primary);
+  color: var(--stamp);
+  border-color: var(--stamp);
   background: var(--soft);
 }
 .sheet-btn:focus-visible {
@@ -1834,6 +1833,14 @@ input[type="range"] {
   font-size: 13px;
   color: var(--muted);
   line-height: 1.6;
+}
+[data-theme="dark"] .step-kicker,
+[data-theme="dark"] .tabbar a.is-active {
+  color: var(--primary);
+}
+[data-theme="dark"] .sheet-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
 }
 @media (prefers-reduced-motion: reduce) {
   .sheet-scrim,

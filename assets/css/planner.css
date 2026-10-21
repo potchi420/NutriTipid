@@ -47,7 +47,7 @@ select.auth-input {
   background: var(--surface);
 }
 .profile-chip a {
-  color: var(--primary);
+  color: var(--stamp);
   font-weight: 600;
   text-decoration: none;
 }
@@ -295,7 +295,7 @@ select.auth-input {
     background-color 0.15s ease;
 }
 .chip:hover {
-  color: var(--primary);
+  color: var(--stamp);
   border-color: var(--primary);
 }
 .chip.is-on {
@@ -306,6 +306,10 @@ select.auth-input {
 .chip:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+[data-theme="dark"] .chip:hover,
+[data-theme="dark"] .profile-chip a {
+  color: var(--primary);
 }
 @media (max-width: 640px) {
   .profile-facts {

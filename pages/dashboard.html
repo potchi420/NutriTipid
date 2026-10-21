@@ -58,13 +58,13 @@ try {
 
   <div class="hero-duo">
     <div class="panel">
-      <h3>Pesos left</h3>
+      <h2>Pesos left</h2>
       <div class="hero-num tabular" id="pesosLeft">P0</div>
       <p class="hero-cap tabular" id="pesosCap">of P100 today</p>
       <div class="bar" style="margin-top:12px"><i class="g" id="pesosBar" style="width:0%"></i></div>
     </div>
     <div class="panel">
-      <h3>Calories in</h3>
+      <h2>Calories in</h2>
       <div class="hero-num tabular" id="kcalIn">0</div>
       <p class="hero-cap" id="kcalCap">target 1,500</p>
       <div class="bar" style="margin-top:12px"><i class="y" id="kcalBar" style="width:0%"></i></div>
@@ -74,7 +74,7 @@ try {
   <div id="mealSecs"></div>
 
   <div class="panel" style="margin-top:24px">
-    <h3>Macros today</h3>
+    <h2>Macros today</h2>
     <div class="macro-bar" aria-hidden="true">
       <i id="macroP" style="background:var(--primary)"></i><i id="macroC" style="background:var(--accent)"></i><i id="macroF" style="background:var(--muted)"></i>
     </div>
@@ -86,13 +86,13 @@ try {
   </div>
 
   <div class="panel" style="margin-top:24px">
-    <h3>Micros today</h3>
+    <h2>Micros today</h2>
     <div id="microRows"></div>
     <p class="verdict">Share of daily RENI.</p>
   </div>
 
   <div class="panel" style="margin-top:24px">
-    <h3>Tomorrow, planned</h3>
+    <h2>Tomorrow, planned</h2>
     <p class="verdict">A full 7-day board built around your budget.</p>
     <p style="margin:14px 0 0"><a href="planner.html" class="text-link">Open meal planner</a></p>
   </div>
@@ -101,7 +101,7 @@ try {
 <div class="sheet-scrim" id="addScrim" aria-hidden="true"></div>
 <section class="sheet" id="addSheet" role="dialog" aria-modal="true" aria-labelledby="addTitle" tabindex="-1" aria-hidden="true">
   <div class="sheet-head">
-    <h3 id="addTitle">Add to Breakfast</h3>
+    <h2 id="addTitle">Add to Breakfast</h2>
     <button type="button" class="sheet-close" id="addClose" aria-label="Close add food list">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>
@@ -287,7 +287,7 @@ try {
       sec.className = "meal-sec";
       var head = document.createElement("div");
       head.className = "meal-sec-head";
-      var h = document.createElement("h3");
+      var h = document.createElement("h2");
       h.textContent = slot;
       var add = document.createElement("button");
       add.type = "button";

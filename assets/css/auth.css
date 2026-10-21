@@ -102,7 +102,7 @@
   margin-top: 10px;
 }
 .link-green {
-  color: var(--primary);
+  color: var(--stamp);
   font-weight: 600;
   font-size: 14px;
   text-decoration: none;
@@ -110,6 +110,9 @@
 .link-green:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+[data-theme="dark"] .link-green {
+  color: var(--primary);
 }
 .auth-submit {
   width: 100%;
