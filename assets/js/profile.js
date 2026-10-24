@@ -12,27 +12,41 @@
     return null;
   }
 
-  /* Calorie goal: Mifflin-St Jeor BMR x activity, with a gentle goal
-     factor (lose 0.9 / hold 1.0 / gain 1.1), rounded to 50 kcal and
-     clamped to a sane band. No saved profile falls back to 1,500 so
-     every sample page keeps its coherent mock story. Pages that need
-     a live preview (profiler) pass their own source object. */
-  function kcalTarget(src) {
+  /* Calorie goal: Mifflin-St Jeor BMR x activity, then a goal step
+     inside the locked 300-500 band (lose -300, hold 0, gain +300),
+     rounded to 50 kcal and clamped to a sane band. No saved profile
+     falls back to 1,500 so every sample page keeps its coherent mock
+     story. Pages that need a live preview (profiler) pass their own
+     source object; kcalParts() exposes the full breakdown. */
+  function kcalParts(src) {
+    var empty = { bmr: 0, tdee: 0, target: 1500, deficit: 0, has: false };
     var p = src || readProfile();
-    if (!p) return 1500;
+    if (!p) return empty;
     var w = Number(p.weight);
     var h = Number(p.height);
     var a = Number(p.age);
-    if (!(w > 0) || !(h > 0) || !(a > 0)) return 1500;
+    if (!(w > 0) || !(h > 0) || !(a > 0)) return empty;
     var sex = p.sex;
     var bmr = 10 * w + 6.25 * h - 5 * a + (sex === "M" ? 5 : sex === "F" ? -161 : -78);
-    var act = parseFloat(p.activity) || 1.2;
-    var f = p.goal === "gain" ? 1.1 : p.goal === "hold" ? 1 : 0.9;
-    var t = Math.round(bmr * act * f / 50) * 50;
-    if (t < 1200) t = 1200;
-    if (t > 2500) t = 2500;
-    return t;
+    var tdee = bmr * (parseFloat(p.activity) || 1.2);
+    var target = p.goal === "gain" ? tdee + 300 : p.goal === "hold" ? tdee : tdee - 300;
+    target = Math.round(target / 50) * 50;
+    if (target < 1200) target = 1200;
+    if (target > 2500) target = 2500;
+    return {
+      bmr: Math.round(bmr),
+      tdee: Math.round(tdee),
+      target: target,
+      deficit: Math.round(tdee) - target,
+      has: true
+    };
   }
+
+  function kcalTarget(src) {
+    return kcalParts(src).target;
+  }
+
+  window.NutriTipid = { kcalTarget: kcalTarget, kcalParts: kcalParts, allergies: allergies };
 
   /* Active allergies as stored labels ("None" never counts). */
   function allergies() {
@@ -40,6 +54,4 @@
     if (!p || !Array.isArray(p.allergies)) return [];
     return p.allergies.filter(function (v) { return v && v !== "None"; });
   }
-
-  window.NutriTipid = { kcalTarget: kcalTarget, allergies: allergies };
 })();

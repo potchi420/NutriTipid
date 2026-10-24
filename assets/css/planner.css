@@ -273,6 +273,18 @@ select.auth-input {
   color: var(--muted);
   line-height: 1.6;
 }
+.first-plan {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.first-plan p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink);
+}
 .chip-row {
   display: flex;
   flex-wrap: wrap;

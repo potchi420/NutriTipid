@@ -62,11 +62,11 @@ try {
   <div class="profile-facts tabular">
     <div class="fact">
       <span>BMI</span>
-      <div class="fact-num"><b id="factBmi">22.6</b><i id="factCat">Normal</i></div>
+      <div class="fact-num"><b id="factBmi">20.4</b><i id="factCat">Normal</i></div>
     </div>
     <div class="fact">
       <span>Latest weight</span>
-      <div class="fact-num"><b id="factWeight">62 kg</b></div>
+      <div class="fact-num"><b id="factWeight">55 kg</b></div>
     </div>
     <div class="fact">
       <span>Pesos per day</span>
@@ -97,7 +97,7 @@ try {
           <div>
             <label class="auth-label" for="weight">Weight</label>
             <div class="unit-row">
-              <input class="auth-input" id="weight" name="weight" type="number" min="0" value="62" required>
+              <input class="auth-input" id="weight" name="weight" type="number" min="0" value="55" required>
               <select class="auth-input" id="weightUnit" name="weightUnit" aria-label="Weight unit">
                 <option value="kg" selected>kg</option>
                 <option value="lb">lb</option>
@@ -107,7 +107,7 @@ try {
           <div>
             <label class="auth-label" for="height">Height</label>
             <div class="unit-row">
-              <input class="auth-input" id="height" name="height" type="number" min="0" value="165" required>
+              <input class="auth-input" id="height" name="height" type="number" min="0" value="164" required>
               <select class="auth-input" id="heightUnit" name="heightUnit" aria-label="Height unit">
                 <option value="cm" selected>cm</option>
                 <option value="ft">ft</option>
@@ -118,8 +118,8 @@ try {
 
         <label class="auth-label" for="activity">Weekly activity</label>
         <select class="auth-input" id="activity" name="activity">
-          <option value="1.2" selected>Sedentary (office job)</option>
-          <option value="1.375">Light Exercise (1-2 days/week)</option>
+          <option value="1.2">Sedentary (office job)</option>
+          <option value="1.375" selected>Light Exercise (1-2 days/week)</option>
           <option value="1.55">Moderate Exercise (3-5 days/week)</option>
           <option value="1.725">Heavy Exercise (6-7 days/week)</option>
           <option value="1.9">Athlete (2x per day)</option>
@@ -289,15 +289,20 @@ try {
   var kcalNote = document.getElementById("kcalNote");
   function updNote() {
     if (!window.NutriTipid) return;
-    var t = NutriTipid.kcalTarget({
+    var src = {
       age: Number(age.value),
       sex: sex.value,
       weight: weightUnit.value === "lb" ? Number(weight.value) * 0.453592 : Number(weight.value),
       height: heightUnit.value === "ft" ? Number(height.value) * 30.48 : Number(height.value),
       activity: activity.value,
       goal: goal.value
-    });
-    kcalNote.textContent = "Your plan targets about " + t.toLocaleString() + " kcal a day.";
+    };
+    var k = NutriTipid.kcalParts(src);
+    if (Math.abs(k.deficit) < 50) {
+      kcalNote.textContent = "You burn about " + k.tdee.toLocaleString() + " kcal a day. Your plan targets that burn, holding steady.";
+    } else {
+      kcalNote.textContent = "You burn about " + k.tdee.toLocaleString() + " kcal a day. Your plan targets " + k.target.toLocaleString() + " \u2014 about " + Math.abs(k.deficit).toLocaleString() + " kcal " + (k.deficit > 0 ? "deficit" : "surplus") + " a day.";
+    }
   }
   [weight, weightUnit, height, heightUnit, budget].forEach(function (el) {
     el.addEventListener("input", updMetrics);
@@ -370,6 +375,7 @@ try {
     <a href="progress.html">Progress</a>
     <a href="profiler.html" class="is-active" aria-current="page">Profile</a>
   </nav>
-<script src="../assets/js/theme.js"></script>
+<script src="../assets/js/theme.js"><script src="../assets/js/select.js"></script>
+</script>
 </body>
 </html>

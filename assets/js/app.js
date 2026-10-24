@@ -52,17 +52,15 @@
   }
 
   /* Diary sample days. Prices mirror the board. Labeled as samples. */
-  var thumbBase = "https://commons.wikimedia.org/wiki/Special:FilePath/";
-  function thumb(name) { return thumbBase + encodeURIComponent(name) + "?width=200"; }
   var thumbs = {
-    arroz: thumb("Arroz caldo from Street Sarap at the Terminal 3 of the Ninoy Aquino International Airport (2026-01-14).jpg"),
-    monggo: thumb("3778Ginisang monggo, sugpo at tokwa sa kamias 12.jpg"),
-    adobo: thumb("Chicken Adobo with Potatoes.jpg"),
-    tapsilog: thumb("Tapsilog in saudi arabia.jpg"),
-    sinigang: thumb("Sinigang na Baboy DSCF4234.jpg"),
-    gulay: thumb("Pinakbet on a white bowl.jpg"),
-    champorado: thumb("Champorado with tuyo and milk (cropped top view).jpg"),
-    pares: thumb("Beef Pares with Fried Rice.jpg")
+    arroz: "assets/img/dishes/arroz-caldo.jpg",
+    monggo: "assets/img/dishes/ginisang-monggo.jpg",
+    adobo: "assets/img/dishes/adobo.jpg",
+    tapsilog: "assets/img/dishes/tapsilog.jpg",
+    sinigang: "assets/img/dishes/sinigang-baboy.jpg",
+    gulay: "assets/img/dishes/pinakbet.png",
+    champorado: "assets/img/dishes/champorado.jpg",
+    pares: "assets/img/dishes/pares.jpg"
   };
   var days = [
     {

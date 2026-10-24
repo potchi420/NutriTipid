@@ -60,7 +60,7 @@
       ["Arroz caldo w/ egg", "Ginisang Monggo", "Adobong Kangkong"],
       ["Fried egg, half rice", "Pork Menudo", "Chicken Tinola"],
       ["Lugaw", "Chop Suey", "Adobong Kangkong"],
-      ["Arroz caldo w/ egg", "Pork Caldereta", "Chop Suey"],
+      ["Arroz caldo w/ egg", "Beef Caldereta", "Chop Suey"],
       ["Fried egg, half rice", "Chicken Adobo", "Ginisang Monggo"]
     ],
     andrea: [
@@ -79,8 +79,9 @@
     "Lugaw": 15, "Arroz caldo w/ egg": 30, "Fried egg, half rice": 20,
     "Chicken Tinola": 45, "Chicken Adobo": 40, "Pork Menudo": 45,
     "Pork Sinigang": 50, "Ginisang Monggo": 35, "Adobong Kangkong": 25,
-    "Pork Caldereta": 55, "Chop Suey": 35
+    "Beef Caldereta": 55, "Chop Suey": 35
   };
+
 
   var WEIGHTS = {
     maria: [["Sep 1", 72.5], ["Sep 5", 72.1], ["Sep 10", 71.8], ["Sep 15", 71.0], ["Sep 29", 69.8]],

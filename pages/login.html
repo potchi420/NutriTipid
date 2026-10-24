@@ -127,21 +127,32 @@ try {
       setTimeout(function () {
         loginBtn.disabled = false;
         loginBtn.innerHTML = "Log In &rarr;";
-        /* Email decides the role, like AppRole in the schema. */
+        /* Email decides the role, like AppRole in the schema. The three
+           demo personas are long-standing members; anyone else gets the
+           first-run setup unless they finished it before. */
         var lowered = mail.toLowerCase();
         var isClinic = lowered.indexOf("clinic") === 0;
+        var isPersona = isClinic || lowered.indexOf("maria") === 0 || lowered.indexOf("admin") === 0;
         var localPart = mail.split("@")[0] || "Student";
         var pretty = localPart.charAt(0).toUpperCase() + localPart.slice(1).replace(/[._]/g, " ");
+        var existing = null;
+        try { existing = JSON.parse(localStorage.getItem("nutritipid-account") || "null"); } catch (err) {}
+        var onboarded = isPersona || !!(existing && existing.email === mail && existing.onboarded);
         try {
           localStorage.setItem("nutritipid-account", JSON.stringify({
             name: isClinic ? "University Clinic" : pretty,
             email: mail,
-            since: new Date().toISOString().slice(0, 10),
-            role: isClinic ? "clinic" : "user"
+            since: (existing && existing.email === mail && existing.since) || new Date().toISOString().slice(0, 10),
+            role: isClinic ? "clinic" : "user",
+            onboarded: onboarded
           }));
         } catch (err) {}
-        ok(isClinic ? "Welcome back. Opening your patient list..." : "Welcome back. Taking you to your dashboard...");
-        setTimeout(function () { window.location.href = isClinic ? "clinic.html" : "dashboard.html"; }, 900);
+        ok(isClinic ? "Welcome back. Opening your patient list..."
+          : onboarded ? "Welcome back. Taking you to your dashboard..."
+          : "Found you. Finishing first-time setup...");
+        setTimeout(function () {
+          window.location.href = isClinic ? "clinic.html" : (onboarded ? "dashboard.html" : "onboard.html");
+        }, 900);
       }, 700);
     });
   }

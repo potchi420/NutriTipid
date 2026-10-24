@@ -1,0 +1,64 @@
+/* Onboarding: one card, three steps (how it works, profile, week gate).
+   Mock Module 1 onboarding path. Reads tokens from styles.css. Link
+   after auth.css and planner.css (reuses their form/chip pieces).
+   Reuses .panel, .auth-*, .field-2, .unit-row, .range-ends, .big-peso,
+   .chip, .agree-row, .btn, .text-link, .form-note. */
+.onboard-wrap {
+  width: min(560px, 100%);
+  margin: 0 auto;
+  padding: 32px max(24px, env(safe-area-inset-left)) 88px;
+}
+.onboard-wrap h1 {
+  margin: 10px 0 0;
+  font-size: clamp(30px, 5vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.step-dots {
+  display: flex;
+  gap: 8px;
+  margin: 18px 2px 16px;
+}
+.step-dots i {
+  height: 6px;
+  flex: 1;
+  border-radius: 999px;
+  background: var(--line);
+}
+.step-dots i.is-here {
+  background: var(--primary);
+}
+.explain-row {
+  display: flex;
+  gap: 10px;
+  padding: 10px 2px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.explain-row b {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--stamp);
+}
+.explain-row + .explain-row {
+  border-top: 1px solid var(--line);
+}
+.step-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+.step-actions .auth-submit {
+  width: auto;
+  margin-top: 0;
+}
+.gate-line {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.6;
+}

@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Welcome - NutriTipid</title>
+<meta name="description" content="First-run setup: how it works, then your profile, then your week.">
+<link rel="icon" href="../assets/img/logo_tight.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+/* Theme: same saved choice as the rest of the site, no framework. */
+try {
+  var t = localStorage.getItem("nutritipid-theme");
+  if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.setAttribute("data-theme", "dark");
+} catch (e) {}
+</script>
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/auth.css">
+<link rel="stylesheet" href="../assets/css/planner.css">
+<link rel="stylesheet" href="../assets/css/onboard.css">
+</head>
+<body class="auth-page">
+
+<main class="onboard-wrap">
+  <h1>Welcome.</h1>
+  <p class="auth-sub">Three short steps and your first week is built.</p>
+
+  <div class="auth-card">
+    <div class="step-dots" aria-hidden="true">
+      <i id="dot1"></i><i id="dot2"></i><i id="dot3"></i>
+    </div>
+
+    <section id="ob1" aria-labelledby="ob1Title">
+      <h2 id="ob1Title" style="margin:0; font-size:22px; letter-spacing:-0.01em">How this works</h2>
+      <div class="explain-row" style="margin-top:10px"><b>1</b><span><strong>Tell us your numbers.</strong> Body metrics, a goal, and the pesos you can spend on food per day.</span></div>
+      <div class="explain-row"><b>2</b><span><strong>We build your week.</strong> A 7-day plan from nearby canteen meals, with price and nutrients on every dish.</span></div>
+      <div class="explain-row"><b>3</b><span><strong>Eat, log, weigh in.</strong> Adjust anything mid-week; the report shows how the week went.</span></div>
+      <div class="explain-row"><b>4</b><span><strong>About the deficit.</strong> Eat a few hundred kcal under what you burn. Weight moves slowly and rice stays on the menu.</span></div>
+      <p class="form-note" style="margin-top:12px">NutriTipid is a planning and counseling aid, not medical advice. Cases that need a doctor go to one.</p>
+      <div class="step-actions">
+        <button type="button" id="skipIntro" class="text-link" style="background:none;border:0;padding:0;font-weight:600;cursor:pointer">Skip the intro</button>
+        <button type="button" id="toStep2" class="btn btn-primary">Continue &rarr;</button>
+      </div>
+    </section>
+
+    <section id="ob2" class="is-hidden" aria-labelledby="ob2Title">
+      <h2 id="ob2Title" style="margin:0; font-size:22px; letter-spacing:-0.01em">Set your profile</h2>
+      <form id="onboardProfile" novalidate>
+        <div class="field-2" style="margin-top:14px">
+          <div>
+            <label class="auth-label" for="age">Age</label>
+            <input class="auth-input tabular" id="age" name="age" type="number" min="10" max="100" value="21" required>
+          </div>
+          <div>
+            <label class="auth-label" for="sex">Sex</label>
+            <select class="auth-input" id="sex" name="sex">
+              <option value="F" selected>Female</option>
+              <option value="M">Male</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-2" style="margin-top:12px">
+          <div>
+            <label class="auth-label" for="weight">Weight</label>
+            <div class="unit-row">
+              <input class="auth-input" id="weight" name="weight" type="number" min="0" value="55" required>
+              <select class="auth-input" id="weightUnit" name="weightUnit" aria-label="Weight unit">
+                <option value="kg" selected>kg</option>
+                <option value="lb">lb</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="auth-label" for="height">Height</label>
+            <div class="unit-row">
+              <input class="auth-input" id="height" name="height" type="number" min="0" value="164" required>
+              <select class="auth-input" id="heightUnit" name="heightUnit" aria-label="Height unit">
+                <option value="cm" selected>cm</option>
+                <option value="ft">ft</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <label class="auth-label" for="activity" style="margin-top:12px">Weekly activity</label>
+        <select class="auth-input" id="activity" name="activity">
+          <option value="1.2">Sedentary (office job)</option>
+          <option value="1.375" selected>Light Exercise (1-2 days/week)</option>
+          <option value="1.55">Moderate Exercise (3-5 days/week)</option>
+          <option value="1.725">Heavy Exercise (6-7 days/week)</option>
+          <option value="1.9">Athlete (2x per day)</option>
+        </select>
+
+        <label class="auth-label" for="goal" style="margin-top:12px">Goal for the term</label>
+        <select class="auth-input" id="goal" name="goal">
+          <option value="lose" selected>Lose weight steadily</option>
+          <option value="hold">Hold weight</option>
+          <option value="gain">Gain healthy weight</option>
+        </select>
+
+        <label class="auth-label" for="budget" style="margin-top:12px">Pesos per day</label>
+        <div class="big-peso tabular" id="budgetOut">P100</div>
+        <input id="budget" name="budget" type="range" min="50" max="500" step="5" value="100">
+        <div class="range-ends tabular"><span>P50</span><span>P500</span></div>
+        <p class="form-note" id="kcalNote">Your plan targets about 1,500 kcal a day.</p>
+
+        <span class="auth-label" style="display:block;margin-top:10px">Health conditions</span>
+        <div class="chip-row" id="conRow">
+          <button type="button" class="chip" data-val="Hypertension">Hypertension</button>
+          <button type="button" class="chip" data-val="Diabetes">Diabetes</button>
+          <button type="button" class="chip" data-val="Anemia">Anemia</button>
+          <button type="button" class="chip is-on" data-val="None">None</button>
+        </div>
+
+        <span class="auth-label" style="display:block;margin-top:2px">Allergies</span>
+        <div class="chip-row" id="allRow">
+          <button type="button" class="chip" data-val="Shrimp">Shrimp</button>
+          <button type="button" class="chip" data-val="Egg">Egg</button>
+          <button type="button" class="chip" data-val="Fish">Fish</button>
+          <button type="button" class="chip" data-val="Peanut">Peanut</button>
+          <button type="button" class="chip is-on" data-val="None">None</button>
+        </div>
+
+        <label class="agree-row" for="consentChk" style="margin-top:2px">
+          <input type="checkbox" id="consentChk" name="consentChk">
+          <span>University Clinic staff may view my progress read-only during counseling.</span>
+        </label>
+
+        <div class="step-actions">
+          <button type="button" id="backTo1" class="text-link" style="background:none;border:0;padding:0;font-weight:600;cursor:pointer">&larr; Back</button>
+          <button type="submit" class="btn btn-primary">Save and continue &rarr;</button>
+        </div>
+        <p class="auth-msg" id="onboardMsg" role="status"></p>
+      </form>
+    </section>
+
+    <section id="ob3" class="is-hidden" aria-labelledby="ob3Title">
+      <h2 id="ob3Title" style="margin:0; font-size:22px; letter-spacing:-0.01em">Your week is ready.</h2>
+      <p class="gate-line" id="gateLine">About 1,500 kcal a day target &middot; P100 daily budget &middot; 7 days planned.</p>
+      <p class="gate-line">Swipe the days. Tap any meal to swap it for a cheaper, protein-forward pick.</p>
+      <button type="button" id="toPlanner" class="btn btn-primary" style="margin-top:18px">Open my planner &rarr;</button>
+    </section>
+  </div>
+</main>
+
+<script src="../assets/js/profile.js"></script>
+<script>
+/* Onboarding prototype: mock only. Same storage shape as profiler.html;
+   one source of truth for the profile record. */
+(function () {
+  "use strict";
+  var STEP_KEY = "nutritipid-onboard-step";
+  var dots = [document.getElementById("dot1"), document.getElementById("dot2"), document.getElementById("dot3")];
+  var secs = [document.getElementById("ob1"), document.getElementById("ob2"), document.getElementById("ob3")];
+
+  function readJson(key, fallback) {
+    try {
+      var v = JSON.parse(localStorage.getItem(key) || "null");
+      if (v && typeof v === "object") return v;
+    } catch (e) {}
+    return fallback;
+  }
+
+  function show(n) {
+    secs.forEach(function (s, i) { s.classList.toggle("is-hidden", i !== n - 1); });
+    dots.forEach(function (d, i) { d.classList.toggle("is-here", i === n - 1); });
+    try { sessionStorage.setItem(STEP_KEY, String(n)); } catch (e) {}
+  }
+  var start = 1;
+  try {
+    var sv = parseInt(sessionStorage.getItem(STEP_KEY) || "1", 10);
+    if (sv >= 1 && sv <= 3) start = sv;
+  } catch (e) {}
+  show(start);
+
+  document.getElementById("toStep2").addEventListener("click", function () { show(2); });
+  document.getElementById("skipIntro").addEventListener("click", function () { show(2); });
+  document.getElementById("backTo1").addEventListener("click", function () { show(1); });
+
+  /* Profile form, same fields and payload as the profiler page. */
+  var form = document.getElementById("onboardProfile");
+  var age = document.getElementById("age");
+  var sex = document.getElementById("sex");
+  var weight = document.getElementById("weight");
+  var weightUnit = document.getElementById("weightUnit");
+  var height = document.getElementById("height");
+  var heightUnit = document.getElementById("heightUnit");
+  var activity = document.getElementById("activity");
+  var goal = document.getElementById("goal");
+  var budget = document.getElementById("budget");
+  var budgetOut = document.getElementById("budgetOut");
+  var msg = document.getElementById("onboardMsg");
+  var kcalNote = document.getElementById("kcalNote");
+
+  var saved = readJson("nutritipid-profile", null);
+  if (saved) {
+    if (typeof saved.weight === "number") weight.value = saved.weight;
+    if (saved.weightUnit === "lb") weightUnit.value = "lb";
+    if (typeof saved.height === "number") height.value = saved.height;
+    if (saved.heightUnit === "ft") heightUnit.value = "ft";
+    if (typeof saved.age === "number") age.value = saved.age;
+    if (saved.sex) sex.value = saved.sex;
+    if (saved.activity) activity.value = saved.activity;
+    if (saved.goal) goal.value = saved.goal;
+    if (typeof saved.budget === "number") budget.value = saved.budget;
+  }
+  budgetOut.textContent = "P" + budget.value;
+
+  function chipsIn(rowId) {
+    var out = [];
+    Array.prototype.forEach.call(document.getElementById(rowId).children, function (b) {
+      if (b.classList.contains("is-on")) out.push(b.getAttribute("data-val"));
+    });
+    return out;
+  }
+  function chipsOut(rowId, list) {
+    Array.prototype.forEach.call(document.getElementById(rowId).children, function (b) {
+      b.classList.toggle("is-on", list.indexOf(b.getAttribute("data-val")) >= 0);
+    });
+  }
+  function chipWire(rowId) {
+    var row = document.getElementById(rowId);
+    row.addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest(".chip") : null;
+      if (!b || !row.contains(b)) return;
+      var val = b.getAttribute("data-val");
+      if (val === "None") {
+        chipsOut(rowId, ["None"]);
+      } else {
+        var cur = chipsIn(rowId).filter(function (v) { return v !== "None"; });
+        var i = cur.indexOf(val);
+        if (i >= 0) cur.splice(i, 1); else cur.push(val);
+        chipsOut(rowId, cur.length ? cur : ["None"]);
+      }
+    });
+  }
+  if (saved && Array.isArray(saved.conditions) && saved.conditions.length) chipsOut("conRow", saved.conditions);
+  if (saved && Array.isArray(saved.allergies) && saved.allergies.length) chipsOut("allRow", saved.allergies);
+  chipWire("conRow");
+  chipWire("allRow");
+  var consentChk = document.getElementById("consentChk");
+  if (saved && saved.consent) consentChk.checked = true;
+
+  function updNote() {
+    if (!window.NutriTipid) return;
+    var src = {
+      age: Number(age.value),
+      sex: sex.value,
+      weight: weightUnit.value === "lb" ? Number(weight.value) * 0.453592 : Number(weight.value),
+      height: heightUnit.value === "ft" ? Number(height.value) * 30.48 : Number(height.value),
+      activity: activity.value,
+      goal: goal.value
+    };
+    var k = NutriTipid.kcalParts(src);
+    if (Math.abs(k.deficit) < 50) {
+      kcalNote.textContent = "You burn about " + k.tdee.toLocaleString() + " kcal a day. Your plan targets that burn, holding steady.";
+    } else {
+      kcalNote.textContent = "You burn about " + k.tdee.toLocaleString() + " kcal a day. Your plan targets " + k.target.toLocaleString() + " \u2014 about " + Math.abs(k.deficit).toLocaleString() + " kcal " + (k.deficit > 0 ? "deficit" : "surplus") + " a day.";
+    }
+  }
+  budget.addEventListener("input", function () { budgetOut.textContent = "P" + budget.value; });
+  [age, sex, weight, weightUnit, height, heightUnit, activity, goal].forEach(function (el) {
+    el.addEventListener("input", updNote);
+    el.addEventListener("change", updNote);
+  });
+  updNote();
+
+  function fail(text, el) {
+    msg.classList.add("is-error");
+    msg.textContent = text;
+    if (el && el.focus) el.focus();
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    msg.classList.remove("is-error");
+    var a = Number(age.value);
+    if (!(a > 0) || a < 10 || a > 100) {
+      fail("Age looks off. Use 10 to 100.", age);
+      return;
+    }
+    var w = Number(weight.value);
+    var wUnit = weightUnit.value;
+    var kg = wUnit === "lb" ? w * 0.453592 : w;
+    if (!(w > 0) || (wUnit === "kg" ? (w < 30 || w > 200) : (w < 66 || w > 440))) {
+      fail(wUnit === "kg" ? "Weight looks off. Use 30 to 200 kg." : "Weight looks off. Use 66 to 440 lb.", weight);
+      return;
+    }
+    var h = Number(height.value);
+    var hUnit = heightUnit.value;
+    var cm = hUnit === "ft" ? h * 30.48 : h;
+    if (!(h > 0) || (hUnit === "cm" ? (h < 130 || h > 220) : (h < 3 || h > 8))) {
+      fail(hUnit === "cm" ? "Height looks off. Use 130 to 220 cm." : "Height looks off. Use 3 to 8 ft.", height);
+      return;
+    }
+    try {
+      localStorage.setItem("nutritipid-profile", JSON.stringify({
+        age: a, sex: sex.value,
+        weight: Math.round(kg * 10) / 10, weightUnit: wUnit,
+        height: Math.round(cm), heightUnit: hUnit,
+        activity: activity.value,
+        activityLabel: activity.options[activity.selectedIndex].text,
+        goal: goal.value, budget: Number(budget.value),
+        conditions: chipsIn("conRow"), allergies: chipsIn("allRow"),
+        consent: consentChk.checked
+      }));
+    } catch (err) {}
+    show(3);
+    var t = window.NutriTipid ? NutriTipid.kcalTarget() : 1500;
+    document.getElementById("gateLine").textContent = "About " + t.toLocaleString() + " kcal a day target \u00B7 P" + budget.value + " daily budget \u00B7 7 days planned.";
+    window.scrollTo(0, 0);
+  });
+
+  document.getElementById("toPlanner").addEventListener("click", function () {
+    try { sessionStorage.setItem("nutritipid-first-plan", "1"); } catch (e) {}
+    window.location.href = "planner.html";
+  });
+})();
+</script>
+<script src="../assets/js/theme.js"><script src="../assets/js/select.js"></script>
+</script>
+</body>
+</html>

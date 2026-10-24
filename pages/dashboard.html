@@ -115,6 +115,16 @@ try {
 /* Dashboard home prototype: mock only. One week object, day cycler. */
 (function () {
   "use strict";
+
+  /* First-run guard: an account mid-setup is sent back to onboarding.
+     Missing flags (demo personas, fresh browsers) stay open. */
+  try {
+    var obAcc = JSON.parse(localStorage.getItem("nutritipid-account") || "null");
+    if (obAcc && obAcc.onboarded === false) {
+      window.location.replace("onboard.html");
+    }
+  } catch (e) {}
+
   var EAT = [
     { n: "Lugaw", p: 15, k: 280, dot: "L", c: "#8A6D1B" },
     { n: "Monggo, half rice", p: 35, k: 520, dot: "M", c: "#E8A415", ink: "#1A2E22" },

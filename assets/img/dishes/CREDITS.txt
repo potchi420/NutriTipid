@@ -1,0 +1,24 @@
+Dish photos — all from Wikimedia Commons, fetched 2026-10-24.
+Licenses verified per file (all CC0 / CC BY / CC BY-SA, attribution-required
+ones listed with license). Page link: https://commons.wikimedia.org/wiki/<title-URL-encoded>
+
+lugaw.jpg            File:Lugaw (2023-12-01).jpg                            CC BY-SA 4.0
+arroz-caldo.jpg      File:Arroz Caldo.jpg                                   CC BY 3.0
+fried-egg.jpg        File:Fried Egg1.jpg                                    CC BY-SA 4.0
+tinola.jpg           File:Chicken tinola with green papaya and lemongrass.jpg CC0
+adobo.jpg            File:Chicken Adobo with Potatoes.jpg                   CC BY-SA 4.0
+menudo.jpg           File:Pork Menudo (Filipino Pork Stew).jpg              CC BY-SA 4.0
+sinigang-baboy.jpg   File:Sinigang na Baboy DSCF4234.jpg                    CC BY-SA 4.0
+ginisang-monggo.jpg  File:3778Ginisang monggo, sugpo at tokwa sa kamias 12.jpg CC0
+ginisang-monggo-alt.jpg File:Ginisang munggo with fried bangus.jpg        CC0
+adobong-kangkong.jpg File:Tumis kangkung Makassar.JPG                       CC BY 3.0
+kaldereta.jpg        File:Beef caldereta from the Philippines.jpg           CC0
+chop-suey.jpg        File:Chopsuey from the Philippines.jpg                 CC BY-SA 4.0
+sinigang-hipon.jpg   File:Sinigang na Hipon in bowl, Aug 2024.jpg           CC BY-SA 4.0
+sinigang-bangus.jpg  File:Sinigang na Bangus 01.jpg                         CC BY-SA 4.0
+tapsilog.jpg         File:Tapsilog.jpg                                      CC BY 2.5
+pinakbet.png         USER-PROVIDED (lead, 2026-10-24)                       n/a (owned)
+pinakbet.jpg         File:Pinakbet (Ilocano-style), Mar 2024.jpg            CC BY-SA 4.0 (superseded by user png, kept as fallback)
+boodle-fight.png     USER-PROVIDED (lead, 2026-10-24, not yet wired)        n/a (owned)
+pares.jpg            File:Beef Pares with Fried Rice.jpg                    CC BY-SA 4.0
+champorado.jpg       File:Champorado with tuyo and milk.jpg                 CC0

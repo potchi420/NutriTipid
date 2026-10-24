@@ -60,6 +60,10 @@ try {
   </div>
 
   <div id="planBody" class="is-hidden">
+    <div class="panel first-plan is-hidden" id="firstPlan" role="status">
+      <p><strong>Your first week is generated.</strong> Swipe the day tabs, tap any meal to swap it.</p>
+      <button type="button" id="firstOk" class="btn btn-sm">Got it</button>
+    </div>
     <div class="diary plan-diary">
       <div class="diary-tabs" role="tablist" aria-label="Days of the week" id="dayTabs"></div>
       <div id="planMeals"></div>
@@ -111,24 +115,22 @@ try {
   /* Mock Module 2 pool: 11 canteen meals. Ulam prices follow the NU
      Manila eatery survey plus the carinderia SRP matrix (tinola 40,
      adobo 35, menudo 40, sinigang 45, monggo 25 to 35, kangkong 20,
-     caldereta 50, rice 15 a cup). Combos add half rice at P5, since
-     vendors round to fives. */
-  var thumbBase = "https://commons.wikimedia.org/wiki/Special:FilePath/";
-  function thumb(n) { return thumbBase + encodeURIComponent(n) + "?width=200"; }
+      caldereta 50, rice 15 a cup). Combos add half rice at P5, since
+      vendors round to fives. */
   var DISHES = [
-    { name: "Lugaw", price: 15, kcal: 280, protein: 7, dot: "L", color: "#8A6D1B", img: thumb("Champorado with tuyo and milk (cropped top view).jpg") },
-    { name: "Arroz caldo w/ egg", price: 30, kcal: 420, protein: 14, dot: "A", color: "#1F9D55", al: ["Egg"], img: thumb("Arroz caldo from Street Sarap at the Terminal 3 of the Ninoy Aquino International Airport (2026-01-14).jpg") },
-    { name: "Fried egg, half rice", price: 20, kcal: 350, protein: 12, dot: "E", color: "#B7791F", al: ["Egg"], img: thumb("Fried egg.jpg") },
-    { name: "Chicken Tinola, half rice", price: 45, kcal: 460, protein: 24, dot: "T", color: "#3E8E7E", img: thumb("Tinola.jpg") },
-    { name: "Chicken Adobo, half rice", price: 40, kcal: 520, protein: 30, dot: "A", color: "#5F6F65", img: thumb("Chicken Adobo with Potatoes.jpg") },
-    { name: "Pork Menudo, half rice", price: 45, kcal: 540, protein: 22, dot: "M", color: "#7A4A21", img: thumb("Pork Menudo.jpg") },
-    { name: "Pork Sinigang, half rice", price: 50, kcal: 480, protein: 20, dot: "S", color: "#2E7D5B", img: thumb("Sinigang na Baboy DSCF4234.jpg") },
-    { name: "Ginisang Monggo, half rice", price: 35, kcal: 520, protein: 20, dot: "M", color: "#E8A415", ink: "#1A2E22", al: ["Shrimp"], img: thumb("3778Ginisang monggo, sugpo at tokwa sa kamias 12.jpg") },
-    { name: "Adobong Kangkong, half rice", price: 25, kcal: 320, protein: 9, dot: "K", color: "#4C7A45", img: thumb("Adobong kangkong.jpg") },
-    { name: "Pork Caldereta, half rice", price: 55, kcal: 600, protein: 24, dot: "C", color: "#A34A24", img: thumb("Pork caldereta.jpg") },
-    { name: "Chop Suey, half rice", price: 35, kcal: 380, protein: 10, dot: "C", color: "#6B8F71", img: thumb("Chop suey.jpg") },
-    { name: "Sinigang na Hipon, half rice", price: 45, kcal: 380, protein: 22, dot: "H", color: "#E0876A", ink: "#1A2E22", al: ["Shrimp"], img: thumb("Sinigang na hipon.jpg") },
-    { name: "Sinigang na Bangus, half rice", price: 45, kcal: 420, protein: 24, dot: "F", color: "#4A7E96", ink: "#FFFFFF", al: ["Fish"], img: thumb("Sinigang na bangus.jpg") }
+    { name: "Lugaw", price: 15, kcal: 280, protein: 7, dot: "L", color: "#8A6D1B", img: "../assets/img/dishes/lugaw.jpg" },
+    { name: "Arroz caldo w/ egg", price: 30, kcal: 420, protein: 14, dot: "A", color: "#1F9D55", al: ["Egg"], img: "../assets/img/dishes/arroz-caldo.jpg" },
+    { name: "Fried egg, half rice", price: 20, kcal: 350, protein: 12, dot: "E", color: "#B7791F", al: ["Egg"], img: "../assets/img/dishes/fried-egg.jpg" },
+    { name: "Chicken Tinola, half rice", price: 45, kcal: 460, protein: 24, dot: "T", color: "#3E8E7E", img: "../assets/img/dishes/tinola.jpg" },
+    { name: "Chicken Adobo, half rice", price: 40, kcal: 520, protein: 30, dot: "A", color: "#5F6F65", img: "../assets/img/dishes/adobo.jpg" },
+    { name: "Pork Menudo, half rice", price: 45, kcal: 540, protein: 22, dot: "M", color: "#7A4A21", img: "../assets/img/dishes/menudo.jpg" },
+    { name: "Pork Sinigang, half rice", price: 50, kcal: 480, protein: 20, dot: "S", color: "#2E7D5B", img: "../assets/img/dishes/sinigang-baboy.jpg" },
+    { name: "Ginisang Monggo, half rice", price: 35, kcal: 520, protein: 20, dot: "M", color: "#E8A415", ink: "#1A2E22", al: ["Shrimp"], img: "../assets/img/dishes/ginisang-monggo.jpg" },
+    { name: "Adobong Kangkong, half rice", price: 25, kcal: 320, protein: 9, dot: "K", color: "#4C7A45", img: "../assets/img/dishes/adobong-kangkong.jpg" },
+    { name: "Beef Caldereta, half rice", price: 55, kcal: 600, protein: 24, dot: "C", color: "#A34A24", img: "../assets/img/dishes/kaldereta.jpg" },
+    { name: "Chop Suey, half rice", price: 35, kcal: 380, protein: 10, dot: "C", color: "#6B8F71", img: "../assets/img/dishes/chop-suey.jpg" },
+    { name: "Sinigang na Hipon, half rice", price: 45, kcal: 380, protein: 22, dot: "H", color: "#E0876A", ink: "#1A2E22", al: ["Shrimp"], img: "../assets/img/dishes/sinigang-hipon.jpg" },
+    { name: "Sinigang na Bangus, half rice", price: 45, kcal: 420, protein: 24, dot: "F", color: "#4A7E96", ink: "#FFFFFF", al: ["Fish"], img: "../assets/img/dishes/sinigang-bangus.jpg" }
   ];
   var BREAKFASTS = ["Lugaw", "Arroz caldo w/ egg", "Fried egg, half rice"];
   var DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -165,6 +167,21 @@ try {
     avoidNote.textContent = "Avoiding " + joined + " from your profile.";
     avoidNote.classList.remove("is-hidden");
   }
+
+  /* First-run greeting from the onboard flow; reaching the plan
+     finishes onboarding for the account. */
+  var firstPlan = document.getElementById("firstPlan");
+  try {
+    if (sessionStorage.getItem("nutritipid-first-plan") === "1") {
+      firstPlan.classList.remove("is-hidden");
+      sessionStorage.removeItem("nutritipid-first-plan");
+      var acc = JSON.parse(localStorage.getItem("nutritipid-account") || "null");
+      if (acc) { acc.onboarded = true; localStorage.setItem("nutritipid-account", JSON.stringify(acc)); }
+    }
+  } catch (e) {}
+  document.getElementById("firstOk").addEventListener("click", function () {
+    firstPlan.classList.add("is-hidden");
+  });
 
   /* Mock solver: cheapest protein per peso inside a 30/40/30 split. */
   function byName(n) {
