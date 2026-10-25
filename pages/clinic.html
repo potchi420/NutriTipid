@@ -50,6 +50,7 @@ try {
   <p class="patient-count" id="patientCount">3 patients opted in to sharing.</p>
 
   <div class="diary" id="patientList"></div>
+  <div class="pager" id="pager"></div>
 
   <div class="panel" style="margin-top:24px">
     <h2>Recent access log</h2>
@@ -68,8 +69,9 @@ try {
   var countEl = document.getElementById("patientCount");
   var searchEl = document.getElementById("patientSearch");
   var logEl = document.getElementById("logList");
+  var pagerEl = document.getElementById("pager");
   var patients = NutriTipidClinic.patients();
-  var consentedCount = patients.filter(function (p) { return p.consented; }).length;
+  var page = 0;
 
   function row(p) {
     if (!p.consented) {
@@ -134,27 +136,52 @@ try {
     return btn;
   }
 
-  function render(filter) {
-    listEl.innerHTML = "";
-    var shown = 0;
-    patients.forEach(function (p) {
-      if (filter && p.name.toLowerCase().indexOf(filter) < 0 && p.email.toLowerCase().indexOf(filter) < 0) return;
-      listEl.appendChild(row(p));
-      shown++;
+  function render() {
+    var q = searchEl.value.trim().toLowerCase();
+    var list = patients.filter(function (p) {
+      return !q || p.name.toLowerCase().indexOf(q) >= 0 || p.email.toLowerCase().indexOf(q) >= 0;
     });
-    if (!shown) {
+    var pageSize = window.innerWidth < 641 ? 5 : 6;
+    var pages = Math.max(1, Math.ceil(list.length / pageSize));
+    if (page > pages - 1) page = pages - 1;
+    listEl.innerHTML = "";
+    list.slice(page * pageSize, page * pageSize + pageSize).forEach(function (p) {
+      listEl.appendChild(row(p));
+    });
+    if (!list.length) {
       var empty = document.createElement("p");
       empty.className = "denied-note";
       empty.style.padding = "16px 20px";
       empty.textContent = "No students match that search.";
       listEl.appendChild(empty);
     }
-    var s = searchEl.value.trim().toLowerCase();
-    countEl.textContent = s
-      ? shown + " match" + (shown === 1 ? "" : "es") + "."
-      : consentedCount + " patients opted in to sharing.";
+    var consentedCount = patients.filter(function (p) { return p.consented; }).length;
+    countEl.textContent = q
+      ? list.length + " match" + (list.length === 1 ? "" : "es") + " \u00B7 page " + (page + 1) + " of " + pages
+      : consentedCount + " patients opted in to sharing \u00B7 " + (patients.length - consentedCount) + " not sharing.";
+    pagerEl.innerHTML = "";
+    if (pages > 1) {
+      var prev = document.createElement("button");
+      prev.type = "button";
+      prev.className = "pager-btn";
+      prev.textContent = "\u2039";
+      prev.setAttribute("aria-label", "Previous page");
+      prev.disabled = page === 0;
+      prev.addEventListener("click", function () { page--; render(); });
+      var next = document.createElement("button");
+      next.type = "button";
+      next.className = "pager-btn";
+      next.textContent = "\u203A";
+      next.setAttribute("aria-label", "Next page");
+      next.disabled = page >= pages - 1;
+      next.addEventListener("click", function () { page++; render(); });
+      var lab = document.createElement("span");
+      lab.className = "tabular";
+      lab.textContent = "Page " + (page + 1) + " of " + pages;
+      pagerEl.appendChild(prev); pagerEl.appendChild(lab); pagerEl.appendChild(next);
+    }
   }
-  searchEl.addEventListener("input", function () { render(searchEl.value.trim().toLowerCase()); });
+  searchEl.addEventListener("input", function () { page = 0; render(); });
   render("");
 
   function renderLog() {

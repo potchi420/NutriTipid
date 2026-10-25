@@ -52,7 +52,7 @@ try {
       <strong id="patName">Maria Santos</strong>
       <span id="patMeta">maria@example.com &middot; Student &middot; Sharing consented</span>
     </div>
-    <span class="ro-pill" style="margin-left:auto; align-self:center">Read-only</span>
+    <span class="ro-text" style="margin-left:auto; align-self:center">Read-only access</span>
   </div>
 
   <div class="profile-facts tabular" id="patFacts">
@@ -68,6 +68,10 @@ try {
       <span>Pesos per day</span>
       <div class="fact-num"><b id="factBudget">&mdash;</b></div>
     </div>
+  </div>
+
+  <div class="diary week-diary" style="margin: 20px 0 24px">
+    <div class="diary-tabs" role="tablist" aria-label="Week to review" id="weekTabs"></div>
   </div>
 
   <div class="week-grid" id="reportBody">
@@ -143,16 +147,69 @@ try {
   if (p.weight.length) document.getElementById("factKg").textContent = p.weight[p.weight.length - 1].kg.toFixed(1) + " kg";
   document.getElementById("factBudget").textContent = "P" + p.budget;
 
-  /* Week summary meters, all derived from the same rows. */
-  var s = p.summary;
-  document.getElementById("calCap").textContent = s.avgKcal.toLocaleString() + " avg. vs " + p.kcalTarget.toLocaleString() + " target";
-  document.getElementById("calBar").style.width = Math.min(100, s.kcalPct) + "%";
-  document.getElementById("budCap").textContent = s.withinBudget + " of " + s.n + " days within P" + p.budget;
-  document.getElementById("budBar").style.width = s.budgetPct + "%";
-  document.getElementById("proCap").textContent = s.proteinHits + " of " + s.n + " days hit " + p.proteinGoal + "g \u00B7 avg " + s.avgProtein + "g";
-  document.getElementById("proBar").style.width = s.proteinPct + "%";
-  document.getElementById("sumNote").textContent =
-    "P" + s.avgSpend + " per day avg. " + (p.weightDelta < 0 ? "Down " + Math.abs(p.weightDelta) : p.weightDelta > 0 ? "Up " + p.weightDelta : "Level") + " kg across " + p.weight.length + " weigh-ins.";
+  /* Week picker: review consistency across their logged weeks.
+     The weight chart above stays month-wide; meters and plan follow
+     the selected week. */
+  var weekTabs = document.getElementById("weekTabs");
+  var calCap = document.getElementById("calCap");
+  var calBar = document.getElementById("calBar");
+  var budCap = document.getElementById("budCap");
+  var budBar = document.getElementById("budBar");
+  var proCap = document.getElementById("proCap");
+  var proBar = document.getElementById("proBar");
+  var sumNote = document.getElementById("sumNote");
+  var weightDelta = document.getElementById("weightDelta");
+  var planLines = document.getElementById("planLines");
+  p.weeks.forEach(function (w, i) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "day-tab";
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", i === p.weeks.length - 1 ? "true" : "false");
+    b.textContent = w.label.replace("Week of ", "");
+    b.addEventListener("click", function () { renderWeek(i); });
+    weekTabs.appendChild(b);
+  });
+  function renderWeek(i) {
+    var w = p.weeks[i];
+    var s = w.summary;
+    calCap.textContent = s.avgKcal.toLocaleString() + " avg. vs " + p.kcalTarget.toLocaleString() + " target";
+    calBar.style.width = Math.min(100, s.kcalPct) + "%";
+    budCap.textContent = s.withinBudget + " of " + s.n + " days within P" + p.budget;
+    budBar.style.width = s.budgetPct + "%";
+    proCap.textContent = s.proteinHits + " of " + s.n + " days hit " + p.proteinGoal + "g \u00B7 avg " + s.avgProtein + "g";
+    proBar.style.width = s.proteinPct + "%";
+    sumNote.textContent = "P" + s.avgSpend + " per day avg. spend.";
+    weightDelta.textContent = (p.weightDelta < 0 ? "Down " + Math.abs(p.weightDelta) : p.weightDelta > 0 ? "Up " + p.weightDelta : "Level") + " kg across " + p.weight.length + " weigh-ins.";
+    planLines.innerHTML = "";
+    w.plan.forEach(function (day) {
+      var row = document.createElement("div");
+      row.className = "plan-line";
+      var leftWrap = document.createElement("span");
+      leftWrap.className = "who";
+      var strong = document.createElement("strong");
+      strong.textContent = day.day;
+      var dishes = document.createElement("span");
+      dishes.className = "dishes";
+      dishes.textContent = day.dishes.join(" \u00B7 ");
+      leftWrap.appendChild(strong);
+      leftWrap.appendChild(dishes);
+      if (day.total > p.budget) {
+        var over = document.createElement("span");
+        over.className = "over";
+        over.textContent = "P" + (day.total - p.budget) + " over";
+        leftWrap.appendChild(over);
+      }
+      var right = document.createElement("b");
+      right.textContent = "P" + day.total;
+      row.appendChild(leftWrap); row.appendChild(right);
+      planLines.appendChild(row);
+    });
+    Array.prototype.forEach.call(weekTabs.children, function (tb, j) {
+      tb.setAttribute("aria-selected", String(j === i));
+    });
+  }
+  renderWeek(p.weeks.length - 1);
 
   /* Weight chart: same density rules as the tracker view. */
   var svg = document.getElementById("trendChart");
@@ -206,32 +263,6 @@ try {
     requestAnimationFrame(function () { tick = false; renderTrend(); });
   });
   renderTrend();
-
-  /* Week plan rows. */
-  var planLines = document.getElementById("planLines");
-  p.plan.forEach(function (day) {
-    var row = document.createElement("div");
-    row.className = "plan-line";
-    var leftWrap = document.createElement("span");
-    leftWrap.className = "who";
-    var strong = document.createElement("strong");
-    strong.textContent = day.day;
-    var dishes = document.createElement("span");
-    dishes.className = "dishes";
-    dishes.textContent = day.dishes.join(" \u00B7 ");
-    leftWrap.appendChild(strong);
-    leftWrap.appendChild(dishes);
-    if (day.total > p.budget) {
-      var over = document.createElement("span");
-      over.className = "over";
-      over.textContent = "P" + (day.total - p.budget) + " over";
-      leftWrap.appendChild(over);
-    }
-    var right = document.createElement("b");
-    right.textContent = "P" + day.total;
-    row.appendChild(leftWrap); row.appendChild(right);
-    planLines.appendChild(row);
-  });
 
   /* Audit: every view writes AccessLog. */
   NutriTipidClinic.logView(p);
