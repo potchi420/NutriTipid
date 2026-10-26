@@ -131,11 +131,15 @@ try {
     { n: "Adobo, half rice", p: 40, k: 520, dot: "A", c: "#5F6F65" },
     { n: "Tinola, half rice", p: 45, k: 460, dot: "T", c: "#3E8E7E" },
     { n: "Kangkong, half rice", p: 25, k: 320, dot: "K", c: "#4C7A45" },
-    { n: "Arroz caldo w/ egg", p: 30, k: 420, dot: "A", c: "#1F9D55" }
+    { n: "Arroz caldo w/ egg", p: 30, k: 420, dot: "A", c: "#1F9D55" },
+    { n: "Pandesal & kapeng barako", p: 0, k: 240, dot: "B", c: "#5F6F65" }
   ];
-  var DAY_MEALS = [[0, 1, 2], [5, 3, 4], [1, 4, 0], [2, 5, 3], [0, 3, 1], [4, 2, 5], [3, 0, 4]];
+  /* Slots follow the paper: budget covers what is bought on campus
+     (2 meals + a snack); breakfast is from home at P0. Saturday shows
+     the bought-breakfast + over-budget day on purpose. */
+  var DAY_MEALS = [[6, 1, 4, 0], [6, 3, 4, 0], [6, 2, 1, 0], [6, 1, 2, 0], [6, 3, 4, 5], [5, 2, 4, 0], [6, 3, 2, 0]];
   var DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  var SLOTS = ["Breakfast", "Lunch", "Dinner"];
+  var SLOTS = ["Breakfast", "Lunch", "Dinner", "Snack"];
   var KCAL_TARGET = window.NutriTipid ? NutriTipid.kcalTarget() : 1500;
   document.getElementById("kcalCap").textContent = "target " + KCAL_TARGET.toLocaleString();
 
@@ -331,6 +335,10 @@ try {
           var sub = document.createElement("span");
           sub.textContent = "Extra serving";
           who.appendChild(sub);
+        } else if (d.p === 0) {
+          var home = document.createElement("span");
+          home.textContent = "From home \u00B7 free in pesos";
+          who.appendChild(home);
         }
         var nums = document.createElement("div");
         nums.className = "nums";

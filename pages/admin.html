@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin console - NutriTipid</title>
+<meta name="description" content="Reference data and audit logs for monitoring.">
+<link rel="icon" href="../assets/img/logo_tight.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+/* Theme: same saved choice as the rest of the site, no framework. */
+try {
+  var t = localStorage.getItem("nutritipid-theme");
+  if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.setAttribute("data-theme", "dark");
+} catch (e) {}
+</script>
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/auth.css">
+<link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-row">
+    <a class="brand" href="../index.html" aria-label="NutriTipid home">
+      <img src="../assets/img/logo_tight.svg" alt="NutriTipid" class="brand-logo" width="543" height="493">
+    </a>
+    <nav class="app-nav" aria-label="App">
+      <a href="admin.html" class="header-link is-active" aria-current="page">Console</a>
+    </nav>
+    <div class="header-actions">
+      <button id="themeBtn" class="theme-btn" aria-label="Switch color mode">
+        <svg id="themeMoon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg id="themeSun" class="is-hidden" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <span id="themeLabel">Dark</span>
+      </button>
+      <a href="login.html" class="header-link">Log out</a>
+    </div>
+  </div>
+</header>
+
+<main class="admin-wrap">
+  <h1>Console.</h1>
+  <p class="auth-sub">Reference data and audit logs, kept from menu sheets and price surveys.</p>
+
+  <section class="panel admin-sec">
+    <div class="panel-head">
+      <h2>Food &amp; price board</h2>
+      <span class="count-line" id="boardCount" role="status"></span>
+    </div>
+    <div class="board-search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="boardSearch" class="auth-input" type="search" placeholder="Search dishes" aria-label="Search dishes by name or allergen">
+    </div>
+    <div class="diary admin-list" id="boardList"></div>
+    <div class="pager" id="boardPager"></div>
+  </section>
+
+  <section class="admin-grid admin-sec">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Price history</h2>
+        <span class="count-line" id="historyTally"></span>
+      </div>
+      <div id="historyList"></div>
+      <p class="report-note">Append-only. Price trails never rewind.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Access log</h2>
+        <span class="count-line" id="accessTally"></span>
+      </div>
+      <div id="accessList"></div>
+      <p class="report-note">Read-only. Clinic views never edit.</p>
+    </div>
+  </section>
+
+  <section class="panel admin-sec">
+    <div class="panel-head">
+      <h2>Users</h2>
+      <span class="count-line" id="userCount" role="status"></span>
+    </div>
+    <div class="diary admin-list" id="userList"></div>
+    <p class="diary-note">Deactivated accounts lose access the next time they sign in.</p>
+  </section>
+</main>
+
+<script src="../assets/js/clinic.js"></script>
+<script src="../assets/js/board.js"></script>
+<script>
+/* Admin console prototype: reference data writes, planner reads. */
+(function () {
+  "use strict";
+  var B = window.NutriTipidBoard;
+  var C = window.NutriTipidClinic;
+  var ADMIN = "admin@example.com";
+  var PAGE = 8;
+
+  /* Base pool mirrors the planner's 13 canteen meals; dot colors match its letter dots. */
+  var BASE = [
+    { name: "Lugaw", price: 15, kcal: 280, protein: 7, cat: "Rice meal", al: [], dot: "L", color: "#8A6D1B" },
+    { name: "Arroz caldo w/ egg", price: 30, kcal: 420, protein: 14, cat: "Rice meal", al: ["Egg"], dot: "A", color: "#1F9D55" },
+    { name: "Fried egg, half rice", price: 20, kcal: 350, protein: 12, cat: "Rice meal", al: ["Egg"], dot: "E", color: "#B7791F" },
+    { name: "Chicken Tinola, half rice", price: 45, kcal: 460, protein: 24, cat: "Ulam", al: [], dot: "T", color: "#3E8E7E" },
+    { name: "Chicken Adobo, half rice", price: 40, kcal: 520, protein: 30, cat: "Ulam", al: [], dot: "A", color: "#5F6F65" },
+    { name: "Pork Menudo, half rice", price: 45, kcal: 540, protein: 22, cat: "Ulam", al: [], dot: "M", color: "#7A4A21" },
+    { name: "Pork Sinigang, half rice", price: 50, kcal: 480, protein: 20, cat: "Ulam", al: [], dot: "S", color: "#2E7D5B" },
+    { name: "Ginisang Monggo, half rice", price: 35, kcal: 520, protein: 20, cat: "Ulam", al: ["Shrimp"], dot: "M", color: "#E8A415", ink: "#1A2E22" },
+    { name: "Adobong Kangkong, half rice", price: 25, kcal: 320, protein: 9, cat: "Ulam", al: [], dot: "K", color: "#4C7A45" },
+    { name: "Beef Caldereta, half rice", price: 55, kcal: 600, protein: 24, cat: "Ulam", al: [], dot: "C", color: "#A34A24" },
+    { name: "Chop Suey, half rice", price: 35, kcal: 380, protein: 10, cat: "Ulam", al: [], dot: "C", color: "#6B8F71" },
+    { name: "Sinigang na Hipon, half rice", price: 45, kcal: 380, protein: 22, cat: "Ulam", al: ["Shrimp"], dot: "H", color: "#E0876A", ink: "#1A2E22" },
+    { name: "Sinigang na Bangus, half rice", price: 45, kcal: 420, protein: 24, cat: "Ulam", al: ["Fish"], dot: "F", color: "#4A7E96" }
+  ];
+
+  /* Local photo set, same files the planner serves; missing entries keep the letter dot. */
+  var IMG = {
+    "Lugaw": "../assets/img/dishes/lugaw.jpg",
+    "Arroz caldo w/ egg": "../assets/img/dishes/arroz-caldo.jpg",
+    "Fried egg, half rice": "../assets/img/dishes/fried-egg.jpg",
+    "Chicken Tinola, half rice": "../assets/img/dishes/tinola.jpg",
+    "Chicken Adobo, half rice": "../assets/img/dishes/adobo.jpg",
+    "Pork Menudo, half rice": "../assets/img/dishes/menudo.jpg",
+    "Pork Sinigang, half rice": "../assets/img/dishes/sinigang-baboy.jpg",
+    "Ginisang Monggo, half rice": "../assets/img/dishes/ginisang-monggo.jpg",
+    "Adobong Kangkong, half rice": "../assets/img/dishes/adobong-kangkong.jpg",
+    "Beef Caldereta, half rice": "../assets/img/dishes/kaldereta.jpg",
+    "Chop Suey, half rice": "../assets/img/dishes/chop-suey.jpg",
+    "Sinigang na Hipon, half rice": "../assets/img/dishes/sinigang-hipon.jpg",
+    "Sinigang na Bangus, half rice": "../assets/img/dishes/sinigang-bangus.jpg"
+  };
+
+  var FALLBACK = ["#8A6D1B", "#3E8E7E", "#7A4A21", "#4C7A45", "#2E7D5B", "#A34A24"];
+
+  function dishList() {
+    return BASE.concat(B.extraDishes().map(function (d, i) {
+      var code = 0;
+      for (var j = 0; j < d.name.length; j++) code = (code + d.name.charCodeAt(j)) % FALLBACK.length;
+      return {
+        name: d.name, price: d.price, kcal: d.kcal, protein: d.protein,
+        cat: d.cat || "Ulam", al: d.al || [],
+        dot: d.name.charAt(0).toUpperCase(), color: FALLBACK[code]
+      };
+    }));
+  }
+
+  /* Board: search + pagination over the dish pool. */
+  var boardEl = document.getElementById("boardList");
+  var pagerEl = document.getElementById("boardPager");
+  var countEl = document.getElementById("boardCount");
+  var searchEl = document.getElementById("boardSearch");
+  var state = { q: "", page: 1 };
+
+  function matches(d) {
+    if (!state.q) return true;
+    var hay = (d.name + " " + d.cat + " " + (d.al || []).join(" ")).toLowerCase();
+    return hay.indexOf(state.q.toLowerCase()) >= 0;
+  }
+
+  function renderBoard() {
+    var all = dishList();
+    var rows = all.filter(matches);
+    var pages = Math.max(1, Math.ceil(rows.length / PAGE));
+    if (state.page > pages) state.page = pages;
+    boardEl.innerHTML = "";
+    if (!rows.length) {
+      var none = document.createElement("p");
+      none.className = "report-note";
+      none.textContent = "No dishes match \u201C" + state.q + "\u201D. Try a shorter name.";
+      boardEl.appendChild(none);
+      countEl.textContent = "0 of " + all.length + " dishes match.";
+      pagerEl.innerHTML = "";
+      return;
+    }
+    rows.slice((state.page - 1) * PAGE, state.page * PAGE).forEach(function (d) {
+      boardEl.appendChild(buildRow(d));
+    });
+    countEl.textContent = state.q
+      ? rows.length + " of " + all.length + " dishes match."
+      : all.length + " dishes on the board.";
+    renderPager(pages);
+  }
+
+  function buildRow(d) {
+    var on = B.isActive(d.name);
+    var row = document.createElement("div");
+    row.className = "meal" + (on ? "" : " is-off");
+    var tw = document.createElement("span");
+    tw.className = "board-thumb";
+    tw.setAttribute("aria-hidden", "true");
+    var dot = document.createElement("span");
+    dot.className = "board-dot";
+    dot.style.background = d.color;
+    if (d.ink) dot.style.color = d.ink;
+    dot.textContent = d.dot;
+    tw.appendChild(dot);
+    var img = IMG[d.name];
+    if (img) {
+      var im = document.createElement("img");
+      im.src = img;
+      im.alt = "";
+      im.loading = "lazy";
+      im.onerror = function () { this.remove(); };
+      tw.appendChild(im);
+    }
+    row.appendChild(tw);
+    var who = document.createElement("div");
+    who.className = "who";
+    var strong = document.createElement("strong");
+    strong.textContent = d.name;
+    who.appendChild(strong);
+    var meta = document.createElement("span");
+    meta.textContent = d.cat + " \u00B7 " + d.kcal + " kcal \u00B7 " + d.protein + "g protein";
+    who.appendChild(meta);
+    if ((d.al || []).length) {
+      var pills = document.createElement("div");
+      pills.className = "pill-row";
+      d.al.forEach(function (a) {
+        var p = document.createElement("span");
+        p.className = "board-pill";
+        p.textContent = a + " allergen";
+        pills.appendChild(p);
+      });
+      who.appendChild(pills);
+    }
+    row.appendChild(who);
+    var nums = document.createElement("div");
+    nums.className = "nums";
+    var price = document.createElement("button");
+    price.type = "button";
+    price.className = "price-btn";
+    price.textContent = "P" + B.priceOf(d.name, d.price);
+    price.setAttribute("aria-label", "Edit price of " + d.name);
+    price.addEventListener("click", function () { startEdit(d); });
+    nums.appendChild(price);
+    var act = document.createElement("button");
+    act.type = "button";
+    act.className = "sheet-btn";
+    act.textContent = on ? "Deactivate" : "Activate";
+    act.setAttribute("aria-label", (on ? "Deactivate " : "Activate ") + d.name);
+    act.addEventListener("click", function () {
+      B.toggleActive(d.name);
+      renderBoard();
+    });
+    nums.appendChild(act);
+    row.appendChild(nums);
+    return row;
+  }
+
+  function startEdit(d) {
+    var rows = boardEl.querySelectorAll(".meal");
+    var row = null;
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].querySelector(".who strong").textContent === d.name) { row = rows[i]; break; }
+    }
+    if (!row) return;
+    var nums = row.querySelector(".nums");
+    nums.innerHTML = "";
+    var box = document.createElement("span");
+    box.className = "edit-row";
+    var input = document.createElement("input");
+    input.type = "number";
+    input.className = "auth-input tabular";
+    input.value = B.priceOf(d.name, d.price);
+    input.setAttribute("aria-label", "New price for " + d.name);
+    var err = document.createElement("span");
+    err.className = "edit-note";
+    var okBtn = document.createElement("button");
+    okBtn.type = "button";
+    okBtn.className = "sheet-btn";
+    okBtn.textContent = "Save";
+    var noBtn = document.createElement("button");
+    noBtn.type = "button";
+    noBtn.className = "sheet-btn";
+    noBtn.textContent = "Cancel";
+    function save() {
+      var v = Number(input.value);
+      if (!(v > 0)) { err.textContent = "Use a peso amount."; return; }
+      if (Math.round(v) !== v || v % 5 !== 0) { err.textContent = "Vendors round to fives."; return; }
+      if (B.setPrice(d.name, v, ADMIN, d.price)) {
+        renderHistory();
+        renderBoard();
+      } else {
+        err.textContent = "Vendors round to fives.";
+      }
+    }
+    okBtn.addEventListener("click", save);
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") save(); if (e.key === "Escape") renderBoard(); });
+    noBtn.addEventListener("click", function () { renderBoard(); });
+    box.appendChild(input); box.appendChild(err); box.appendChild(okBtn); box.appendChild(noBtn);
+    nums.appendChild(box);
+    input.focus();
+  }
+
+  function renderPager(pages) {
+    pagerEl.innerHTML = "";
+    if (pages <= 1) return;
+    var prev = document.createElement("button");
+    prev.type = "button";
+    prev.className = "pager-btn";
+    prev.textContent = "\u2039";
+    prev.setAttribute("aria-label", "Previous page");
+    prev.disabled = state.page <= 1;
+    prev.addEventListener("click", function () { state.page--; renderBoard(); });
+    var next = document.createElement("button");
+    next.type = "button";
+    next.className = "pager-btn";
+    next.textContent = "\u203A";
+    next.setAttribute("aria-label", "Next page");
+    next.disabled = state.page >= pages;
+    next.addEventListener("click", function () { state.page++; renderBoard(); });
+    var lab = document.createElement("span");
+    lab.className = "tabular";
+    lab.textContent = "Page " + state.page + " of " + pages;
+    pagerEl.appendChild(prev); pagerEl.appendChild(lab); pagerEl.appendChild(next);
+  }
+
+  searchEl.addEventListener("input", function () {
+    state.q = searchEl.value.trim();
+    state.page = 1;
+    renderBoard();
+  });
+  renderBoard();
+
+  /* Price history. */
+  function renderHistory() {
+    var box = document.getElementById("historyList");
+    var tally = document.getElementById("historyTally");
+    box.innerHTML = "";
+    var h = B.history();
+    if (!h.length) {
+      var none = document.createElement("p");
+      none.className = "report-note";
+      none.textContent = "No price changes yet.";
+      box.appendChild(none);
+      tally.textContent = "Nothing on record yet.";
+      return;
+    }
+    h.slice(0, 5).forEach(function (en) {
+      var line = document.createElement("div");
+      line.className = "log-line";
+      var left = document.createElement("span");
+      left.textContent = en.food + " \u00B7 P" + (en.old === null ? "\u2014" : en.old) + " \u2192 P" + en.new;
+      var right = document.createElement("span");
+      right.className = "tabular";
+      right.textContent = en.at;
+      line.appendChild(left); line.appendChild(right);
+      box.appendChild(line);
+    });
+    tally.textContent = h.length > 5 ? "Latest 5 \u00B7 " + h.length + " on record." : h.length + " on record.";
+  }
+  renderHistory();
+
+  /* Access log review: the clinic's views, audited here. */
+  function renderAccess() {
+    var box = document.getElementById("accessList");
+    var tally = document.getElementById("accessTally");
+    box.innerHTML = "";
+    var recent = C ? C.recentLog() : [];
+    if (!recent.length) {
+      var none = document.createElement("p");
+      none.className = "report-note";
+      none.textContent = "No clinic views logged yet.";
+      box.appendChild(none);
+      tally.textContent = "No views logged yet.";
+    } else {
+      recent.slice(0, 5).forEach(function (en) {
+        var line = document.createElement("div");
+        line.className = "log-line";
+        var left = document.createElement("span");
+        left.textContent = en.patient + " \u00B7 " + en.action;
+        var right = document.createElement("span");
+        right.className = "tabular";
+        right.textContent = en.at;
+        line.appendChild(left); line.appendChild(right);
+        box.appendChild(line);
+      });
+      tally.textContent = recent.length > 5 ? "Latest 5 \u00B7 " + recent.length + " total." : recent.length + " logged.";
+    }
+  }
+  renderAccess();
+
+  /* Users. */
+  var USERS = [
+    { name: "Maria Santos", email: "maria@example.com", role: "Student" },
+    { name: "Juan Dela Cruz", email: "juan@example.com", role: "Student" },
+    { name: "Andrea Lim", email: "andrea@example.com", role: "Student" },
+    { name: "Carla Mendez", email: "carla@example.com", role: "Student" },
+    { name: "Bea Torres", email: "bea@example.com", role: "Student" },
+    { name: "Nico Reyes", email: "nico@example.com", role: "Student" },
+    { name: "Liza Santos", email: "liza@example.com", role: "Student" },
+    { name: "Marco Reyes", email: "marco@example.com", role: "Student" },
+    { name: "University Clinic", email: "clinic@example.com", role: "Clinic viewer" },
+    { name: "Administrator", email: ADMIN, role: "Admin" }
+  ];
+  var userListEl = document.getElementById("userList");
+  var userCountEl = document.getElementById("userCount");
+  function renderUsers() {
+    var off = B.deactivated();
+    var acc = null;
+    try { acc = JSON.parse(localStorage.getItem("nutritipid-account") || "null"); } catch (e) {}
+    var list = USERS.slice();
+    var seen = {};
+    USERS.forEach(function (u) { seen[u.email] = true; });
+    if (acc && acc.email && !seen[acc.email]) {
+      list.push({ name: acc.name || "Member", email: acc.email, role: acc.role === "clinic" ? "Clinic viewer" : "Student" });
+    }
+    userListEl.innerHTML = "";
+    list.forEach(function (u) {
+      var active = off.indexOf(u.email) < 0;
+      var row = document.createElement("div");
+      row.className = "meal is-user" + (active ? "" : " is-off");
+      var code = 0;
+      for (var i = 0; i < u.email.length; i++) code = (code + u.email.charCodeAt(i)) % FALLBACK.length;
+      var av = document.createElement("span");
+      av.className = "admin-av";
+      av.style.background = FALLBACK[code];
+      av.textContent = u.name.charAt(0).toUpperCase();
+      var who = document.createElement("div");
+      who.className = "who";
+      var strong = document.createElement("strong");
+      strong.textContent = u.name;
+      who.appendChild(strong);
+      var meta = document.createElement("span");
+      meta.textContent = u.email + " \u00B7 Member since Sep 2026";
+      who.appendChild(meta);
+      var pill = document.createElement("span");
+      pill.className = "board-pill" + (u.role === "Student" ? " is-on" : "");
+      pill.textContent = u.role;
+      who.appendChild(pill);
+      var nums = document.createElement("div");
+      nums.className = "nums";
+      var stateBtn = document.createElement("button");
+      stateBtn.type = "button";
+      stateBtn.className = "sheet-btn";
+      stateBtn.textContent = active ? "Deactivate" : "Activate";
+      stateBtn.setAttribute("aria-label", (active ? "Deactivate " : "Activate ") + u.name);
+      if (acc && acc.email === u.email && acc.role === "admin") stateBtn.disabled = true;
+      stateBtn.addEventListener("click", function () {
+        B.toggleDeactivated(u.email);
+        renderUsers();
+      });
+      nums.appendChild(stateBtn);
+      row.appendChild(av); row.appendChild(who); row.appendChild(nums);
+      userListEl.appendChild(row);
+    });
+    var activeCount = list.filter(function (u) { return off.indexOf(u.email) < 0; }).length;
+    userCountEl.textContent = list.length + " accounts \u00B7 " + activeCount + " active.";
+  }
+  renderUsers();
+})();
+</script>
+<script src="../assets/js/theme.js"></script>
+</body>
+</html>

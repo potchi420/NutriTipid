@@ -77,70 +77,71 @@
     ]
   };
 
-  /* Generated 7-day plans (dish names + prices from the canteen board). */
+  /* Generated 7-day plans: campus slots lunch, dinner, snack
+     (breakfast is from home at P0). Names + prices from the board. */
   var PLANS = {
     maria: [
-      ["Lugaw", "Ginisang Monggo", "Chicken Adobo"],
-      ["Arroz caldo w/ egg", "Chicken Tinola", "Adobong Kangkong"],
-      ["Fried egg, half rice", "Chicken Adobo", "Lugaw"],
-      ["Lugaw", "Adobong Kangkong", "Pork Menudo"],
-      ["Fried egg, half rice", "Ginisang Monggo", "Adobong Kangkong"],
-      ["Arroz caldo w/ egg", "Pork Menudo", "Pork Sinigang"],
-      ["Lugaw", "Chicken Tinola", "Ginisang Monggo"]
+      ["Ginisang Monggo", "Chicken Adobo", "Lugaw"],
+      ["Chicken Tinola", "Adobong Kangkong", "Arroz caldo w/ egg"],
+      ["Chicken Adobo", "Fried egg, half rice", "Lugaw"],
+      ["Pork Menudo", "Adobong Kangkong", "Lugaw"],
+      ["Ginisang Monggo", "Adobong Kangkong", "Fried egg, half rice"],
+      ["Pork Menudo", "Pork Sinigang", "Arroz caldo w/ egg"],
+      ["Chicken Tinola", "Ginisang Monggo", "Lugaw"]
     ],
     juan: [
-      ["Fried egg, half rice", "Adobong Kangkong", "Chop Suey"],
-      ["Lugaw", "Chicken Adobo", "Adobong Kangkong"],
-      ["Arroz caldo w/ egg", "Ginisang Monggo", "Adobong Kangkong"],
-      ["Fried egg, half rice", "Pork Menudo", "Chicken Tinola"],
-      ["Lugaw", "Chop Suey", "Adobong Kangkong"],
-      ["Arroz caldo w/ egg", "Beef Caldereta", "Chop Suey"],
-      ["Fried egg, half rice", "Chicken Adobo", "Ginisang Monggo"]
+      ["Chop Suey", "Adobong Kangkong", "Fried egg, half rice"],
+      ["Chicken Adobo", "Adobong Kangkong", "Lugaw"],
+      ["Ginisang Monggo", "Adobong Kangkong", "Arroz caldo w/ egg"],
+      ["Pork Menudo", "Chicken Tinola", "Fried egg, half rice"],
+      ["Chop Suey", "Adobong Kangkong", "Lugaw"],
+      ["Beef Caldereta", "Chop Suey", "Arroz caldo w/ egg"],
+      ["Chicken Adobo", "Ginisang Monggo", "Fried egg, half rice"]
     ],
     andrea: [
-      ["Lugaw", "Adobong Kangkong", "Chop Suey"],
-      ["Fried egg, half rice", "Adobong Kangkong", "Chop Suey"],
-      ["Lugaw", "Ginisang Monggo", "Adobong Kangkong"],
-      ["Arroz caldo w/ egg", "Adobong Kangkong", "Chop Suey"],
-      ["Lugaw", "Adobong Kangkong", "Ginisang Monggo"],
-      ["Fried egg, half rice", "Adobong Kangkong", "Chop Suey"],
-      ["Lugaw", "Chop Suey", "Adobong Kangkong"]
+      ["Chop Suey", "Adobong Kangkong", "Lugaw"],
+      ["Adobong Kangkong", "Chop Suey", "Lugaw"],
+      ["Ginisang Monggo", "Adobong Kangkong", "Lugaw"],
+      ["Adobong Kangkong", "Chop Suey", "Lugaw"],
+      ["Adobong Kangkong", "Ginisang Monggo", "Lugaw"],
+      ["Adobong Kangkong", "Chop Suey", "Fried egg, half rice"],
+      ["Chop Suey", "Adobong Kangkong", "Lugaw"]
     ],
     carla: [
-      ["Arroz caldo w/ egg", "Chicken Adobo", "Adobong Kangkong"],
-      ["Fried egg, half rice", "Chicken Tinola", "Ginisang Monggo"],
-      ["Lugaw", "Chicken Adobo", "Pork Menudo"],
-      ["Arroz caldo w/ egg", "Ginisang Monggo", "Adobong Kangkong"],
-      ["Fried egg, half rice", "Chicken Adobo", "Chop Suey"],
-      ["Lugaw", "Pork Sinigang", "Adobong Kangkong"],
-      ["Arroz caldo w/ egg", "Chicken Tinola", "Adobong Kangkong"]
+      ["Chicken Adobo", "Adobong Kangkong", "Lugaw"],
+      ["Chicken Tinola", "Adobong Kangkong", "Fried egg, half rice"],
+      ["Pork Menudo", "Adobong Kangkong", "Lugaw"],
+      ["Ginisang Monggo", "Adobong Kangkong", "Arroz caldo w/ egg"],
+      ["Chicken Adobo", "Chop Suey", "Lugaw"],
+      ["Pork Sinigang", "Adobong Kangkong", "Lugaw"],
+      ["Chicken Tinola", "Adobong Kangkong", "Lugaw"]
     ],
     bea: [
-      ["Lugaw", "Adobong Kangkong", "Chop Suey"],
-      ["Fried egg, half rice", "Chop Suey", "Adobong Kangkong"],
-      ["Lugaw", "Adobong Kangkong", "Ginisang Monggo"],
-      ["Fried egg, half rice", "Adobong Kangkong", "Chop Suey"],
-      ["Lugaw", "Chop Suey", "Adobong Kangkong"],
-      ["Fried egg, half rice", "Ginisang Monggo", "Adobong Kangkong"],
-      ["Lugaw", "Adobong Kangkong", "Chop Suey"]
+      ["Chop Suey", "Adobong Kangkong", "Lugaw"],
+      ["Adobong Kangkong", "Chop Suey", "Lugaw"],
+      ["Ginisang Monggo", "Adobong Kangkong", "Lugaw"],
+      ["Adobong Kangkong", "Chop Suey", "Lugaw"],
+      ["Chop Suey", "Adobong Kangkong", "Lugaw"],
+      ["Ginisang Monggo", "Adobong Kangkong", "Lugaw"],
+      ["Adobong Kangkong", "Chop Suey", "Lugaw"]
     ],
     nico: [
-      ["Arroz caldo w/ egg", "Pork Menudo", "Beef Caldereta"],
-      ["Fried egg, half rice", "Pork Sinigang", "Chicken Adobo"],
-      ["Lugaw", "Chicken Tinola", "Pork Menudo"],
-      ["Arroz caldo w/ egg", "Beef Caldereta", "Chicken Adobo"],
-      ["Fried egg, half rice", "Pork Menudo", "Pork Sinigang"],
-      ["Lugaw", "Pork Sinigang", "Beef Caldereta"],
-      ["Arroz caldo w/ egg", "Chicken Adobo", "Chicken Tinola"]
+      ["Beef Caldereta", "Pork Menudo", "Lugaw"],
+      ["Pork Sinigang", "Chicken Adobo", "Fried egg, half rice"],
+      ["Chicken Tinola", "Pork Menudo", "Lugaw"],
+      ["Beef Caldereta", "Chicken Adobo", "Lugaw"],
+      ["Pork Menudo", "Chicken Adobo", "Fried egg, half rice"],
+      ["Pork Sinigang", "Beef Caldereta", "Lugaw"],
+      ["Chicken Adobo", "Chicken Tinola", "Arroz caldo w/ egg"]
     ],
     liza: [
-      ["Fried egg, half rice", "Chicken Adobo", "Ginisang Monggo"],
-      ["Arroz caldo w/ egg", "Chicken Tinola", "Chicken Adobo"],
-      ["Fried egg, half rice", "Pork Menudo", "Ginisang Monggo"],
-      ["Arroz caldo w/ egg", "Chicken Adobo", "Chicken Tinola"],
-      ["Fried egg, half rice", "Ginisang Monggo", "Chicken Adobo"],
-      ["Lugaw", "Chicken Tinola", "Pork Menudo"],
-      ["Arroz caldo w/ egg", "Chicken Adobo", "Adobong Kangkong"]
+      ["Chicken Adobo", "Adobong Kangkong", "Lugaw"],
+      ["Chicken Tinola", "Adobong Kangkong", "Lugaw"],
+      ["Pork Menudo", "Adobong Kangkong", "Lugaw"],
+      ["Adobong Kangkong", "Chicken Adobo", "Lugaw"],
+      ["Ginisang Monggo", "Adobong Kangkong", "Fried egg, half rice"],
+      ["Beef Caldereta", "Adobong Kangkong", "Lugaw"],
+      ["Pork Menudo", "Adobong Kangkong", "Lugaw"]
     ]
   };
 

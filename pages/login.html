@@ -121,6 +121,13 @@ try {
         if (password) password.focus();
         return;
       }
+      var off = null;
+      try { off = JSON.parse(localStorage.getItem("nutritipid-deactivated") || "[]"); } catch (e) {}
+      if (Array.isArray(off) && off.indexOf(mail) >= 0) {
+        error("This account is deactivated. Contact the administrator.");
+        if (email) email.focus();
+        return;
+      }
       loginBtn.disabled = true;
       loginBtn.textContent = "Logging in...";
       notice("");
@@ -132,7 +139,8 @@ try {
            first-run setup unless they finished it before. */
         var lowered = mail.toLowerCase();
         var isClinic = lowered.indexOf("clinic") === 0;
-        var isPersona = isClinic || lowered.indexOf("maria") === 0 || lowered.indexOf("admin") === 0;
+        var isAdmin = lowered.indexOf("admin") === 0;
+        var isPersona = isClinic || isAdmin || lowered.indexOf("maria") === 0;
         var localPart = mail.split("@")[0] || "Student";
         var pretty = localPart.charAt(0).toUpperCase() + localPart.slice(1).replace(/[._]/g, " ");
         var existing = null;
@@ -140,10 +148,10 @@ try {
         var onboarded = isPersona || !!(existing && existing.email === mail && existing.onboarded);
         try {
           localStorage.setItem("nutritipid-account", JSON.stringify({
-            name: isClinic ? "University Clinic" : pretty,
+            name: isClinic ? "University Clinic" : (isAdmin ? "Administrator" : pretty),
             email: mail,
             since: (existing && existing.email === mail && existing.since) || new Date().toISOString().slice(0, 10),
-            role: isClinic ? "clinic" : "user",
+            role: isClinic ? "clinic" : (isAdmin ? "admin" : "user"),
             onboarded: onboarded
           }));
         } catch (err) {}
@@ -151,7 +159,7 @@ try {
           : onboarded ? "Welcome back. Taking you to your dashboard..."
           : "Found you. Finishing first-time setup...");
         setTimeout(function () {
-          window.location.href = isClinic ? "clinic.html" : (onboarded ? "dashboard.html" : "onboard.html");
+          window.location.href = isClinic ? "clinic.html" : (isAdmin ? "admin.html" : (onboarded ? "dashboard.html" : "onboard.html"));
         }, 900);
       }, 700);
     });

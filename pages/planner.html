@@ -107,6 +107,7 @@ try {
 </section>
 
 <script src="../assets/js/profile.js"></script>
+<script src="../assets/js/board.js"></script>
 <script>
 /* Planner prototype: mock only. No LP solver, deterministic picks. */
 (function () {
@@ -132,9 +133,20 @@ try {
     { name: "Sinigang na Hipon, half rice", price: 45, kcal: 380, protein: 22, dot: "H", color: "#E0876A", ink: "#1A2E22", al: ["Shrimp"], img: "../assets/img/dishes/sinigang-hipon.jpg" },
     { name: "Sinigang na Bangus, half rice", price: 45, kcal: 420, protein: 24, dot: "F", color: "#4A7E96", ink: "#FFFFFF", al: ["Fish"], img: "../assets/img/dishes/sinigang-bangus.jpg" }
   ];
-  var BREAKFASTS = ["Lugaw", "Arroz caldo w/ egg", "Fried egg, half rice"];
+
+  /* The admin console writes price overrides and soft-deletes here;
+     the board applies before any pick, rank, or budget math. */
+  if (window.NutriTipidBoard) {
+    DISHES.forEach(function (d) { d.price = NutriTipidBoard.priceOf(d.name, d.price); });
+  }
+  function live(d) {
+    return !window.NutriTipidBoard || NutriTipidBoard.isActive(d.name);
+  }
+  var SNACKS = ["Lugaw", "Fried egg, half rice", "Arroz caldo w/ egg"];
+  var PACKED = { name: "Packed from home", price: 0, kcal: 0, protein: 0, dot: "B", color: "#5F6F65" };
+  var packedDay = [true, true, true, true, true, true, true];
   var DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  var MEALS = ["Breakfast", "Lunch", "Dinner"];
+  var MEALS = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
   /* Profile or sample fallback. */
   var budget = 100;
@@ -189,7 +201,7 @@ try {
     return DISHES[0];
   }
   function mains() {
-    return DISHES.filter(function (d) { return BREAKFASTS.indexOf(d.name) < 0; })
+    return DISHES.filter(function (d) { return SNACKS.indexOf(d.name) < 0 && live(d); })
       .sort(function (a, b) { return (b.protein / b.price) - (a.protein / a.price); });
   }
   var MAINS = mains().filter(ok);
@@ -203,14 +215,21 @@ try {
     return pool[offset % pool.length];
   }
   function buildDay(b, i) {
-    var caps = [Math.floor(b * 0.3), Math.floor(b * 0.4), Math.floor(b * 0.3)];
-    var bfList = BREAKFASTS.map(byName).filter(ok);
-    if (!bfList.length) bfList = BREAKFASTS.map(byName);
-    return [
-      { slot: MEALS[0], dish: pickFit(bfList, caps[0], i) },
-      { slot: MEALS[1], dish: pickFit(MAINS, caps[1], i + 1) },
-      { slot: MEALS[2], dish: pickFit(MAINS, caps[2], i + 2) }
-    ];
+    /* Budget covers the campus slots: lunch 40 / dinner 40 / snack 20.
+       Breakfast is from home by default (P0) until claimed on campus. */
+    var caps = [Math.floor(b * 0.4), Math.floor(b * 0.4), Math.floor(b * 0.2)];
+    var snackList = SNACKS.map(byName).filter(function (d) { return ok(d) && live(d); });
+    if (!snackList.length) snackList = SNACKS.map(byName);
+    var rows = [];
+    if (packedDay[i]) {
+      rows.push({ slot: MEALS[0], dish: PACKED, packed: true });
+    } else {
+      rows.push({ slot: MEALS[0], dish: pickFit(snackList, Math.floor(b * 0.4), i + 3) });
+    }
+    rows.push({ slot: MEALS[1], dish: pickFit(MAINS, caps[0], i) });
+    rows.push({ slot: MEALS[2], dish: pickFit(MAINS, caps[1], i + 1) });
+    rows.push({ slot: MEALS[3], dish: pickFit(snackList, caps[2], i + 2) });
+    return rows;
   }
   var week = DAYS.map(function (_, i) { return buildDay(budget, i); });
   function totals(rows) {
@@ -242,10 +261,12 @@ try {
     mealsEl.innerHTML = "";
     rows.forEach(function (r, idx) {
       var div = document.createElement("div");
-      div.className = "meal swappable";
-      div.setAttribute("role", "button");
-      div.tabIndex = 0;
-      div.setAttribute("aria-label", "Open swap suggestions for " + r.slot.toLowerCase() + ": " + r.dish.name);
+      div.className = "meal" + (r.packed ? "" : " swappable");
+      if (idx !== 0) {
+        div.setAttribute("role", "button");
+        div.tabIndex = 0;
+        div.setAttribute("aria-label", "Open swap suggestions for " + r.slot.toLowerCase() + ": " + r.dish.name);
+      }
       var tw = document.createElement("span");
       tw.className = "meal-thumb";
       tw.setAttribute("aria-hidden", "true");
@@ -266,8 +287,18 @@ try {
       var strong = document.createElement("strong");
       strong.textContent = r.slot + " - " + r.dish.name;
       var note = document.createElement("span");
-      note.textContent = r.dish.protein + "g protein";
+      if (r.packed) {
+        note.textContent = "Free in pesos, still real kcal";
+      } else {
+        note.textContent = r.dish.protein + "g protein";
+      }
       who.appendChild(strong); who.appendChild(note);
+      if (r.packed) {
+        var home = document.createElement("span");
+        home.className = "swap-flag";
+        home.textContent = "from home";
+        who.appendChild(home);
+      }
       if (r.swapped) {
         var flag = document.createElement("span");
         flag.className = "swap-flag";
@@ -281,21 +312,41 @@ try {
       var kk = document.createElement("span");
       kk.textContent = r.dish.kcal + " kcal";
       nums.appendChild(pb); nums.appendChild(kk);
-      var ico = document.createElement("span");
-      ico.className = "swap-ico";
-      ico.setAttribute("aria-hidden", "true");
-      ico.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>';
-      div.appendChild(tw); div.appendChild(who); div.appendChild(nums); div.appendChild(ico);
-      div.addEventListener("click", function () {
-        if (suppressClick) return;
-        openSwap(idx);
-      });
-      div.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
+      div.appendChild(tw); div.appendChild(who); div.appendChild(nums);
+      if (idx === 0) {
+        var claim = document.createElement("button");
+        claim.type = "button";
+        claim.className = "sheet-btn";
+        claim.textContent = r.packed ? "On campus today?" : "From home instead?";
+        claim.setAttribute("aria-label", r.packed
+          ? "Count " + DAYS[cur] + " breakfast as bought on campus"
+          : "Mark " + DAYS[cur] + " breakfast as packed from home");
+        (function (dayIdx) {
+          claim.addEventListener("click", function () {
+            packedDay[dayIdx] = !packedDay[dayIdx];
+            week[dayIdx] = buildDay(budget, dayIdx);
+            renderDay(dayIdx);
+            renderWeek();
+          });
+        })(cur);
+        div.appendChild(claim);
+      } else {
+        var ico = document.createElement("span");
+        ico.className = "swap-ico";
+        ico.setAttribute("aria-hidden", "true");
+        ico.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>';
+        div.appendChild(ico);
+        div.addEventListener("click", function () {
+          if (suppressClick) return;
           openSwap(idx);
-        }
-      });
+        });
+        div.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openSwap(idx);
+          }
+        });
+      }
       mealsEl.appendChild(div);
     });
     var t = totals(rows);
@@ -384,9 +435,12 @@ try {
   var swapCtx = { day: 3, slot: 1 };
   var lastFocus = null;
   function poolFor(slot) {
-    var pool = slot === 0 ? BREAKFASTS.map(byName) : MAINS;
-    var safe = pool.filter(ok);
-    return safe.length ? safe : pool;
+    if (slot === 0 || slot === 3) {
+      var pool = SNACKS.map(byName);
+      var safe = pool.filter(ok);
+      return safe.length ? safe : pool;
+    }
+    return MAINS;
   }
   function deltaText(o, c) {
     var dp = c.price - o.price;
@@ -397,7 +451,7 @@ try {
   }
   function openSwap(slot) {
     var row = week[cur][slot];
-    if (!row) return;
+    if (!row || row.packed) return;
     swapCtx = { day: cur, slot: slot };
     lastFocus = document.activeElement;
     swapTitle.textContent = "Swap " + DAYS[cur] + " " + row.slot.toLowerCase();

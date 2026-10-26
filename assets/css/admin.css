@@ -1,0 +1,275 @@
+/* Admin console module: food and price board, price history, access
+   log review, users. Mock Module 7. Reads tokens from styles.css.
+   Link after styles.css. Reuses .panel, .diary, .meal, .sheet-btn,
+   .auth-input, .auth-sub, .tabular. */
+.admin-wrap {
+  width: min(880px, 100%);
+  margin: 0 auto;
+  padding: 48px max(24px, env(safe-area-inset-left)) 88px;
+}
+.admin-wrap h1 {
+  margin: 12px 0 0;
+  font-size: clamp(32px, 5vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.admin-wrap > .auth-sub {
+  margin-top: 10px;
+}
+.admin-sec {
+  margin-top: 28px;
+}
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.count-line {
+  font-size: 13.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Board tools: search box. */
+.board-search {
+  position: relative;
+  display: block;
+  margin-top: 16px;
+}
+.board-search svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+.board-search .auth-input {
+  padding-left: 42px;
+}
+
+/* Rows share the diary grammar: thumb, text block, actions. */
+.admin-list {
+  margin-top: 14px;
+}
+.admin-wrap .meal {
+  flex-wrap: wrap;
+  row-gap: 10px;
+}
+.admin-wrap .meal .who {
+  flex: 1;
+  min-width: 180px;
+}
+.admin-wrap .meal .nums {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.admin-wrap .meal .nums .price-btn,
+.admin-wrap .meal .nums .sheet-btn {
+  min-height: 36px;
+}
+.admin-wrap .meal .nums .sheet-btn {
+  padding: 6px 14px;
+}
+.admin-wrap .sheet-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.board-thumb {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex: none;
+}
+.board-dot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+}
+.board-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+.pill-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.board-pill {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 8px 3px 11px;
+}
+.board-pill.is-on {
+  color: var(--stamp);
+}
+.meal.is-user .board-pill {
+  margin-left: 6px;
+}
+.admin-av {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+}
+.meal.is-off .board-thumb,
+.meal.is-off .admin-av,
+.meal.is-off .board-pill,
+.meal.is-off .nums,
+.meal.is-off .who {
+  opacity: 0.55;
+}
+
+/* Price editing. */
+.price-btn {
+  flex: none;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.price-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.price-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.edit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.edit-row .auth-input {
+  width: 92px;
+  padding: 8px 10px;
+  font-size: 14.5px;
+}
+.edit-note {
+  color: #B3261E;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+/* Log lists. */
+.report-note {
+  margin: 14px 2px 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.log-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 2px;
+  font-size: 14px;
+}
+.log-line + .log-line {
+  border-top: 1px solid var(--line);
+}
+.log-line .tabular {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+/* Pager: same grammar as the clinic roster. */
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  justify-content: center;
+}
+.pager:empty {
+  display: none;
+}
+.pager-btn {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.pager-btn:hover:not(:disabled) {
+  color: var(--ink);
+}
+.pager-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.pager-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.pager .tabular {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 560px) {
+  .admin-wrap {
+    padding-top: 32px;
+  }
+  .count-line {
+    text-align: left;
+  }
+}
