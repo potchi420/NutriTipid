@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin console - NutriTipid</title>
-<meta name="description" content="Reference data and audit logs for monitoring.">
+<title>Food &amp; price board - NutriTipid</title>
+<meta name="description" content="Menu items and prices kept from menu sheets and price surveys.">
 <link rel="icon" href="../assets/img/logo_tight.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,7 +29,9 @@ try {
       <img src="../assets/img/logo_tight.svg" alt="NutriTipid" class="brand-logo" width="543" height="493">
     </a>
     <nav class="app-nav" aria-label="App">
-      <a href="admin.html" class="header-link is-active" aria-current="page">Console</a>
+      <a href="admin.html" class="header-link is-active" aria-current="page">Board</a>
+      <a href="admin-logs.html" class="header-link">Logs</a>
+      <a href="admin-users.html" class="header-link">Users</a>
     </nav>
     <div class="header-actions">
       <button id="themeBtn" class="theme-btn" aria-label="Switch color mode">
@@ -43,59 +45,26 @@ try {
 </header>
 
 <main class="admin-wrap">
-  <h1>Console.</h1>
-  <p class="auth-sub">Reference data and audit logs, kept from menu sheets and price surveys.</p>
+  <h1>Food &amp; price board.</h1>
+  <p class="auth-sub">Menu items and prices, kept from menu sheets and price surveys.</p>
 
-  <section class="panel admin-sec">
-    <div class="panel-head">
-      <h2>Food &amp; price board</h2>
-      <span class="count-line" id="boardCount" role="status"></span>
-    </div>
+  <div class="board-toolbar">
     <div class="board-search">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="boardSearch" class="auth-input" type="search" placeholder="Search dishes" aria-label="Search dishes by name or allergen">
     </div>
-    <div class="diary admin-list" id="boardList"></div>
-    <div class="pager" id="boardPager"></div>
-  </section>
-
-  <section class="admin-grid admin-sec">
-    <div class="panel">
-      <div class="panel-head">
-        <h2>Price history</h2>
-        <span class="count-line" id="historyTally"></span>
-      </div>
-      <div id="historyList"></div>
-      <p class="report-note">Append-only. Price trails never rewind.</p>
-    </div>
-    <div class="panel">
-      <div class="panel-head">
-        <h2>Access log</h2>
-        <span class="count-line" id="accessTally"></span>
-      </div>
-      <div id="accessList"></div>
-      <p class="report-note">Read-only. Clinic views never edit.</p>
-    </div>
-  </section>
-
-  <section class="panel admin-sec">
-    <div class="panel-head">
-      <h2>Users</h2>
-      <span class="count-line" id="userCount" role="status"></span>
-    </div>
-    <div class="diary admin-list" id="userList"></div>
-    <p class="diary-note">Deactivated accounts lose access the next time they sign in.</p>
-  </section>
+    <span class="count-line" id="boardCount" role="status"></span>
+  </div>
+  <div class="diary admin-list" id="boardList"></div>
+  <div class="pager" id="boardPager"></div>
 </main>
 
-<script src="../assets/js/clinic.js"></script>
 <script src="../assets/js/board.js"></script>
 <script>
-/* Admin console prototype: reference data writes, planner reads. */
+/* Admin board prototype: reference data writes, planner reads. */
 (function () {
   "use strict";
   var B = window.NutriTipidBoard;
-  var C = window.NutriTipidClinic;
   var ADMIN = "admin@example.com";
   var PAGE = 8;
 
@@ -136,7 +105,7 @@ try {
   var FALLBACK = ["#8A6D1B", "#3E8E7E", "#7A4A21", "#4C7A45", "#2E7D5B", "#A34A24"];
 
   function dishList() {
-    return BASE.concat(B.extraDishes().map(function (d, i) {
+    return BASE.concat(B.extraDishes().map(function (d) {
       var code = 0;
       for (var j = 0; j < d.name.length; j++) code = (code + d.name.charCodeAt(j)) % FALLBACK.length;
       return {
@@ -147,7 +116,6 @@ try {
     }));
   }
 
-  /* Board: search + pagination over the dish pool. */
   var boardEl = document.getElementById("boardList");
   var pagerEl = document.getElementById("boardPager");
   var countEl = document.getElementById("boardCount");
@@ -281,7 +249,6 @@ try {
       if (!(v > 0)) { err.textContent = "Use a peso amount."; return; }
       if (Math.round(v) !== v || v % 5 !== 0) { err.textContent = "Vendors round to fives."; return; }
       if (B.setPrice(d.name, v, ADMIN, d.price)) {
-        renderHistory();
         renderBoard();
       } else {
         err.textContent = "Vendors round to fives.";
@@ -324,135 +291,13 @@ try {
     renderBoard();
   });
   renderBoard();
-
-  /* Price history. */
-  function renderHistory() {
-    var box = document.getElementById("historyList");
-    var tally = document.getElementById("historyTally");
-    box.innerHTML = "";
-    var h = B.history();
-    if (!h.length) {
-      var none = document.createElement("p");
-      none.className = "report-note";
-      none.textContent = "No price changes yet.";
-      box.appendChild(none);
-      tally.textContent = "Nothing on record yet.";
-      return;
-    }
-    h.slice(0, 5).forEach(function (en) {
-      var line = document.createElement("div");
-      line.className = "log-line";
-      var left = document.createElement("span");
-      left.textContent = en.food + " \u00B7 P" + (en.old === null ? "\u2014" : en.old) + " \u2192 P" + en.new;
-      var right = document.createElement("span");
-      right.className = "tabular";
-      right.textContent = en.at;
-      line.appendChild(left); line.appendChild(right);
-      box.appendChild(line);
-    });
-    tally.textContent = h.length > 5 ? "Latest 5 \u00B7 " + h.length + " on record." : h.length + " on record.";
-  }
-  renderHistory();
-
-  /* Access log review: the clinic's views, audited here. */
-  function renderAccess() {
-    var box = document.getElementById("accessList");
-    var tally = document.getElementById("accessTally");
-    box.innerHTML = "";
-    var recent = C ? C.recentLog() : [];
-    if (!recent.length) {
-      var none = document.createElement("p");
-      none.className = "report-note";
-      none.textContent = "No clinic views logged yet.";
-      box.appendChild(none);
-      tally.textContent = "No views logged yet.";
-    } else {
-      recent.slice(0, 5).forEach(function (en) {
-        var line = document.createElement("div");
-        line.className = "log-line";
-        var left = document.createElement("span");
-        left.textContent = en.patient + " \u00B7 " + en.action;
-        var right = document.createElement("span");
-        right.className = "tabular";
-        right.textContent = en.at;
-        line.appendChild(left); line.appendChild(right);
-        box.appendChild(line);
-      });
-      tally.textContent = recent.length > 5 ? "Latest 5 \u00B7 " + recent.length + " total." : recent.length + " logged.";
-    }
-  }
-  renderAccess();
-
-  /* Users. */
-  var USERS = [
-    { name: "Maria Santos", email: "maria@example.com", role: "Student" },
-    { name: "Juan Dela Cruz", email: "juan@example.com", role: "Student" },
-    { name: "Andrea Lim", email: "andrea@example.com", role: "Student" },
-    { name: "Carla Mendez", email: "carla@example.com", role: "Student" },
-    { name: "Bea Torres", email: "bea@example.com", role: "Student" },
-    { name: "Nico Reyes", email: "nico@example.com", role: "Student" },
-    { name: "Liza Santos", email: "liza@example.com", role: "Student" },
-    { name: "Marco Reyes", email: "marco@example.com", role: "Student" },
-    { name: "University Clinic", email: "clinic@example.com", role: "Clinic viewer" },
-    { name: "Administrator", email: ADMIN, role: "Admin" }
-  ];
-  var userListEl = document.getElementById("userList");
-  var userCountEl = document.getElementById("userCount");
-  function renderUsers() {
-    var off = B.deactivated();
-    var acc = null;
-    try { acc = JSON.parse(localStorage.getItem("nutritipid-account") || "null"); } catch (e) {}
-    var list = USERS.slice();
-    var seen = {};
-    USERS.forEach(function (u) { seen[u.email] = true; });
-    if (acc && acc.email && !seen[acc.email]) {
-      list.push({ name: acc.name || "Member", email: acc.email, role: acc.role === "clinic" ? "Clinic viewer" : "Student" });
-    }
-    userListEl.innerHTML = "";
-    list.forEach(function (u) {
-      var active = off.indexOf(u.email) < 0;
-      var row = document.createElement("div");
-      row.className = "meal is-user" + (active ? "" : " is-off");
-      var code = 0;
-      for (var i = 0; i < u.email.length; i++) code = (code + u.email.charCodeAt(i)) % FALLBACK.length;
-      var av = document.createElement("span");
-      av.className = "admin-av";
-      av.style.background = FALLBACK[code];
-      av.textContent = u.name.charAt(0).toUpperCase();
-      var who = document.createElement("div");
-      who.className = "who";
-      var strong = document.createElement("strong");
-      strong.textContent = u.name;
-      who.appendChild(strong);
-      var meta = document.createElement("span");
-      meta.textContent = u.email + " \u00B7 Member since Sep 2026";
-      who.appendChild(meta);
-      var pill = document.createElement("span");
-      pill.className = "board-pill" + (u.role === "Student" ? " is-on" : "");
-      pill.textContent = u.role;
-      who.appendChild(pill);
-      var nums = document.createElement("div");
-      nums.className = "nums";
-      var stateBtn = document.createElement("button");
-      stateBtn.type = "button";
-      stateBtn.className = "sheet-btn";
-      stateBtn.textContent = active ? "Deactivate" : "Activate";
-      stateBtn.setAttribute("aria-label", (active ? "Deactivate " : "Activate ") + u.name);
-      if (acc && acc.email === u.email && acc.role === "admin") stateBtn.disabled = true;
-      stateBtn.addEventListener("click", function () {
-        B.toggleDeactivated(u.email);
-        renderUsers();
-      });
-      nums.appendChild(stateBtn);
-      row.appendChild(av); row.appendChild(who); row.appendChild(nums);
-      userListEl.appendChild(row);
-    });
-    var activeCount = list.filter(function (u) { return off.indexOf(u.email) < 0; }).length;
-    userCountEl.textContent = list.length + " accounts \u00B7 " + activeCount + " active.";
-  }
-  renderUsers();
 })();
 </script>
+<nav class="tabbar" aria-label="App">
+  <a href="admin.html" class="is-active" aria-current="page">Board</a>
+  <a href="admin-logs.html">Logs</a>
+  <a href="admin-users.html">Users</a>
+</nav>
 <script src="../assets/js/theme.js"></script>
 </body>
 </html>
