@@ -134,13 +134,34 @@ try {
     { name: "Sinigang na Bangus, half rice", price: 45, kcal: 420, protein: 24, dot: "F", color: "#4A7E96", ink: "#FFFFFF", al: ["Fish"], img: "../assets/img/dishes/sinigang-bangus.jpg" }
   ];
 
-  /* The admin console writes price overrides and soft-deletes here;
-     the board applies before any pick, rank, or budget math. */
+  /* The admin console writes price overrides, soft-deletes, detail
+     edits, and new dishes here; the board applies all of it before
+     any pick, rank, or budget math. Records stay keyed by the
+     original dish name, so a rename rides along as a display change. */
+  var EXTRA_DOTS = ["#8A6D1B", "#3E8E7E", "#7A4A21", "#4C7A45", "#2E7D5B", "#A34A24"];
   if (window.NutriTipidBoard) {
-    DISHES.forEach(function (d) { d.price = NutriTipidBoard.priceOf(d.name, d.price); });
+    DISHES.forEach(function (d) {
+      var m = NutriTipidBoard.metaOf(d.name);
+      if (m) {
+        if (m.name) { d.was = d.name; d.name = m.name; }
+        if (m.cat) d.cat = m.cat;
+        if (m.al) d.al = m.al;
+        if (typeof m.kcal === "number") d.kcal = m.kcal;
+        if (typeof m.protein === "number") d.protein = m.protein;
+      }
+      d.price = NutriTipidBoard.priceOf(d.was || d.name, d.price);
+    });
+    NutriTipidBoard.extraDishes().forEach(function (d) {
+      var code = 0;
+      for (var j = 0; j < d.name.length; j++) code = (code + d.name.charCodeAt(j)) % EXTRA_DOTS.length;
+      DISHES.push({
+        name: d.name, price: NutriTipidBoard.priceOf(d.name, d.price), kcal: d.kcal, protein: d.protein,
+        cat: d.cat || "Ulam", al: d.al || [], dot: d.name.charAt(0).toUpperCase(), color: EXTRA_DOTS[code], extra: true
+      });
+    });
   }
   function live(d) {
-    return !window.NutriTipidBoard || NutriTipidBoard.isActive(d.name);
+    return !window.NutriTipidBoard || NutriTipidBoard.isActive(d.was || d.name);
   }
   var SNACKS = ["Lugaw", "Fried egg, half rice", "Arroz caldo w/ egg"];
   var PACKED = { name: "Packed from home", price: 0, kcal: 0, protein: 0, dot: "B", color: "#5F6F65" };
@@ -201,7 +222,10 @@ try {
     return DISHES[0];
   }
   function mains() {
-    return DISHES.filter(function (d) { return SNACKS.indexOf(d.name) < 0 && live(d); })
+    return DISHES.filter(function (d) {
+      var snack = SNACKS.indexOf(d.name) >= 0 || (d.extra && d.cat === "Rice meal");
+      return !snack && live(d);
+    })
       .sort(function (a, b) { return (b.protein / b.price) - (a.protein / a.price); });
   }
   var MAINS = mains().filter(ok);
@@ -436,7 +460,8 @@ try {
   var lastFocus = null;
   function poolFor(slot) {
     if (slot === 0 || slot === 3) {
-      var pool = SNACKS.map(byName);
+      var pool = SNACKS.map(byName)
+        .concat(DISHES.filter(function (d) { return d.extra && d.cat === "Rice meal" && live(d); }));
       var safe = pool.filter(ok);
       return safe.length ? safe : pool;
     }

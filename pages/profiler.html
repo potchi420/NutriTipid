@@ -170,6 +170,7 @@ try {
   </form>
 </main>
 
+<script src="../assets/js/board.js"></script>
 <script src="../assets/js/profile.js"></script>
 <script>
 /* Profiler prototype: mock only. Saves to localStorage, then planner.
@@ -255,6 +256,22 @@ try {
         var idx = cur.indexOf(val);
         if (idx >= 0) cur.splice(idx, 1); else cur.push(val);
         chipsOut(rowId, cur.length ? cur : ["None"]);
+      }
+    });
+  }
+  /* Allergen lookup grows with the admin board; new types join the
+     row before rehydration so saved selections still land. */
+  if (window.NutriTipidBoard) {
+    var allRow = document.getElementById("allRow");
+    var noneChip = allRow.querySelector('[data-val="None"]');
+    NutriTipidBoard.allergens().forEach(function (a) {
+      if (!allRow.querySelector('[data-val="' + a + '"]')) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "chip";
+        b.setAttribute("data-val", a);
+        b.textContent = a;
+        allRow.insertBefore(b, noneChip);
       }
     });
   }
@@ -375,7 +392,7 @@ try {
     <a href="progress.html">Progress</a>
     <a href="profiler.html" class="is-active" aria-current="page">Profile</a>
   </nav>
-<script src="../assets/js/theme.js"><script src="../assets/js/select.js"></script>
-</script>
+<script src="../assets/js/theme.js"></script>
+<script src="../assets/js/select.js"></script>
 </body>
 </html>

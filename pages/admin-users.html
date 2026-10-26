@@ -48,10 +48,15 @@ try {
   <h1>Users.</h1>
   <p class="auth-sub">Accounts across students, the clinic, and admins.</p>
 
-  <div class="board-toolbar is-end">
+  <div class="board-toolbar">
+    <div class="board-search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="userSearch" class="auth-input" type="search" placeholder="Search users" aria-label="Search users by name, email, or role">
+    </div>
     <span class="count-line" id="userCount" role="status"></span>
   </div>
   <div class="diary admin-list" id="userList"></div>
+  <div class="pager" id="userPager"></div>
   <p class="diary-note">Deactivated accounts lose access the next time they sign in.</p>
 </main>
 
@@ -63,6 +68,8 @@ try {
   var B = window.NutriTipidBoard;
   var ADMIN = "admin@example.com";
   var FALLBACK = ["#8A6D1B", "#3E8E7E", "#7A4A21", "#4C7A45", "#2E7D5B", "#A34A24"];
+  var PAGE = 8;
+  var state = { q: "", page: 1 };
 
   var USERS = [
     { name: "Maria Santos", email: "maria@example.com", role: "Student" },
@@ -78,19 +85,69 @@ try {
   ];
   var userListEl = document.getElementById("userList");
   var userCountEl = document.getElementById("userCount");
+  var userSearchEl = document.getElementById("userSearch");
+  var userPagerEl = document.getElementById("userPager");
+
+  function accountList() {
+    var list = USERS.slice();
+    var seen = {};
+    USERS.forEach(function (u) { seen[u.email] = true; });
+    var acc = null;
+    try { acc = JSON.parse(localStorage.getItem("nutritipid-account") || "null"); } catch (e) {}
+    if (acc && acc.email && !seen[acc.email]) {
+      list.push({ name: acc.name || "Member", email: acc.email, role: acc.role === "clinic" ? "Clinic viewer" : "Student" });
+    }
+    return list;
+  }
+
+  function matches(u) {
+    if (!state.q) return true;
+    var hay = (u.name + " " + u.email + " " + u.role).toLowerCase();
+    return hay.indexOf(state.q.toLowerCase()) >= 0;
+  }
+
+  function renderPager(pages) {
+    userPagerEl.innerHTML = "";
+    if (pages <= 1) return;
+    var prev = document.createElement("button");
+    prev.type = "button";
+    prev.className = "pager-btn";
+    prev.textContent = "\u2039";
+    prev.setAttribute("aria-label", "Previous page");
+    prev.disabled = state.page <= 1;
+    prev.addEventListener("click", function () { state.page--; renderUsers(); });
+    var next = document.createElement("button");
+    next.type = "button";
+    next.className = "pager-btn";
+    next.textContent = "\u203A";
+    next.setAttribute("aria-label", "Next page");
+    next.disabled = state.page >= pages;
+    next.addEventListener("click", function () { state.page++; renderUsers(); });
+    var lab = document.createElement("span");
+    lab.className = "tabular";
+    lab.textContent = "Page " + state.page + " of " + pages;
+    userPagerEl.appendChild(prev); userPagerEl.appendChild(lab); userPagerEl.appendChild(next);
+  }
 
   function renderUsers() {
     var off = B.deactivated();
     var acc = null;
     try { acc = JSON.parse(localStorage.getItem("nutritipid-account") || "null"); } catch (e) {}
-    var list = USERS.slice();
-    var seen = {};
-    USERS.forEach(function (u) { seen[u.email] = true; });
-    if (acc && acc.email && !seen[acc.email]) {
-      list.push({ name: acc.name || "Member", email: acc.email, role: acc.role === "clinic" ? "Clinic viewer" : "Student" });
-    }
+    var all = accountList();
+    var pool = all.filter(matches);
+    var pages = Math.max(1, Math.ceil(pool.length / PAGE));
+    if (state.page > pages) state.page = pages;
     userListEl.innerHTML = "";
-    list.forEach(function (u) {
+    if (!pool.length) {
+      var none = document.createElement("p");
+      none.className = "report-note";
+      none.textContent = "No accounts match \u201C" + state.q + "\u201D.";
+      userListEl.appendChild(none);
+      userCountEl.textContent = "0 of " + all.length + " accounts match.";
+      userPagerEl.innerHTML = "";
+      return;
+    }
+    pool.slice((state.page - 1) * PAGE, state.page * PAGE).forEach(function (u) {
       var active = off.indexOf(u.email) < 0;
       var row = document.createElement("div");
       row.className = "meal is-user" + (active ? "" : " is-off");
@@ -128,9 +185,20 @@ try {
       row.appendChild(av); row.appendChild(who); row.appendChild(nums);
       userListEl.appendChild(row);
     });
-    var activeCount = list.filter(function (u) { return off.indexOf(u.email) < 0; }).length;
-    userCountEl.textContent = list.length + " accounts \u00B7 " + activeCount + " active.";
+    if (state.q) {
+      userCountEl.textContent = pool.length + " of " + all.length + " accounts match.";
+    } else {
+      var activeCount = all.filter(function (u) { return off.indexOf(u.email) < 0; }).length;
+      userCountEl.textContent = all.length + " accounts \u00B7 " + activeCount + " active.";
+    }
+    renderPager(pages);
   }
+
+  userSearchEl.addEventListener("input", function () {
+    state.q = userSearchEl.value.trim();
+    state.page = 1;
+    renderUsers();
+  });
   renderUsers();
 })();
 </script>

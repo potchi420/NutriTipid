@@ -147,6 +147,7 @@ try {
   </div>
 </main>
 
+<script src="../assets/js/board.js"></script>
 <script src="../assets/js/profile.js"></script>
 <script>
 /* Onboarding prototype: mock only. Same storage shape as profiler.html;
@@ -238,6 +239,22 @@ try {
       }
     });
   }
+  /* Allergen lookup grows with the admin board; new types join the
+     row before rehydration so saved selections still land. */
+  if (window.NutriTipidBoard) {
+    var allRow = document.getElementById("allRow");
+    var noneChip = allRow.querySelector('[data-val="None"]');
+    NutriTipidBoard.allergens().forEach(function (a) {
+      if (!allRow.querySelector('[data-val="' + a + '"]')) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "chip";
+        b.setAttribute("data-val", a);
+        b.textContent = a;
+        allRow.insertBefore(b, noneChip);
+      }
+    });
+  }
   if (saved && Array.isArray(saved.conditions) && saved.conditions.length) chipsOut("conRow", saved.conditions);
   if (saved && Array.isArray(saved.allergies) && saved.allergies.length) chipsOut("allRow", saved.allergies);
   chipWire("conRow");
@@ -321,7 +338,7 @@ try {
   });
 })();
 </script>
-<script src="../assets/js/theme.js"><script src="../assets/js/select.js"></script>
-</script>
+<script src="../assets/js/theme.js"></script>
+<script src="../assets/js/select.js"></script>
 </body>
 </html>

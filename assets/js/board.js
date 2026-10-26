@@ -91,6 +91,96 @@
     try { localStorage.setItem("nutritipid-dishes", JSON.stringify(d)); } catch (e) {}
   }
 
+  /* Dish detail edits (name, category, allergens, nutrition). Records
+     stay keyed by the original dish name so price overrides and
+     activation flags never detach; a rename is a display overlay. */
+  function dishMetas() {
+    var m = readJson("nutritipid-dishmeta", null);
+    return m && typeof m === "object" && m.edits ? m.edits : {};
+  }
+  function saveMetas(edits) {
+    try { localStorage.setItem("nutritipid-dishmeta", JSON.stringify({ edits: edits })); } catch (e) {}
+  }
+  function metaOf(name) {
+    var e = dishMetas()[name];
+    return e && typeof e === "object" ? e : null;
+  }
+  function setDishMeta(name, patch) {
+    var edits = dishMetas();
+    var cur = edits[name] || {};
+    Object.keys(patch).forEach(function (k) {
+      if (typeof patch[k] !== "undefined") cur[k] = patch[k];
+    });
+    edits[name] = cur;
+    saveMetas(edits);
+    return cur;
+  }
+
+  /* Admin-added dishes carry their own record, so an edit rewrites it
+     and a rename migrates every name-keyed record along. */
+  function updateExtra(name, patch) {
+    var d = readJson("nutritipid-dishes", null);
+    if (!d || !Array.isArray(d.extras)) return false;
+    var hit = null;
+    d.extras.forEach(function (x) { if (x.name === name) hit = x; });
+    if (!hit) return false;
+    var newName = typeof patch.name === "string" && patch.name && patch.name !== name ? patch.name : null;
+    if (newName) {
+      var b = board();
+      if (Object.prototype.hasOwnProperty.call(b.prices, name)) {
+        b.prices[newName] = b.prices[name];
+        delete b.prices[name];
+        saveBoard(b);
+      }
+      var i = b.inactive.indexOf(name);
+      if (i >= 0) {
+        b.inactive.splice(i, 1);
+        b.inactive.push(newName);
+        saveBoard(b);
+      }
+      var edits = dishMetas();
+      if (edits[name]) {
+        edits[newName] = edits[name];
+        delete edits[name];
+        saveMetas(edits);
+      }
+      hit.name = newName;
+    }
+    ["cat", "al", "kcal", "protein", "source"].forEach(function (k) {
+      if (typeof patch[k] !== "undefined") hit[k] = patch[k];
+    });
+    try { localStorage.setItem("nutritipid-dishes", JSON.stringify(d)); } catch (e) {}
+    return true;
+  }
+
+  /* Allergen lookup: base three on first use, then admin-owned. */
+  var BASE_ALLERGENS = ["Shrimp", "Egg", "Fish"];
+  function allStore() {
+    var a = readJson("nutritipid-allergens", null);
+    if (!a || !Array.isArray(a.list)) a = { list: BASE_ALLERGENS.slice() };
+    return a;
+  }
+  function allergens() {
+    return allStore().list.slice();
+  }
+  function addAllergen(name) {
+    var n = String(name || "").trim();
+    if (!n) return false;
+    var a = allStore();
+    if (a.list.indexOf(n) >= 0) return false;
+    a.list.push(n);
+    try { localStorage.setItem("nutritipid-allergens", JSON.stringify(a)); } catch (e) {}
+    return true;
+  }
+  function removeAllergen(name) {
+    var a = allStore();
+    var i = a.list.indexOf(name);
+    if (i < 0) return false;
+    a.list.splice(i, 1);
+    try { localStorage.setItem("nutritipid-allergens", JSON.stringify(a)); } catch (e) {}
+    return true;
+  }
+
   window.NutriTipidBoard = {
     priceOf: priceOf,
     isActive: isActive,
@@ -100,6 +190,12 @@
     deactivated: deactivated,
     toggleDeactivated: toggleDeactivated,
     extraDishes: extraDishes,
-    addExtra: addExtra
+    addExtra: addExtra,
+    metaOf: metaOf,
+    setDishMeta: setDishMeta,
+    updateExtra: updateExtra,
+    allergens: allergens,
+    addAllergen: addAllergen,
+    removeAllergen: removeAllergen
   };
 })();

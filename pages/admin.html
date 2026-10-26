@@ -53,11 +53,61 @@ try {
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="boardSearch" class="auth-input" type="search" placeholder="Search dishes" aria-label="Search dishes by name or allergen">
     </div>
+    <button type="button" class="chip-toggle is-add" id="addDish">Add dish</button>
+    <button type="button" class="chip-toggle" id="offToggle" aria-pressed="false">Show deactivated</button>
     <span class="count-line" id="boardCount" role="status"></span>
   </div>
   <div class="diary admin-list" id="boardList"></div>
   <div class="pager" id="boardPager"></div>
 </main>
+
+<div class="sheet-scrim" id="dishScrim"></div>
+<section class="sheet" id="dishSheet" role="dialog" aria-modal="true" aria-labelledby="dishTitle">
+  <div class="sheet-head">
+    <h2 id="dishTitle">Add dish</h2>
+    <button type="button" class="sheet-close" id="dishClose" aria-label="Close dialog">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <label class="auth-label" for="dishName">Dish name</label>
+  <input id="dishName" class="auth-input" type="text" maxlength="60">
+  <div class="dish-2col">
+    <div>
+      <label class="auth-label" for="dishCat">Category</label>
+      <select id="dishCat" class="auth-input">
+        <option value="Ulam">Ulam</option>
+        <option value="Rice meal">Rice meal</option>
+        <option value="Snack">Snack</option>
+      </select>
+    </div>
+    <div>
+      <label class="auth-label" for="dishPrice">Price, pesos</label>
+      <input id="dishPrice" class="auth-input tabular" type="number" min="5" step="5" inputmode="numeric">
+    </div>
+  </div>
+  <div class="dish-2col">
+    <div>
+      <label class="auth-label" for="dishKcal">kcal per serving</label>
+      <input id="dishKcal" class="auth-input tabular" type="number" min="0" inputmode="numeric">
+    </div>
+    <div>
+      <label class="auth-label" for="dishProtein">Protein, grams</label>
+      <input id="dishProtein" class="auth-input tabular" type="number" min="0" inputmode="numeric">
+    </div>
+  </div>
+  <span class="auth-label">Allergens</span>
+  <div class="chip-row" id="dishAl"></div>
+  <p class="sheet-note">Tagged allergens skip the plans of students who flag them. Lookups in use by a dish cannot be removed.</p>
+  <label class="auth-label" for="dishNsrc">Nutrient source</label>
+  <select id="dishNsrc" class="auth-input">
+    <option value="Computed">Computed estimate</option>
+    <option value="PhilFCT">PhilFCT</option>
+    <option value="FNRI">FNRI</option>
+    <option value="USDA">USDA</option>
+  </select>
+  <p class="sheet-note" id="dishErr"></p>
+  <button type="button" class="btn btn-primary sheet-save" id="dishSave">Save dish</button>
+</section>
 
 <script src="../assets/js/board.js"></script>
 <script>
@@ -67,8 +117,10 @@ try {
   var B = window.NutriTipidBoard;
   var ADMIN = "admin@example.com";
   var PAGE = 8;
+  var X_SVG = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
 
-  /* Base pool mirrors the planner's 13 canteen meals; dot colors match its letter dots. */
+  /* Base pool mirrors the planner's 13 canteen meals; records stay keyed
+     by these names even after display edits. */
   var BASE = [
     { name: "Lugaw", price: 15, kcal: 280, protein: 7, cat: "Rice meal", al: [], dot: "L", color: "#8A6D1B" },
     { name: "Arroz caldo w/ egg", price: 30, kcal: 420, protein: 14, cat: "Rice meal", al: ["Egg"], dot: "A", color: "#1F9D55" },
@@ -85,7 +137,7 @@ try {
     { name: "Sinigang na Bangus, half rice", price: 45, kcal: 420, protein: 24, cat: "Ulam", al: ["Fish"], dot: "F", color: "#4A7E96" }
   ];
 
-  /* Local photo set, same files the planner serves; missing entries keep the letter dot. */
+  /* Local photo set keyed by the original dish name; renames keep the photo. */
   var IMG = {
     "Lugaw": "../assets/img/dishes/lugaw.jpg",
     "Arroz caldo w/ egg": "../assets/img/dishes/arroz-caldo.jpg",
@@ -104,58 +156,97 @@ try {
 
   var FALLBACK = ["#8A6D1B", "#3E8E7E", "#7A4A21", "#4C7A45", "#2E7D5B", "#A34A24"];
 
+  /* Effective rows: meta edits overlay the base, extras carry their own.
+     Source follows the schema's FoodSource lookup; "Computed" is the
+     default estimate and stays off the row so real tables stand out. */
+  var TABLE_SOURCES = ["PhilFCT", "FNRI", "USDA"];
+  function rowSource(raw) {
+    return TABLE_SOURCES.indexOf(raw) >= 0 ? raw : null;
+  }
   function dishList() {
-    return BASE.concat(B.extraDishes().map(function (d) {
+    var rows = BASE.map(function (d) {
+      var m = B.metaOf(d.name) || {};
+      return {
+        key: d.name,
+        name: m.name || d.name,
+        price: d.price,
+        kcal: typeof m.kcal === "number" ? m.kcal : d.kcal,
+        protein: typeof m.protein === "number" ? m.protein : d.protein,
+        cat: m.cat || d.cat,
+        al: m.al || d.al || [],
+        nsrc: rowSource(m.source),
+        dot: d.dot,
+        color: d.color,
+        ink: d.ink,
+        base: true
+      };
+    });
+    B.extraDishes().forEach(function (d) {
       var code = 0;
       for (var j = 0; j < d.name.length; j++) code = (code + d.name.charCodeAt(j)) % FALLBACK.length;
-      return {
-        name: d.name, price: d.price, kcal: d.kcal, protein: d.protein,
-        cat: d.cat || "Ulam", al: d.al || [],
-        dot: d.name.charAt(0).toUpperCase(), color: FALLBACK[code]
-      };
-    }));
+      rows.push({
+        key: d.name,
+        name: d.name,
+        price: d.price,
+        kcal: d.kcal,
+        protein: d.protein,
+        cat: d.cat || "Ulam",
+        al: d.al || [],
+        nsrc: rowSource(d.source),
+        dot: d.name.charAt(0).toUpperCase(),
+        color: FALLBACK[code]
+      });
+    });
+    return rows;
   }
 
   var boardEl = document.getElementById("boardList");
   var pagerEl = document.getElementById("boardPager");
   var countEl = document.getElementById("boardCount");
   var searchEl = document.getElementById("boardSearch");
-  var state = { q: "", page: 1 };
+  var offToggle = document.getElementById("offToggle");
+  var addDishBtn = document.getElementById("addDish");
+  var state = { q: "", page: 1, showOff: false };
 
   function matches(d) {
     if (!state.q) return true;
-    var hay = (d.name + " " + d.cat + " " + (d.al || []).join(" ")).toLowerCase();
+    var hay = (d.name + " " + d.cat + " " + (d.nsrc || "") + " " + (d.al || []).join(" ")).toLowerCase();
     return hay.indexOf(state.q.toLowerCase()) >= 0;
   }
 
   function renderBoard() {
     var all = dishList();
-    var rows = all.filter(matches);
+    var pool = all.filter(function (d) { return state.showOff || B.isActive(d.key); });
+    var rows = pool.filter(matches);
     var pages = Math.max(1, Math.ceil(rows.length / PAGE));
     if (state.page > pages) state.page = pages;
     boardEl.innerHTML = "";
     if (!rows.length) {
       var none = document.createElement("p");
       none.className = "report-note";
-      none.textContent = "No dishes match \u201C" + state.q + "\u201D. Try a shorter name.";
+      none.textContent = state.q
+        ? "No dishes match \u201C" + state.q + "\u201D. Try a shorter name."
+        : "No active dishes. Turn on \u201CShow deactivated\u201D or add one below.";
       boardEl.appendChild(none);
-      countEl.textContent = "0 of " + all.length + " dishes match.";
+      countEl.textContent = "0 dishes";
       pagerEl.innerHTML = "";
       return;
     }
     rows.slice((state.page - 1) * PAGE, state.page * PAGE).forEach(function (d) {
       boardEl.appendChild(buildRow(d));
     });
+    var offCount = all.length - all.filter(function (d) { return B.isActive(d.key); }).length;
     countEl.textContent = state.q
-      ? rows.length + " of " + all.length + " dishes match."
-      : all.length + " dishes on the board.";
+      ? rows.length + " of " + pool.length + " dishes match."
+      : rows.length + " dishes on the board" + (state.showOff && offCount ? " \u00B7 " + offCount + " deactivated" : "") + ".";
     renderPager(pages);
   }
 
   function buildRow(d) {
-    var on = B.isActive(d.name);
+    var on = B.isActive(d.key);
     var row = document.createElement("div");
     row.className = "meal" + (on ? "" : " is-off");
+    row.setAttribute("data-key", d.key);
     var tw = document.createElement("span");
     tw.className = "board-thumb";
     tw.setAttribute("aria-hidden", "true");
@@ -165,7 +256,7 @@ try {
     if (d.ink) dot.style.color = d.ink;
     dot.textContent = d.dot;
     tw.appendChild(dot);
-    var img = IMG[d.name];
+    var img = IMG[d.key];
     if (img) {
       var im = document.createElement("img");
       im.src = img;
@@ -181,7 +272,7 @@ try {
     strong.textContent = d.name;
     who.appendChild(strong);
     var meta = document.createElement("span");
-    meta.textContent = d.cat + " \u00B7 " + d.kcal + " kcal \u00B7 " + d.protein + "g protein";
+    meta.textContent = d.cat + (d.nsrc ? " \u00B7 " + d.nsrc : "") + " \u00B7 " + d.kcal + " kcal \u00B7 " + d.protein + "g protein";
     who.appendChild(meta);
     if ((d.al || []).length) {
       var pills = document.createElement("div");
@@ -197,10 +288,17 @@ try {
     row.appendChild(who);
     var nums = document.createElement("div");
     nums.className = "nums";
+    var edit = document.createElement("button");
+    edit.type = "button";
+    edit.className = "ghost-btn";
+    edit.textContent = "Edit";
+    edit.setAttribute("aria-label", "Edit " + d.name);
+    edit.addEventListener("click", function () { openSheet("edit", d); });
+    nums.appendChild(edit);
     var price = document.createElement("button");
     price.type = "button";
     price.className = "price-btn";
-    price.textContent = "P" + B.priceOf(d.name, d.price);
+    price.textContent = "P" + B.priceOf(d.key, d.price);
     price.setAttribute("aria-label", "Edit price of " + d.name);
     price.addEventListener("click", function () { startEdit(d); });
     nums.appendChild(price);
@@ -210,7 +308,7 @@ try {
     act.textContent = on ? "Deactivate" : "Activate";
     act.setAttribute("aria-label", (on ? "Deactivate " : "Activate ") + d.name);
     act.addEventListener("click", function () {
-      B.toggleActive(d.name);
+      B.toggleActive(d.key);
       renderBoard();
     });
     nums.appendChild(act);
@@ -222,7 +320,7 @@ try {
     var rows = boardEl.querySelectorAll(".meal");
     var row = null;
     for (var i = 0; i < rows.length; i++) {
-      if (rows[i].querySelector(".who strong").textContent === d.name) { row = rows[i]; break; }
+      if (rows[i].getAttribute("data-key") === d.key) { row = rows[i]; break; }
     }
     if (!row) return;
     var nums = row.querySelector(".nums");
@@ -232,7 +330,7 @@ try {
     var input = document.createElement("input");
     input.type = "number";
     input.className = "auth-input tabular";
-    input.value = B.priceOf(d.name, d.price);
+    input.value = B.priceOf(d.key, d.price);
     input.setAttribute("aria-label", "New price for " + d.name);
     var err = document.createElement("span");
     err.className = "edit-note";
@@ -248,7 +346,7 @@ try {
       var v = Number(input.value);
       if (!(v > 0)) { err.textContent = "Use a peso amount."; return; }
       if (Math.round(v) !== v || v % 5 !== 0) { err.textContent = "Vendors round to fives."; return; }
-      if (B.setPrice(d.name, v, ADMIN, d.price)) {
+      if (B.setPrice(d.key, v, ADMIN, d.price)) {
         renderBoard();
       } else {
         err.textContent = "Vendors round to fives.";
@@ -290,6 +388,174 @@ try {
     state.page = 1;
     renderBoard();
   });
+  offToggle.addEventListener("click", function () {
+    state.showOff = !state.showOff;
+    offToggle.setAttribute("aria-pressed", state.showOff ? "true" : "false");
+    state.page = 1;
+    renderBoard();
+  });
+  addDishBtn.addEventListener("click", function () { openSheet("add", null); });
+
+  /* Add / edit dish sheet. */
+  var scrim = document.getElementById("dishScrim");
+  var sheet = document.getElementById("dishSheet");
+  var sheetTitle = document.getElementById("dishTitle");
+  var dishName = document.getElementById("dishName");
+  var dishCat = document.getElementById("dishCat");
+  var dishPrice = document.getElementById("dishPrice");
+  var dishKcal = document.getElementById("dishKcal");
+  var dishProtein = document.getElementById("dishProtein");
+  var dishAl = document.getElementById("dishAl");
+  var dishNsrc = document.getElementById("dishNsrc");
+  var dishErr = document.getElementById("dishErr");
+  var dishSave = document.getElementById("dishSave");
+  var mode = "add";
+  var editingKey = null;
+  var editingBase = false;
+  var lastFocus = null;
+
+  function chipsOn(row, sel) {
+    var out = [];
+    Array.prototype.forEach.call(row.querySelectorAll(sel), function (b) {
+      if (b.classList.contains("is-on")) out.push(b.getAttribute("data-val"));
+    });
+    return out;
+  }
+  /* Allergen lookups are managed here, where tagging happens: toggle to
+     tag, × to remove a lookup, "+ New" to grow the list on the spot. */
+  function buildAlChips(selected) {
+    dishAl.innerHTML = "";
+    var dishes = dishList();
+    B.allergens().forEach(function (a) {
+      var used = dishes.some(function (d) { return (d.al || []).indexOf(a) >= 0; });
+      var wrap = document.createElement("span");
+      wrap.className = "tag-chip";
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "tag-btn" + (selected.indexOf(a) >= 0 ? " is-on" : "");
+      b.setAttribute("data-val", a);
+      b.setAttribute("aria-pressed", selected.indexOf(a) >= 0 ? "true" : "false");
+      b.textContent = a;
+      b.addEventListener("click", function () {
+        var on = b.classList.toggle("is-on");
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      wrap.appendChild(b);
+      var x = document.createElement("button");
+      x.type = "button";
+      x.className = "tag-x";
+      x.innerHTML = X_SVG;
+      if (used) {
+        x.disabled = true;
+        x.setAttribute("aria-label", a + " is in use by a dish and cannot be removed");
+      } else {
+        x.setAttribute("aria-label", "Remove " + a + " from the lookup");
+        x.addEventListener("click", function () {
+          B.removeAllergen(a);
+          buildAlChips(chipsOn(dishAl, ".tag-btn"));
+        });
+      }
+      wrap.appendChild(x);
+      dishAl.appendChild(wrap);
+    });
+    var addWrap = document.createElement("span");
+    addWrap.className = "tag-chip tag-new";
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.className = "tag-input";
+    inp.placeholder = "+ New";
+    inp.setAttribute("aria-label", "New allergen name");
+    inp.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      var v = inp.value.trim();
+      if (!v) return;
+      if (B.allergens().indexOf(v) >= 0) { dishErr.textContent = "Already in the lookup."; return; }
+      B.addAllergen(v);
+      dishErr.textContent = "";
+      buildAlChips(chipsOn(dishAl, ".tag-btn").concat([v]));
+    });
+    addWrap.appendChild(inp);
+    dishAl.appendChild(addWrap);
+  }
+  function openSheet(m, d) {
+    mode = m;
+    lastFocus = document.activeElement;
+    dishErr.textContent = "";
+    dishAl.innerHTML = "";
+    if (mode === "add") {
+      sheetTitle.textContent = "Add dish";
+      editingKey = null;
+      editingBase = false;
+      dishName.value = "";
+      dishCat.value = "Ulam";
+      dishPrice.value = "";
+      dishKcal.value = "";
+      dishProtein.value = "";
+      buildAlChips([]);
+      dishNsrc.value = "Computed";
+    } else {
+      sheetTitle.textContent = "Edit dish";
+      editingKey = d.key;
+      editingBase = !!d.base;
+      dishName.value = d.name;
+      dishCat.value = d.cat;
+      dishPrice.value = B.priceOf(d.key, d.price);
+      dishKcal.value = d.kcal;
+      dishProtein.value = d.protein;
+      buildAlChips(d.al || []);
+      dishNsrc.value = d.nsrc || "Computed";
+    }
+    scrim.classList.add("is-open");
+    sheet.classList.add("is-open");
+    dishName.focus();
+  }
+  function closeSheet() {
+    scrim.classList.remove("is-open");
+    sheet.classList.remove("is-open");
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  document.getElementById("dishClose").addEventListener("click", closeSheet);
+  scrim.addEventListener("click", closeSheet);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && sheet.classList.contains("is-open")) closeSheet();
+  });
+  dishSave.addEventListener("click", function () {
+    var name = dishName.value.trim();
+    var cat = dishCat.value;
+    var price = Number(dishPrice.value);
+    var kcal = Number(dishKcal.value);
+    var prot = Number(dishProtein.value);
+    var al = chipsOn(dishAl, ".tag-btn");
+    var nsrc = dishNsrc.value;
+    if (!name) { dishErr.textContent = "Give the dish a name."; return; }
+    var clash = dishList().some(function (d) {
+      return (d.name === name || d.key === name) && d.key !== editingKey;
+    });
+    if (clash) { dishErr.textContent = "That name is already on the board."; return; }
+    if (!(price > 0) || Math.round(price) !== price || price % 5 !== 0) { dishErr.textContent = "Vendors round to fives."; return; }
+    if (!(kcal >= 0) || Math.round(kcal) !== kcal || !(prot >= 0) || Math.round(prot) !== prot) {
+      dishErr.textContent = "kcal and protein need whole numbers.";
+      return;
+    }
+    if (mode === "add") {
+      B.addExtra({ name: name, price: price, kcal: kcal, protein: prot, cat: cat, al: al, source: nsrc });
+      state.page = 9999; /* land on the new dish's page */
+    } else if (editingBase) {
+      B.setDishMeta(editingKey, {
+        name: name === editingKey ? undefined : name,
+        cat: cat, al: al, kcal: kcal, protein: prot, source: nsrc
+      });
+    } else {
+      B.updateExtra(editingKey, {
+        name: name === editingKey ? undefined : name,
+        cat: cat, al: al, kcal: kcal, protein: prot, source: nsrc
+      });
+    }
+    closeSheet();
+    renderBoard();
+  });
+
   renderBoard();
 })();
 </script>

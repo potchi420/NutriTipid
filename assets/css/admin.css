@@ -40,15 +40,164 @@
   align-items: center;
   gap: 16px;
   margin-top: 24px;
-}
-.board-toolbar.is-end {
-  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 .board-search {
   position: relative;
   display: block;
-  flex: 1;
+  flex: 1 1 200px;
   min-width: 0;
+}
+
+/* Chip toggles: allergen picker, source picker, list filters. */
+.chip-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chip-toggle {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.chip-toggle:hover {
+  color: var(--ink);
+}
+.chip-toggle.is-on,
+.chip-toggle[aria-pressed="true"],
+.chip-toggle.is-add {
+  color: var(--stamp);
+  border-color: var(--stamp);
+}
+.chip-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Dish add / edit sheet form. */
+.dish-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.dish-2col .auth-label {
+  margin-top: 12px;
+}
+.sheet .auth-input {
+  margin-top: 4px;
+}
+.sheet-note {
+  min-height: 18px;
+}
+.sheet-save {
+  margin-top: 14px;
+  width: 100%;
+}
+
+/* Tag chips in the dish sheet: toggle tags, × removes the lookup,
+   "+ New" grows it. Lookups in use keep their × disabled. */
+.tag-chip {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  overflow: hidden;
+}
+.tag-btn {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 7px 10px 7px 14px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.tag-btn:hover {
+  color: var(--ink);
+}
+.tag-btn.is-on {
+  color: var(--stamp);
+}
+.tag-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+.tag-x {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  width: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  border-left: 1px solid var(--line);
+}
+.tag-x:hover:not(:disabled) {
+  color: #B3261E;
+}
+.tag-x:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.tag-x:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+.tag-new {
+  padding: 0;
+}
+.tag-new:focus-within {
+  border-color: var(--primary);
+}
+.tag-input {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  width: 84px;
+  padding: 7px 12px;
+  outline: none;
+}
+.tag-input::placeholder {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Row edit button. */
+.ghost-btn {
+  flex: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  min-height: 36px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.ghost-btn:hover {
+  color: var(--ink);
+}
+.ghost-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 .board-search svg {
   position: absolute;
