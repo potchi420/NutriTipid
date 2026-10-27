@@ -1,8 +1,8 @@
-/* Clinic viewer mock data: deterministic patients + access log, shaped
-   after AppUsers/UserProfile/MealPlan/IntakeLog/ProgressLog/AccessLog.
-   Four weeks of intake rows per patient so the report can show
-   consistency across weeks; Maria resolves real local data when it
-   lives in this browser; the rest are fixed samples. */
+/* clinic viewer data, deterministic patients plus the access log.
+   rows follow the schema shapes (AppUsers, UserProfile, MealPlan, IntakeLog,
+   ProgressLog, AccessLog) so the backend swap stays boring. four weeks of
+   intake per patient, maria resolves real browser data, rest are samples
+   */
 (function () {
   "use strict";
 
@@ -29,9 +29,11 @@
   var PROTEIN_GOAL = 60;
   var DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-  /* Four weeks of intake rows: [kcal, spent, protein] x 7 days.
-     Week 4 is the week the Progress page shows, so Maria's report and
-     her own dashboards always agree. */
+  /* [kcal, spent, protein] x 7 days, four weeks.
+     week 4 = the exact week the progress page shows so maria's report and
+     her dashboards always agree. hand-authored after a script mangled them
+     once, keep edits by hand
+   */
   var WEEKS = {
     maria: [
       { label: "Week of Sep 1", rows: [[1500, 90, 58], [1580, 95, 60], [1450, 92, 54], [1600, 94, 66], [1400, 88, 58], [1650, 112, 63], [1520, 93, 61]] },
@@ -77,8 +79,9 @@
     ]
   };
 
-  /* Generated 7-day plans: campus slots lunch, dinner, snack
-     (breakfast is from home at P0). Names + prices from the board. */
+/* the 7-day plans, campus slots only, lunch, dinner, snack, breakfast is
+     packed from home at P0. dish names and prices come from the board
+   */
   var PLANS = {
     maria: [
       ["Ginisang Monggo", "Chicken Adobo", "Lugaw"],
@@ -145,7 +148,8 @@
     ]
   };
 
-  /* Prices: canteen board, SRP rounding to fives. */
+  /* canteen prices, everything rounds to fives
+   */
   var PRICE = {
     "Lugaw": 15, "Arroz caldo w/ egg": 30, "Fried egg, half rice": 20,
     "Chicken Tinola": 45, "Chicken Adobo": 40, "Pork Menudo": 45,
@@ -153,7 +157,8 @@
     "Beef Caldereta": 55, "Chop Suey": 35
   };
 
-  /* Weigh-ins across the month, oldest to newest. */
+  /* weigh-ins through the month, oldest to newest
+   */
   var WEIGHTS = {
     maria: [["Sep 1", 72.5], ["Sep 5", 72.1], ["Sep 10", 71.8], ["Sep 15", 71.0], ["Sep 22", 70.6], ["Sep 29", 69.8]],
     juan: [["Sep 2", 66.8], ["Sep 9", 66.2], ["Sep 16", 66.0], ["Sep 23", 65.7], ["Sep 29", 65.9]],
@@ -191,14 +196,15 @@
     };
   }
 
-  /* Maria binds to the real browser data: profile + tracker weight +
-     kcal target + logged extras. Fallbacks keep her card intact on a
-     fresh browser. */
+/* maria binds to the real browser data, profile, tracker weights, kcal
+      target, logged extras. fresh browser = fallbacks, her card stays intact
+   */
   function foldIntake(rows) {
     try {
       var intake = readJson("nutritipid-intake", null);
       if (!intake || typeof intake !== "object") return;
-      /* Same pool as the dashboard's EAT list, in the same order. */
+      /* same pool as the dashboard's EAT list, same order, the indices have to match
+       */
       var EAT = [{ p: 15, k: 280 }, { p: 35, k: 520 }, { p: 40, k: 520 }, { p: 45, k: 460 }, { p: 25, k: 320 }, { p: 30, k: 420 }];
       Object.keys(intake).forEach(function (dayKey) {
         var day = Number(dayKey) % 7;
@@ -284,7 +290,8 @@
       p.bmiCat = p.bmi < 18.5 ? ["Underweight", "is-warn"] : p.bmi < 25 ? ["Normal", "is-ok"] : p.bmi < 30 ? ["Overweight", "is-warn"] : ["Obese", "is-alert"];
     }
     p.weightDelta = p.weight.length >= 2 ? Math.round((p.weight[p.weight.length - 1].kg - p.weight[0].kg) * 10) / 10 : 0;
-    /* Logged extras from the dashboard fold into the latest week. */
+    /* logged extras from the dashboard fold into the latest week
+     */
     foldIntake(p.rows);
     p.weeks.forEach(function (w) {
       w.summary = summarize(w.rows, p.budget, p.kcalTarget, p.proteinGoal);

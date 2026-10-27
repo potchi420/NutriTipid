@@ -1,4 +1,5 @@
-/* Shared theme toggle for app pages. Same storage key as the landing. */
+/* theme toggle for app pages, same nutritipid-theme key as the landing
+   */
 (function () {
   "use strict";
   var root = document.documentElement;

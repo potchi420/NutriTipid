@@ -1,6 +1,4 @@
-/* Dashboard home: MFP-style diary landing. Mock Module 4 plus 7.
-   Reads tokens from styles.css. Link after styles.css. Reuses
-   .panel, .bar, .meal, .back-link, .auth-sub, .header-link. */
+/* dashboard, MFP style home. leans on global pieces so link after styles.css */
 .dash-wrap {
   width: min(880px, 100%);
   margin: 0 auto;
@@ -97,18 +95,6 @@
 [data-theme="dark"] .add-btn {
   color: var(--primary);
 }
-.meal-dot {
-  width: 44px;
-  height: 44px;
-  border-radius: 99px;
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 800;
-  color: #fff;
-}
 .macro-bar {
   display: flex;
   height: 12px;
@@ -140,10 +126,7 @@
   border-radius: 99px;
   margin-right: 6px;
 }
-.plan-cta {
-  margin-top: 24px;
-}
-/* Logged extras + over-budget hero state. */
+/* logged extras + over budget state, hero goes red. functional red only */
 .hero-num.is-over {
   color: #B3261E;
 }
@@ -173,17 +156,6 @@
 }
 @media (max-width: 900px) {
   .hero-duo {
-    grid-template-columns: 1fr;
-  }
-  .dash-grid-3 {
-    grid-template-columns: 1fr 1fr;
-  }
-  .dash-grid-2 {
-    grid-template-columns: 1fr;
-  }
-}
-@media (max-width: 560px) {
-  .dash-grid-3 {
     grid-template-columns: 1fr;
   }
 }

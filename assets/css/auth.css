@@ -1,5 +1,4 @@
-/* Auth: shared login plus forgot password system. Mock only.
-   Reads tokens from styles.css. Link after styles.css. Same flat hairlines. */
+/* auth pages, login signup forgot all share this. link after styles.css */
 .auth-page {
   background: var(--soft);
   min-height: 100dvh;

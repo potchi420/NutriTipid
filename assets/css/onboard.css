@@ -1,8 +1,4 @@
-/* Onboarding: one card, three steps (how it works, profile, week gate).
-   Mock Module 1 onboarding path. Reads tokens from styles.css. Link
-   after auth.css and planner.css (reuses their form/chip pieces).
-   Reuses .panel, .auth-*, .field-2, .unit-row, .range-ends, .big-peso,
-   .chip, .agree-row, .btn, .text-link, .form-note. */
+/* onboarding, one card three steps. same fields as profiler.html on purpose */
 .onboard-wrap {
   width: min(560px, 100%);
   margin: 0 auto;

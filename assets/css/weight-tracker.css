@@ -1,6 +1,4 @@
-/* Weight tracker: app module. Reads tokens from styles.css. Link after
-   styles.css and auth.css. Reuses .panel, .diary, .diary-foot, .auth-label,
-   .auth-input, .auth-msg, .btn, .back-link, .auth-sub, .header-link. */
+/* weight tracker, log form on top then stats chart history. links after styles + auth css */
 .weight-wrap {
   width: min(880px, 100%);
   margin: 0 auto;
@@ -13,84 +11,22 @@
   letter-spacing: -0.03em;
   line-height: 1.05;
 }
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  margin-top: 24px;
-}
 .stat-grid > *,
 .weight-wrap > * {
   min-width: 0;
 }
-.panel.stat {
-  padding: 20px;
-}
-.panel.stat h2 {
-  margin: 0;
-  font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.stat-num {
-  margin-top: 10px;
-  font-size: clamp(26px, 3vw, 32px);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1;
-}
-.stat-cap {
-  margin: 8px 0 0;
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.55;
-}
 .chart-panel {
   margin-top: 24px;
-}
-.chart-holder {
-  margin-top: 16px;
-  border-top: 1px solid var(--line);
-  padding-top: 16px;
-}
-.chart-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-.chart-svg .grid {
-  stroke: var(--line);
-  stroke-width: 1;
 }
 .chart-svg .axis {
   stroke: var(--line);
   stroke-width: 1;
-}
-.chart-svg .trend {
-  fill: none;
-  stroke: var(--primary);
-  stroke-width: 2.5;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-.chart-svg .dot {
-  fill: var(--surface);
-  stroke: var(--primary);
-  stroke-width: 2.5;
 }
 .chart-svg .tick {
   fill: var(--muted);
   font-size: 11px;
   font-family: Inter, system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
-}
-.verdict {
-  margin: 14px 0 0;
-  font-size: 13.5px;
-  color: var(--muted);
-  line-height: 1.6;
 }
 .log-panel {
   margin-top: 24px;

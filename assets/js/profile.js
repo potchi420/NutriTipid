@@ -1,6 +1,6 @@
-/* Shared profile helpers, no framework. One source of truth for the
-   calorie target and the allergy list so the profiler, planner,
-   dashboard, and progress pages never drift apart. */
+/* shared profile helpers, one source of truth for the kcal target and
+   allergy list so pages cant drift apart
+   */
 (function () {
   "use strict";
 
@@ -12,12 +12,11 @@
     return null;
   }
 
-  /* Calorie goal: Mifflin-St Jeor BMR x activity, then a goal step
-     inside the locked 300-500 band (lose -300, hold 0, gain +300),
-     rounded to 50 kcal and clamped to a sane band. No saved profile
-     falls back to 1,500 so every sample page keeps its coherent mock
-     story. Pages that need a live preview (profiler) pass their own
-     source object; kcalParts() exposes the full breakdown. */
+  /* mifflin-st jeor BMR x activity, then a goal step in the locked 300-500
+     band (lose -300, hold 0, gain +300), rounded to 50, clamped 1200-2500.
+     no profile saved = 1,500, every sample page's math is built on that
+     number so dont casually change it. kcalParts() has the breakdown
+   */
   function kcalParts(src) {
     var empty = { bmr: 0, tdee: 0, target: 1500, deficit: 0, has: false };
     var p = src || readProfile();
@@ -48,7 +47,8 @@
 
   window.NutriTipid = { kcalTarget: kcalTarget, kcalParts: kcalParts, allergies: allergies };
 
-  /* Active allergies as stored labels ("None" never counts). */
+  /* allergy labels currently in effect, "None" never counts
+   */
   function allergies() {
     var p = readProfile();
     if (!p || !Array.isArray(p.allergies)) return [];

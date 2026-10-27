@@ -1,7 +1,7 @@
-/* Reference board helpers, no framework: price overrides, soft-deletes,
-   price history, deactivated accounts. Shaped after FoodItem.IsActive +
-   PriceHistory (FoodId, OldPrice, NewPrice, UpdatedBy, UpdatedAt) +
-   AppUsers.IsActive. Admin writes; the planner reads at generation. */
+/* the price board, admin writes, planner reads at generation.
+   price overrides, soft-deletes, price history, deactivated accounts,
+   mirrors FoodItem.IsActive / PriceHistory / AppUsers.IsActive from the schema
+   */
 (function () {
   "use strict";
 
@@ -91,9 +91,10 @@
     try { localStorage.setItem("nutritipid-dishes", JSON.stringify(d)); } catch (e) {}
   }
 
-  /* Dish detail edits (name, category, allergens, nutrition). Records
-     stay keyed by the original dish name so price overrides and
-     activation flags never detach; a rename is a display overlay. */
+  /* dish detail edits (name, category, allergens, nutrition), keyed by the
+     ORIGINAL dish name so price overrides and activation flags never
+     detach. a rename only changes what's displayed, the keys stay put
+   */
   function dishMetas() {
     var m = readJson("nutritipid-dishmeta", null);
     return m && typeof m === "object" && m.edits ? m.edits : {};
@@ -116,8 +117,9 @@
     return cur;
   }
 
-  /* Admin-added dishes carry their own record, so an edit rewrites it
-     and a rename migrates every name-keyed record along. */
+/* admin-added dishes own their whole record, so an edit rewrites it and a
+     rename carries every name-keyed record along with it
+   */
   function updateExtra(name, patch) {
     var d = readJson("nutritipid-dishes", null);
     if (!d || !Array.isArray(d.extras)) return false;
@@ -153,7 +155,8 @@
     return true;
   }
 
-  /* Allergen lookup: base three on first use, then admin-owned. */
+  /* allergen lookup, ships with the base three, admin owns it after that
+   */
   var BASE_ALLERGENS = ["Shrimp", "Egg", "Fish"];
   function allStore() {
     var a = readJson("nutritipid-allergens", null);

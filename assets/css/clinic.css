@@ -1,8 +1,8 @@
-/* Clinic viewer module: patient lobby + read-only patient report.
-   Mock Module 6 read-only half + AccessLog note. Reads tokens from
-   styles.css. Link after styles.css (and planner.css on clinic-patient
-   for the shared profile-head/fact/week-grid pieces). Reuses .panel,
-   .diary, .meal, .meter, .bar, .back-link, .auth-input, .form-note. */
+/* clinic viewer, the lobby and the read-only patient report.
+   read-only means it, nothing on these pages writes student data, every
+   view just gets appended to the access log. clinic-patient also links
+   planner.css for the shared profile-head / fact / week-grid pieces
+   */
 .clinic-wrap {
   width: min(880px, 100%);
   margin: 0 auto;
@@ -117,14 +117,16 @@ button.patient-row:focus-visible {
   text-transform: uppercase;
   color: var(--muted);
 }
-/* Week picker bar: the tab-strip pattern always lives inside a diary
-   box (planner grammar). With no rows under it, drop the strip's own
-   bottom line so the box closes it instead of doubling. */
+/* week picker is a diary-tabs strip with no rows under it, so its own
+   bottom line goes away or you get two stacked hairlines, the box
+   closes it instead
+   */
 .week-diary .diary-tabs {
   border-bottom: 0;
 }
-/* Report panels sit equal; the chart column fills its height so the
-   pair reads symmetric instead of chart-then-void. */
+/* stretch the columns and pin the chart height on desktop so the weight
+   trend and week summary read as a pair, not chart then empty space
+   */
 #reportBody {
   align-items: stretch;
 }
@@ -132,20 +134,6 @@ button.patient-row:focus-visible {
   #trendChart {
     height: 200px;
   }
-}
-.report-line {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 2px;
-  font-size: 13.5px;
-}
-.report-line + .report-line {
-  border-top: 1px solid var(--line);
-}
-.report-line b {
-  font-variant-numeric: tabular-nums;
 }
 .plan-line {
   display: flex;
@@ -200,12 +188,6 @@ button.patient-row:focus-visible {
   fill: var(--muted);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
-}
-.report-note {
-  margin: 14px 2px 0;
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.6;
 }
 .pager {
   display: flex;

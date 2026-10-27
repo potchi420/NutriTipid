@@ -1,7 +1,8 @@
-/* Admin console module: food and price board, price history, access
-   log review, users. Mock Module 7. Reads tokens from styles.css.
-   Link after styles.css. Reuses .panel, .diary, .meal, .sheet-btn,
-   .auth-input, .auth-sub, .tabular. */
+/* admin console, food and price board, price history, access log, users.
+   prices edited here are the real ones, board.js applies overrides before
+   any planner math, and deactivated dishes drop out of generation and
+   swaps entirely. links after styles.css
+   */
 .admin-wrap {
   width: min(880px, 100%);
   margin: 0 auto;
@@ -34,7 +35,8 @@
   text-align: right;
 }
 
-/* Page toolbar: search + count, or count alone on the right. */
+/* toolbar row, search and the count line, or the count alone pushed right
+   */
 .board-toolbar {
   display: flex;
   align-items: center;
@@ -49,12 +51,8 @@
   min-width: 0;
 }
 
-/* Chip toggles: allergen picker, source picker, list filters. */
-.chip-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
+/* chip toggles, allergen and source pickers and the list filters all share these
+   */
 .chip-toggle {
   font: inherit;
   font-size: 13.5px;
@@ -81,7 +79,8 @@
   outline-offset: 2px;
 }
 
-/* Dish add / edit sheet form. */
+/* dish add/edit sheet form, the shared sheet chrome handles the drawer part
+   */
 .dish-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -101,8 +100,10 @@
   width: 100%;
 }
 
-/* Tag chips in the dish sheet: toggle tags, × removes the lookup,
-   "+ New" grows it. Lookups in use keep their × disabled. */
+/* tag chips in the dish sheet, tapping toggles, the × removes that lookup,
+   "+ New" grows the set. lookups already in use keep their × disabled so a
+   dish can't lose its allergen tag mid-edit
+   */
 .tag-chip {
   display: inline-flex;
   align-items: stretch;
@@ -177,7 +178,8 @@
   font-weight: 600;
 }
 
-/* Row edit button. */
+/* the quiet edit button that sits on rows
+   */
 .ghost-btn {
   flex: none;
   font: inherit;
@@ -211,7 +213,9 @@
   padding-left: 42px;
 }
 
-/* Rows share the diary grammar: thumb, text block, actions. */
+/* rows borrow the diary grammar, thumb, text block, actions, so the console
+   reads like the rest of the app instead of an admin table
+   */
 .admin-list {
   margin-top: 14px;
 }
@@ -309,7 +313,9 @@
   opacity: 0.55;
 }
 
-/* Price editing. */
+/* inline price edit, everything rounds to fives like real carinderias,
+   the JS does the enforcing
+   */
 .price-btn {
   flex: none;
   font: inherit;
@@ -349,13 +355,8 @@
   font-weight: 700;
 }
 
-/* Log lists. */
-.report-note {
-  margin: 14px 2px 0;
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.6;
-}
+/* log lists, price history entries and access log rows
+   */
 .log-line {
   display: flex;
   align-items: baseline;
@@ -372,7 +373,8 @@
   font-size: 12.5px;
 }
 
-/* Pager: same grammar as the clinic roster. */
+/* pager, same grammar as the clinic roster
+   */
 .pager {
   display: flex;
   align-items: center;

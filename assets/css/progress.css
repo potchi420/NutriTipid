@@ -1,6 +1,4 @@
-/* Progress dashboard: reports and analytics. Reads tokens from styles.css.
-   Link after styles.css. Reuses .panel, .bar, .meter, .diary, .back-link,
-   .auth-sub, .header-link, .text-link, .summary-num, .summary-label. */
+/* progress page. every number derives from the day rows in the script, nothing hand counted */
 .progress-wrap {
   width: min(880px, 100%);
   margin: 0 auto;
@@ -13,40 +11,10 @@
   letter-spacing: -0.03em;
   line-height: 1.05;
 }
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  margin-top: 24px;
-}
 .stat-grid > *,
 .progress-grid > *,
 .progress-wrap > * {
   min-width: 0;
-}
-.panel.stat {
-  padding: 20px;
-}
-.panel.stat h2 {
-  margin: 0;
-  font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.stat-num {
-  margin-top: 10px;
-  font-size: clamp(26px, 3vw, 32px);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1;
-}
-.stat-cap {
-  margin: 8px 0 0;
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.55;
 }
 .progress-grid {
   display: grid;
@@ -54,37 +22,11 @@
   gap: 24px;
   margin-top: 24px;
 }
-.chart-holder {
-  margin-top: 16px;
-  border-top: 1px solid var(--line);
-  padding-top: 16px;
-}
-.chart-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-.chart-svg .grid {
-  stroke: var(--line);
-  stroke-width: 1;
-}
 .chart-svg .tick {
   fill: var(--muted);
   font-size: 12px;
   font-family: Inter, system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
-}
-.chart-svg .trend {
-  fill: none;
-  stroke: var(--primary);
-  stroke-width: 2.5;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-.chart-svg .dot {
-  fill: var(--surface);
-  stroke: var(--primary);
-  stroke-width: 2.5;
 }
 .chart-svg .bar-meal {
   fill: var(--primary);
@@ -107,12 +49,6 @@
 }
 .meter + .meter {
   margin-top: 18px;
-}
-.verdict {
-  margin: 14px 0 0;
-  font-size: 13.5px;
-  color: var(--muted);
-  line-height: 1.6;
 }
 .summary-num {
   margin-top: 12px;

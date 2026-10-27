@@ -6,41 +6,15 @@
 <title>NutriTipid - Good food on any budget</title>
 <meta name="description" content="NutriTipid builds 7-day meal plans from canteen and carinderia meals in Metro Manila. Price, calories, and macros checked against DOST-FNRI standards for any daily budget.">
 <link rel="icon" href="assets/img/logo_tight.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-/* Tailwind covers layout utilities. Design tokens stay locked to Option 1. */
-tailwind.config = {
-  darkMode: ['selector', '[data-theme="dark"]'],
-  theme: {
-    extend: {
-      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
-      colors: {
-        ink: '#1A2E22',
-        muted: '#5F6F65',
-        line: '#E3E9E4',
-        primary: '#1F9D55',
-        accent: '#E8A415',
-        pine: '#101614',
-        surface: '#18211C',
-        paletext: '#EAF2EC',
-        palemuted: '#9AAFA3',
-        darkline: '#26332C',
-        mint: '#34D399',
-        gold: '#FBBF24'
-      }
-    }
-  }
-}
-</script>
+<link rel="preload" href="assets/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+
 <script>document.documentElement.classList.add('js')</script>
 <link rel="stylesheet" href="assets/css/styles.css">
+<link rel="stylesheet" href="assets/css/landing.css">
 </head>
-<body class="antialiased">
-
+<body class="landing">
 <header class="site-header">
+
   <div class="wrap header-row flex items-center justify-between">
     <a class="brand" href="#top" aria-label="NutriTipid home">
       <img src="assets/img/logo_tight.svg" alt="NutriTipid" class="brand-logo" width="543" height="493" fetchpriority="high">
@@ -93,7 +67,7 @@ tailwind.config = {
       </div>
       <figure class="hero-figure">
         <div class="hero-photo">
-          <img src="assets/img/dishes/pinakbet.png" alt="A bowl of pinakbet, Filipino vegetable stew" fetchpriority="high">
+          <img src="assets/img/dishes/pinakbet.jpg" alt="A bowl of pinakbet, Filipino vegetable stew" fetchpriority="high">
         </div>
         <div class="receipt" aria-label="Sample receipt for Thursday">
           <div class="receipt-head"><strong>THU PLAN</strong><span>P90 of P100</span></div>
@@ -226,6 +200,24 @@ tailwind.config = {
             </div>
             <p id="solStatus" class="solver-status" aria-live="polite">Monggo + half rice wins at P1.75 per 10g protein. Lunch locked.</p>
           </div>
+          <!-- STATIC SOLVER (drafted replacement, professor feedback: keep it simple).
+               To switch: delete the animated .solver block above, then remove
+               these comment markers. app.js stays inert automatically (it
+               guards on #solRows, which this block does not have). -->
+          <!--
+          <div class="solver solver-plain">
+            <div class="solver-head">
+              <span>Lunch mixes under P50, ranked by protein per peso</span>
+            </div>
+            <ul class="plain-rows">
+              <li><span>Tinola + half rice</span><span class="tabular">P45 &middot; P3.75 per 10g protein</span></li>
+              <li><span>Ginisang gulay + half rice</span><span class="tabular">P25 &middot; P2.27 per 10g protein</span></li>
+              <li><span>Pares + half rice</span><span class="tabular">P40 &middot; P2.67 per 10g protein</span></li>
+              <li class="plain-win"><span>Monggo + half rice <span class="win-tag">LOWEST COST</span></span><span class="tabular">P35 &middot; P1.75 per 10g protein</span></li>
+            </ul>
+            <p class="plain-note">Monggo wins: the cheapest protein per peso, kept whole on the board.</p>
+          </div>
+          -->
         </div>
       </div>
 

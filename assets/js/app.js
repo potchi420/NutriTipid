@@ -58,7 +58,7 @@
     adobo: "assets/img/dishes/adobo.jpg",
     tapsilog: "assets/img/dishes/tapsilog.jpg",
     sinigang: "assets/img/dishes/sinigang-baboy.jpg",
-    gulay: "assets/img/dishes/pinakbet.png",
+    gulay: "assets/img/dishes/pinakbet.jpg",
     champorado: "assets/img/dishes/champorado.jpg",
     pares: "assets/img/dishes/pares.jpg"
   };

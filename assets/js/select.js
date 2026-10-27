@@ -1,10 +1,8 @@
-/* Custom select: progressive enhancement over select.auth-input.
-   Native option popups cannot be styled cross-browser, so this builds
-   a listbox that matches the design system. The real <select> stays
-   in the DOM holding name and value; every choice syncs both ways and
-   fires a bubbling change event, so existing listeners keep working.
-   Keyboard: arrows navigate, Enter picks, Escape closes, letters jump.
-   ES5, no framework. */
+/* custom select, native option popups cant be themed so this builds a
+   listbox that matches the design system. the real <select> stays in the DOM
+   holding name and value, picks sync both ways and fire a bubbling change
+   event so existing listeners keep working
+   */
 (function () {
   "use strict";
   var NS = "http://www.w3.org/2000/svg";
