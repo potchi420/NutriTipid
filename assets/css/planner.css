@@ -278,7 +278,7 @@ select.auth-input {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin: 10px 0;
 }
 .first-plan p {
   margin: 0;
