@@ -158,6 +158,106 @@ a {
   }
 }
 
+/* Account menu: profile, dark mode, and log out in one dropdown.
+   Flat, hairline edge, no shadow, same tokens as the rest. */
+.user-menu {
+  position: relative;
+}
+.user-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 10px 4px 4px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.user-btn:hover {
+  color: var(--ink);
+}
+.user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: var(--primary-ink);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.user-caret {
+  flex: none;
+  transition: transform 0.2s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.user-btn[aria-expanded="true"] .user-caret {
+  transform: rotate(180deg);
+}
+.user-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 60;
+  width: 208px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: none;
+}
+.user-panel.is-open {
+  display: block;
+}
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.user-item:hover {
+  background: var(--soft);
+}
+.user-item svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+.user-sep {
+  border-top: 1px solid var(--line);
+  margin: 6px 4px;
+}
+@media (max-width: 640px) {
+  .user-label {
+    display: none;
+  }
+  .user-btn {
+    padding: 4px;
+  }
+  .user-caret {
+    display: none;
+  }
+}
+
 /* Buttons: one primary voice, quiet secondary as text or outline */
 .btn {
   display: inline-flex;

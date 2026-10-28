@@ -1,6 +1,6 @@
 /* progress page. every number derives from the day rows in the script, nothing hand counted */
 .progress-wrap {
-  width: min(880px, 100%);
+  width: min(1140px, 100%);
   margin: 0 auto;
   padding: 32px max(24px, env(safe-area-inset-left)) 88px;
 }
@@ -110,12 +110,131 @@
   padding: 3px 10px;
   white-space: nowrap;
 }
+/* Log form and weigh-in history: flat rows, dotted leaders, no inner card. */
+.log-submit {
+  width: 100%;
+  margin-top: 18px;
+}
+.weigh-list {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.weigh-row {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 11px 0;
+}
+.weigh-row + .weigh-row {
+  border-top: 1px solid var(--line);
+}
+.weigh-date {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.weigh-row .dots {
+  flex: 1;
+  min-width: 20px;
+  border-bottom: 2px dotted var(--line);
+  transform: translateY(-4px);
+}
+.weigh-val {
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.weigh-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+  font-size: 13px;
+  color: var(--muted);
+}
+.weigh-foot b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Motion: the dashboard beat, one quiet entrance per block. Charts
+   draw in once; everything rests under prefers-reduced-motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .stat-grid .stat,
+  .progress-grid > .panel,
+  .progress-grid > .side-stack {
+    animation: rise 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  }
+  .stat-grid .stat:nth-child(2) {
+    animation-delay: 0.06s;
+  }
+  .stat-grid .stat:nth-child(3) {
+    animation-delay: 0.12s;
+  }
+  .stat-grid .stat:nth-child(4) {
+    animation-delay: 0.18s;
+  }
+  .progress-grid > .panel,
+  .progress-grid > .side-stack {
+    animation-delay: 0.1s;
+  }
+  .chart-svg .trend {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: chart-draw 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s forwards;
+  }
+  .chart-svg .dot {
+    animation: fade-in 0.35s ease backwards;
+  }
+  .chart-svg .bar-meal,
+  .chart-svg .bar-budget {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: grow-y 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  }
+  @keyframes chart-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes grow-y {
+    from {
+      transform: scaleY(0.2);
+      opacity: 0.4;
+    }
+  }
+}
+
 @media (max-width: 900px) {
   .stat-grid {
     grid-template-columns: 1fr 1fr;
   }
   .progress-grid {
     grid-template-columns: 1fr;
+  }
+}
+/* Wide screens: slower gutters, roomier panels, so the 1140px canvas
+   fills side to side instead of reading as a narrow column. */
+@media (min-width: 1000px) {
+  .progress-wrap {
+    padding-top: 40px;
+  }
+  .panel {
+    padding: 26px;
+  }
+  .panel.stat {
+    padding: 24px;
+  }
+  .progress-grid {
+    gap: 28px;
   }
 }
 @media (max-width: 480px) {
