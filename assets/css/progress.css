@@ -1,6 +1,6 @@
 /* progress page. every number derives from the day rows in the script, nothing hand counted */
 .progress-wrap {
-  width: min(1140px, 100%);
+  width: min(1520px, 100%);
   margin: 0 auto;
   padding: 32px max(24px, env(safe-area-inset-left)) 88px;
 }
@@ -18,9 +18,16 @@
 }
 .progress-grid {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
   margin-top: 24px;
+}
+.progress-grid > .sum-panel {
+  grid-column: 1 / -1;
+}
+.side-stack {
+  display: grid;
+  gap: 24px;
 }
 .chart-svg .tick {
   fill: var(--muted);
@@ -218,23 +225,13 @@
     grid-template-columns: 1fr 1fr;
   }
   .progress-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
-}
-/* Wide screens: slower gutters, roomier panels, so the 1140px canvas
-   fills side to side instead of reading as a narrow column. */
-@media (min-width: 1000px) {
-  .progress-wrap {
-    padding-top: 40px;
-  }
-  .panel {
-    padding: 26px;
-  }
-  .panel.stat {
-    padding: 24px;
-  }
-  .progress-grid {
-    gap: 28px;
+  /* phones: the weigh-in panels jump right under the stat cards */
+  .side-stack {
+    order: -1;
+    position: static;
+    margin-top: 24px;
   }
 }
 @media (max-width: 480px) {

@@ -6,9 +6,7 @@
 <title>Progress - NutriTipid</title>
 <meta name="description" content="Weight trend, adherence, calories, and cost efficiency in one place.">
 <link rel="icon" href="../assets/img/logo_tight.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" href="../assets/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
 <script>
 /* Theme: same saved choice as the rest of the site, no framework. */
 try {
@@ -103,6 +101,16 @@ try {
       </div>
     </section>
 
+    <section class="panel" aria-label="FNRI score and micros">
+      <h2>FNRI score</h2>
+      <div class="summary-num tabular">82%</div>
+      <p class="summary-label">weekly average</p>
+      <div class="bar" style="margin-top:12px"><i class="y" style="width:82%"></i></div>
+      <div id="microRows"></div>
+      <p class="verdict">Share of daily RENI across micros. Vitamin A leads, iron lags.</p>
+      <p style="margin:14px 0 0"><a href="dashboard.html" class="text-link">View micros today</a></p>
+    </section>
+
     <div class="side-stack">
       <section class="panel" aria-label="Log weigh-in">
         <h2>Log weigh-in</h2>
@@ -142,6 +150,18 @@ try {
       </div>
     </section>
 
+    <section class="panel" aria-label="Calorie balance">
+      <h2>Calorie balance</h2>
+      <div class="summary-num tabular" id="balAvg">1,574</div>
+      <p class="summary-label tabular" id="balLabel">avg. intake vs 1,500 target</p>
+      <div class="bar" style="margin-top:12px"><i class="g" id="balBar" style="width:100%"></i></div>
+      <div class="meter" style="margin-top:18px">
+        <div class="top"><span>Days on target</span><span class="tabular" id="balDays">6 of 7</span></div>
+        <div class="bar"><i class="y" id="balDaysBar" style="width:86%"></i></div>
+      </div>
+      <p class="verdict" id="balNote">Within range on most days. Saturday runs high.</p>
+    </section>
+
     <section class="panel" aria-label="Goal adherence">
       <h2>Goals</h2>
       <div class="meter">
@@ -160,34 +180,8 @@ try {
         <p class="meter-cap" id="goalProCap">6 of 7 days hit 60g &middot; avg 62g</p>
       </div>
     </section>
-  </div>
 
-  <div class="progress-grid">
-    <section class="panel" aria-label="Calorie balance">
-      <h2>Calorie balance</h2>
-      <div class="summary-num tabular" id="balAvg">1,574</div>
-      <p class="summary-label tabular" id="balLabel">avg. intake vs 1,500 target</p>
-      <div class="bar" style="margin-top:12px"><i class="g" id="balBar" style="width:100%"></i></div>
-      <div class="meter" style="margin-top:18px">
-        <div class="top"><span>Days on target</span><span class="tabular" id="balDays">6 of 7</span></div>
-        <div class="bar"><i class="y" id="balDaysBar" style="width:86%"></i></div>
-      </div>
-      <p class="verdict" id="balNote">Within range on most days. Saturday runs high.</p>
-    </section>
-
-    <section class="panel" aria-label="FNRI score and micros">
-      <h2>FNRI score</h2>
-      <div class="summary-num tabular">82%</div>
-      <p class="summary-label">weekly average</p>
-      <div class="bar" style="margin-top:12px"><i class="y" style="width:82%"></i></div>
-      <div id="microRows"></div>
-      <p class="verdict">Share of daily RENI across micros. Vitamin A leads, iron lags.</p>
-      <p style="margin:14px 0 0"><a href="dashboard.html" class="text-link">View micros today</a></p>
-    </section>
-  </div>
-
-  <section aria-label="This week summary" style="margin-top:24px">
-    <div class="panel sum-panel">
+    <section class="panel sum-panel" aria-label="This week summary">
       <h2>This Week Summary</h2>
       <p class="sum-meta tabular" id="swapLine">4 swaps accepted this week &middot; P28 kept in the plan.</p>
       <div class="sum-scroll">
@@ -196,8 +190,8 @@ try {
         </div>
         <div id="sumRows"></div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </main>
 
 <nav class="tabbar" aria-label="App">
