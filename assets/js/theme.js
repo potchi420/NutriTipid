@@ -61,4 +61,16 @@
       link.addEventListener("click", function () { setMenu(false); });
     });
   }
+
+  /* avatar letters come from the signed-in name, static markup is only
+     the logged-out fallback */
+  var avatar = document.querySelector(".user-avatar");
+  var me = null;
+  try { me = JSON.parse(localStorage.getItem("nutritipid-account") || "null"); } catch (e) {}
+  if (avatar && me) {
+    var words = String(me.name || "").trim().split(/\s+/).filter(Boolean);
+    if (words.length) {
+      avatar.textContent = words.slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join("");
+    }
+  }
 })();

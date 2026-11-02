@@ -53,13 +53,18 @@ Light: bg `#FFFFFF`, ink `#1A2E22`, muted `#5F6F65`, line `#E3E9E4`,
 primary `#1F9D55`, primary-ink `#FFFFFF`, accent `#E8A415`,
 stamp `#157A41`, soft `#F1F5F2`.
 
-Dark (`[data-theme="dark"]`): bg `#101614`, surface `#18211C`,
-ink `#EAF2EC`, muted `#9AAFA3`, line `#26332C`, primary `#34D399`,
-primary-ink `#0B1510`, accent `#FBBF24`, stamp `#34D399`, soft `#151E19`.
+Dark (`[data-theme="dark"]`): bg `#131519`, surface `#1A1E24`,
+ink `#E7EAEE`, muted `#9AA2AD`, line `#2A3038`, primary `#34D399`,
+primary-ink `#0B1510`, accent `#FBBF24`, stamp `#34D399`, soft `#161A1F`.
+Dark surfaces are neutral graphite (no green tint); green belongs to
+controls and success states only.
 
 - One functional red exists for form errors only: `#B3261E`.
 - Radii: 4px controls/inputs, 6-8px cards/panels, 999px pills/tabs/badges.
   Device mock corners are the single exception, not a precedent.
+- Symmetry: 24px is the shared rhythm across gaps, rails, strips and section
+  spacing on desktop. Card rows in a strip stay equal height (a foot line per
+  card), and leftover column space gets filled rather than hanging empty.
 - Motion: `cubic-bezier(.22,.61,.36,1)` everywhere. Quiet entrances, one
   solver-style demo beat per page max. Everything freezes under
   `prefers-reduced-motion`, and no-JS keeps the finished state.

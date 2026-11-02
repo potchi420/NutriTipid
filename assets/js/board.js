@@ -1,7 +1,6 @@
-/* the price board, admin writes, planner reads at generation.
-   price overrides, soft-deletes, price history, deactivated accounts,
-   mirrors FoodItem.IsActive / PriceHistory / AppUsers.IsActive from the schema
-   */
+/* the price board, admin is the only writer and everyone else reads it.
+   price overrides, soft deletes, price history, deactivated accounts,
+   dish detail edits and the allergen shortlist */
 (function () {
   "use strict";
 

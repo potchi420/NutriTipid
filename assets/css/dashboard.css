@@ -1,8 +1,20 @@
 /* dashboard, MFP style home. leans on global pieces so link after styles.css */
 .dash-wrap {
-  width: min(880px, 100%);
+  width: min(1520px, 100%);
   margin: 0 auto;
   padding: 32px max(24px, env(safe-area-inset-left)) 88px;
+}
+.dash-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.dash-top .date-strip {
+  margin-top: 0;
+  flex: none;
+  width: min(400px, 100%);
 }
 .dash-wrap h1 {
   margin: 10px 0 0;
@@ -43,12 +55,96 @@
   font-weight: 800;
   font-size: 16px;
 }
+/* summary strip: the four number cards share one row on pc, 2x2 on phones */
 .hero-duo {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   margin-top: 24px;
-  align-items: start;
+}
+/* two column body: meals scroll on the left, numbers stick right, both end on one line */
+.dash-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  margin-top: 24px;
+}
+.dash-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.dash-main > .panel:last-child {
+  flex: 1 1 auto;
+}
+/* the two stretched panels center their content so the leftover space sits
+   even top and bottom instead of pooling at the bottom edge */
+.dash-main > .panel:last-child,
+.dash-rail > .panel:last-child {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.dash-rail {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 24px;
+  position: sticky;
+  top: 90px;
+}
+/* meals run as a 2x2 grid on pc so the column never hangs empty */
+@media (min-width: 1101px) {
+  #mealSecs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+  #mealSecs .meal-sec {
+    margin-top: 0;
+  }
+}
+/* week chips sit a little larger in the panel and flag the over budget day */
+.week-tabs {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.week-tabs .day-tab {
+  padding: 9px 18px;
+}
+.week-tabs .day-tab.is-over {
+  color: #B3261E;
+  border-color: #B3261E;
+}
+.week-tabs .day-tab.is-over[aria-selected="true"] {
+  color: var(--bg);
+  border-color: var(--ink);
+}
+@media (max-width: 1100px) {
+  .hero-duo {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dash-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dash-rail {
+    position: static;
+    margin-top: 24px;
+  }
+}
+@media (max-width: 560px) {
+  /* phones: the loop cards pack 2x2 so the strip stays one view */
+  .hero-duo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .hero-duo .panel {
+    padding: 18px;
+  }
+  .hero-duo .hero-num {
+    font-size: clamp(28px, 8.5vw, 38px);
+  }
+  .hero-duo .hero-cap {
+    font-size: 12.5px;
+  }
 }
 .hero-num {
   font-size: clamp(44px, 6vw, 60px);
@@ -153,11 +249,6 @@
 .add-remove:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
-}
-@media (max-width: 900px) {
-  .hero-duo {
-    grid-template-columns: 1fr;
-  }
 }
 @media (max-width: 480px) {
   .dash-wrap {

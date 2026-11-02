@@ -111,7 +111,7 @@ try {
 
 <script src="../assets/js/board.js"></script>
 <script>
-/* Admin board prototype: reference data writes, planner reads. */
+/* admin board: writes the reference data the rest of the app reads */
 (function () {
   "use strict";
   var B = window.NutriTipidBoard;
@@ -119,8 +119,8 @@ try {
   var PAGE = 8;
   var X_SVG = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
 
-  /* Base pool mirrors the planner's 13 canteen meals; records stay keyed
-     by these names even after display edits. */
+  /* same 13 dishes from the menu board, records stay keyed
+     by these names even after display edits */
   var BASE = [
     { name: "Lugaw", price: 15, kcal: 280, protein: 7, cat: "Rice meal", al: [], dot: "L", color: "#8A6D1B" },
     { name: "Arroz caldo w/ egg", price: 30, kcal: 420, protein: 14, cat: "Rice meal", al: ["Egg"], dot: "A", color: "#1F9D55" },
@@ -421,8 +421,8 @@ try {
     });
     return out;
   }
-  /* Allergen lookups are managed here, where tagging happens: toggle to
-     tag, × to remove a lookup, "+ New" to grow the list on the spot. */
+  /* allergen picker and lookup editor in one place: tap to tag, x to
+     remove a lookup nobody uses, new ones land ready to tag */
   function buildAlChips(selected) {
     dishAl.innerHTML = "";
     var dishes = dishList();

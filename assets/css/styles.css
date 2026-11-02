@@ -1,6 +1,6 @@
 /* shared styles, every page loads this. landing css is separate, modules override on top */
 
-/* Self-hosted Inter font cuz the other ones unreliable as hell*/
+/* self hosted inter font cuz the other ones unreliable as hell*/
 @font-face {
   font-family: "Inter";
   font-style: normal;
@@ -26,12 +26,12 @@
 }
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #101614;
-  --surface: #18211c;
-  --soft: #151e19;
-  --ink: #eaf2ec;
-  --muted: #9aafa3;
-  --line: #26332c;
+  --bg: #131519;
+  --surface: #1a1e24;
+  --soft: #161a1f;
+  --ink: #e7eaee;
+  --muted: #9aa2ad;
+  --line: #2a3038;
   --primary: #34d399;
   --primary-ink: #0b1510;
   --accent: #fbbf24;
@@ -78,7 +78,7 @@ a {
 .tabular {
   font-variant-numeric: tabular-nums;
 }
-/* Layout utilities bullshit */
+/* layout utilities, landing page only */
 .flex {
   display: flex;
 }
@@ -90,6 +90,35 @@ a {
 }
 .justify-between {
   justify-content: space-between;
+}
+
+/* landing headings and lists stay flat and evenly spaced, app pages look after themselves */
+.landing h1,
+.landing h2,
+.landing h3,
+.landing h4,
+.landing h5,
+.landing h6,
+.landing p {
+  margin: 0;
+}
+.landing h1,
+.landing h2,
+.landing h3,
+.landing h4,
+.landing h5,
+.landing h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+.landing ul,
+.landing ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.landing figure {
+  margin: 0;
 }
 
 /* Header */
@@ -148,6 +177,10 @@ a {
   display: flex;
   align-items: center;
   gap: 22px;
+}
+/* all site headers run edge to edge on wide screens, elements unchanged */
+.site-header .wrap {
+  max-width: none;
 }
 @media (max-width: 560px) {
   .app-nav {
@@ -969,7 +1002,7 @@ input[type="range"] {
   stroke-width: 2.5;
 }
 .verdict {
-  margin: 14px 0 0;
+  margin: 16px 0 0;
   font-size: 13.5px;
   color: var(--muted);
   line-height: 1.6;

@@ -62,13 +62,16 @@ try {
 </header>
 
 <main class="dash-wrap">
-  <h1 id="dashTitle">Today.</h1>
-  <p class="auth-sub">Your week at a glance.</p>
-
-  <div class="date-strip">
-    <button class="date-nav" id="prevDay" aria-label="Previous day">&larr;</button>
-    <span class="date-today tabular" id="dateLabel">Thursday</span>
-    <button class="date-nav" id="nextDay" aria-label="Next day">&rarr;</button>
+  <div class="dash-top">
+    <div>
+      <h1 id="dashTitle">Today.</h1>
+      <p class="auth-sub">Your week at a glance.</p>
+    </div>
+    <div class="date-strip">
+      <button class="date-nav" id="prevDay" aria-label="Previous day">&larr;</button>
+      <span class="date-today tabular" id="dateLabel">Thursday</span>
+      <button class="date-nav" id="nextDay" aria-label="Next day">&rarr;</button>
+    </div>
   </div>
 
   <div class="hero-duo">
@@ -77,39 +80,60 @@ try {
       <div class="hero-num tabular" id="pesosLeft">P0</div>
       <p class="hero-cap tabular" id="pesosCap">of P100 today</p>
       <div class="bar" style="margin-top:12px"><i class="g" id="pesosBar" style="width:0%"></i></div>
+      <p class="hero-cap tabular" id="pesosWeek" style="margin-top:12px">P400 left of P700 this week</p>
     </div>
     <div class="panel">
       <h2>Calories in</h2>
       <div class="hero-num tabular" id="kcalIn">0</div>
       <p class="hero-cap" id="kcalCap">target 1,500</p>
       <div class="bar" style="margin-top:12px"><i class="y" id="kcalBar" style="width:0%"></i></div>
+      <p class="hero-cap tabular" style="margin-top:12px">1,574 kcal avg this week</p>
+    </div>
+    <div class="panel">
+      <h2>Plan</h2>
+      <div class="hero-num tabular" id="planNum">90%</div>
+      <p class="hero-cap" id="planCap">19 of 21 meals as planned</p>
+      <div class="bar" style="margin-top:12px"><i class="g" id="planBar" style="width:90%"></i></div>
+      <p class="hero-cap" style="margin-top:12px">4 swaps, P28 kept in plan</p>
+    </div>
+    <div class="panel">
+      <h2>Weight</h2>
+      <div class="hero-num tabular" id="wtNum">69.8</div>
+      <p class="hero-cap" id="wtCap">kg now, down 2.7kg since Sep 1</p>
+      <div class="bar" style="margin-top:12px"><i class="g" id="wtBar" style="width:17%"></i></div>
+      <p class="hero-cap" style="margin-top:12px">pace 0.7kg this month, steady</p>
     </div>
   </div>
 
-  <div id="mealSecs"></div>
-
-  <div class="panel" style="margin-top:24px">
-    <h2>Macros today</h2>
-    <div class="macro-bar" aria-hidden="true">
-      <i id="macroP" style="background:var(--primary)"></i><i id="macroC" style="background:var(--accent)"></i><i id="macroF" style="background:var(--muted)"></i>
+  <div class="dash-cols">
+    <div class="dash-main">
+      <div id="mealSecs"></div>
+      <div class="panel" style="margin-top:24px">
+        <h2>Your week</h2>
+        <div class="diary-tabs week-tabs" id="weekTabs" aria-label="Jump to a day"></div>
+        <p class="verdict" id="weekNote"></p>
+        <p style="margin:16px 0 0"><a href="planner.html" class="text-link">Open meal planner</a></p>
+      </div>
     </div>
-    <div class="macro-legend">
-      <span><i class="dot-key" style="background:var(--primary)"></i>Protein <b id="mP">0g</b></span>
-      <span><i class="dot-key" style="background:var(--accent)"></i>Carbs <b id="mC">0g</b></span>
-      <span><i class="dot-key" style="background:var(--muted)"></i>Fat <b id="mF">0g</b></span>
-    </div>
-  </div>
+    <aside class="dash-rail">
+      <div class="panel">
+        <h2>Macros today</h2>
+        <div class="macro-bar" aria-hidden="true">
+          <i id="macroP" style="background:var(--primary)"></i><i id="macroC" style="background:var(--accent)"></i><i id="macroF" style="background:var(--muted)"></i>
+        </div>
+        <div class="macro-legend">
+          <span><i class="dot-key" style="background:var(--primary)"></i>Protein <b id="mP">0g</b></span>
+          <span><i class="dot-key" style="background:var(--accent)"></i>Carbs <b id="mC">0g</b></span>
+          <span><i class="dot-key" style="background:var(--muted)"></i>Fat <b id="mF">0g</b></span>
+        </div>
+      </div>
 
-  <div class="panel" style="margin-top:24px">
-    <h2>Micros today</h2>
-    <div id="microRows"></div>
-    <p class="verdict">Share of daily RENI.</p>
-  </div>
-
-  <div class="panel" style="margin-top:24px">
-    <h2>Tomorrow, planned</h2>
-    <p class="verdict">A full 7-day board built around your budget.</p>
-    <p style="margin:14px 0 0"><a href="planner.html" class="text-link">Open meal planner</a></p>
+      <div class="panel">
+        <h2>Micros today</h2>
+        <div id="microRows"></div>
+        <p class="verdict">Share of daily RENI.</p>
+      </div>
+    </aside>
   </div>
 </main>
 
@@ -131,8 +155,8 @@ try {
 (function () {
   "use strict";
 
-  /* First-run guard: an account mid-setup is sent back to onboarding.
-     Missing flags (demo personas, fresh browsers) stay open. */
+  /* an account that hasnt finished onboarding gets sent back to it.
+     missing flags (demo personas, fresh browsers) stay open */
   try {
     var obAcc = JSON.parse(localStorage.getItem("nutritipid-account") || "null");
     if (obAcc && obAcc.onboarded === false) {
@@ -280,6 +304,38 @@ try {
     }, { price: 0, kcal: 0 });
   }
 
+  /* read only view of a day slot, render must not create entries */
+  function slotRead(day, slot) {
+    var d = intake[String(day)];
+    return d && Array.isArray(d[slot]) ? d[slot] : [];
+  }
+
+  /* saved weigh-ins first, the sample rows are the fallback */
+  var wStore = null;
+  try { wStore = JSON.parse(localStorage.getItem("nutritipid-weight") || "null"); } catch (e) {}
+  var wEntryPool = [
+    { date: "2026-09-01", label: "Sep 1", kg: 72.5 },
+    { date: "2026-09-05", label: "Sep 5", kg: 72.1 },
+    { date: "2026-09-10", label: "Sep 10", kg: 71.8 },
+    { date: "2026-09-15", label: "Sep 15", kg: 71.0 },
+    { date: "2026-09-29", label: "Sep 29", kg: 69.8 }
+  ];
+  var wEntries = wStore && Array.isArray(wStore.entries) && wStore.entries.length
+    ? wStore.entries.slice().sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; })
+    : wEntryPool;
+  var wFirst = wEntries[0];
+  var wLast = wEntries[wEntries.length - 1];
+  var wTarget = wStore && typeof wStore.targetKg === "number" ? wStore.targetKg : 57;
+  var wChange = wLast.kg - wFirst.kg;
+  var wPct = wTarget - wFirst.kg === 0
+    ? 0
+    : Math.max(0, Math.min(100, Math.round((wLast.kg - wFirst.kg) / (wTarget - wFirst.kg) * 100)));
+  document.getElementById("wtNum").textContent = wLast.kg.toFixed(1);
+  document.getElementById("wtCap").textContent = "kg now, " +
+    (wChange < 0 ? "down " : wChange > 0 ? "up " : "") +
+    Math.abs(wChange).toFixed(1) + "kg since " + wFirst.label;
+  document.getElementById("wtBar").style.width = wPct + "%";
+
   function render() {
     var slots = SLOTS.map(function (_, s) {
       var rows = [{ d: EAT[DAY_MEALS[idx][s]], extra: false, key: -1 }];
@@ -294,6 +350,14 @@ try {
     });
     var t = dayTotals(all);
     var left = budget - t.price;
+    var weekSpend = 0;
+    for (var wday = 0; wday <= idx; wday++) {
+      for (var wslot = 0; wslot < 4; wslot++) {
+        weekSpend += EAT[DAY_MEALS[wday][wslot]].p;
+        slotRead(wday, wslot).forEach(function (di) { weekSpend += EAT[di].p; });
+      }
+    }
+    var weekLeft = budget * 7 - weekSpend;
     dashTitle.textContent = idx === 3 ? "Today." : DAY_NAMES[idx] + ".";
     dateLabel.textContent = idx === 3 ? "Today" : DAY_NAMES[idx];
     if (left < 0) {
@@ -305,7 +369,12 @@ try {
       pesosLeft.classList.remove("is-over");
       pesosCap.textContent = "of P" + budget + " today";
     }
-    pesosBar.style.width = Math.max(0, Math.min(100, Math.round(left / budget * 100))) + "%";
+    /* both hero bars read the same way: how much of the cap is used */
+    pesosBar.style.width = Math.max(0, Math.min(100, Math.round((budget - left) / budget * 100))) + "%";
+    var wkLine = document.getElementById("pesosWeek");
+    wkLine.textContent = weekLeft < 0
+      ? "over by P" + -weekLeft + " this week"
+      : "P" + weekLeft + " left of P" + budget * 7 + " this week";
     kcalIn.textContent = t.kcal.toLocaleString();
     kcalBar.style.width = Math.min(100, Math.round(t.kcal / KCAL_TARGET * 100)) + "%";
 
@@ -410,7 +479,7 @@ try {
       var pct = mic[1][idx];
       var row = document.createElement("div");
       row.className = "meter";
-      row.style.marginTop = "14px";
+      row.style.marginTop = "16px";
       var top = document.createElement("div");
       top.className = "top";
       var name = document.createElement("span");
@@ -428,6 +497,34 @@ try {
       row.appendChild(top); row.appendChild(bar);
       microRows.appendChild(row);
     });
+
+    /* week strip: one chip per day with its planned spend, tap jumps.
+       a day over budget gets the red and calls it out below. */
+    var weekTabs = document.getElementById("weekTabs");
+    var overDays = [];
+    weekTabs.innerHTML = "";
+    DAY_MEALS.forEach(function (meals, d) {
+      var spend = 0;
+      meals.forEach(function (e) { spend += EAT[e].p; });
+      slotRead(d, 0).concat(slotRead(d, 1), slotRead(d, 2), slotRead(d, 3)).forEach(function (di) {
+        spend += EAT[di].p;
+      });
+      var over = spend > budget;
+      if (over) overDays.push(DAY_NAMES[d]);
+      var chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "day-tab" + (over ? " is-over" : "");
+      chip.textContent = DAY_NAMES[d].slice(0, 3) + " \u00B7 P" + spend;
+      chip.setAttribute("aria-selected", d === idx ? "true" : "false");
+      chip.addEventListener("click", function () {
+        idx = d;
+        render();
+      });
+      weekTabs.appendChild(chip);
+    });
+    document.getElementById("weekNote").textContent = overDays.length
+      ? overDays.join(" and ") + (overDays.length === 1 ? " runs" : " run") + " over budget. A swap can pull it back."
+      : "Tap a day to walk it.";
   }
 
   document.getElementById("prevDay").addEventListener("click", function () {
