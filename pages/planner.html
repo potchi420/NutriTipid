@@ -19,7 +19,7 @@ try {
 <link rel="stylesheet" href="../assets/css/auth.css">
 <link rel="stylesheet" href="../assets/css/planner.css">
 </head>
-<body class="auth-page">
+<body>
 
 <header class="site-header">
   <div class="wrap header-row">
@@ -59,13 +59,18 @@ try {
   </div>
 </header>
 
-<main class="plan-wrap">
+<main class="plan-wrap plan-wide">
   <a class="back-link" href="profiler.html">&larr; Back to profile</a>
-  <h1 id="planTitle">Your week on P100 a day.</h1>
-  <p class="auth-sub">Seven days around your pesos per day.</p>
-
-  <div class="profile-chip tabular" id="profileChip">P100 a day &middot; <a href="profiler.html">Set yours</a></div>
-  <p class="form-note is-hidden" id="avoidNote"></p>
+  <div class="plan-top">
+    <div>
+      <h1 id="planTitle">Your week on P100 a day.</h1>
+      <p class="auth-sub">Seven days around your pesos per day.</p>
+    </div>
+    <div class="plan-top-side">
+      <div class="profile-chip tabular" id="profileChip">P100 a day &middot; <a href="profiler.html">Set yours</a></div>
+      <p class="form-note is-hidden" id="avoidNote"></p>
+    </div>
+  </div>
 
   <div class="panel solving" id="solving">
     <p id="solvingText">Reading board prices...</p>
@@ -77,28 +82,35 @@ try {
       <p><strong>Your first week is generated.</strong> Swipe the day tabs, tap any meal to swap it.</p>
       <button type="button" id="firstOk" class="btn btn-sm">Got it</button>
     </div>
-    <div class="diary plan-diary">
-      <div class="diary-tabs" role="tablist" aria-label="Days of the week" id="dayTabs"></div>
-      <div id="planMeals"></div>
-      <div class="diary-foot flex flex-wrap items-center justify-between">
-        <span>Day total <b id="planTotal">P0</b><span class="over-bud tabular is-hidden" id="planOver"></span></span>
-        <span class="muted tabular" id="planKcal">0 kcal</span>
+    <div class="plan-cols">
+      <div class="plan-main">
+        <div class="diary plan-diary">
+          <div class="diary-tabs" role="tablist" aria-label="Days of the week" id="dayTabs"></div>
+          <div id="planMeals"></div>
+          <div class="diary-foot flex flex-wrap items-center justify-between">
+            <span>Day total <b id="planTotal">P0</b><span class="over-bud tabular is-hidden" id="planOver"></span></span>
+            <span class="muted tabular" id="planKcal">0 kcal</span>
+          </div>
+        </div>
       </div>
-    </div>
-
-    <div class="week-grid">
-      <div class="panel">
-        <h2>Week spend</h2>
-        <div class="summary-num tabular" id="weekSpend">P0</div>
-        <p class="summary-label tabular" id="weekBudget">of P700 budget</p>
-        <div class="bar" style="margin-top:12px"><i class="g" id="weekBar" style="width:0%"></i></div>
-      </div>
-      <div class="panel">
-        <h2>FNRI fulfillment</h2>
-        <div class="summary-num tabular" id="fnriScore">0%</div>
-        <p class="summary-label">weekly average</p>
-        <div class="bar" style="margin-top:12px"><i class="y" id="fnriBar" style="width:0%"></i></div>
-      </div>
+      <aside class="plan-rail">
+        <div class="panel">
+          <h2>Week spend</h2>
+          <div class="summary-num tabular" id="weekSpend">P0</div>
+          <p class="summary-label tabular" id="weekBudget">of P700 budget</p>
+          <div class="bar" style="margin-top:12px"><i class="g" id="weekBar" style="width:0%"></i></div>
+        </div>
+        <div class="panel">
+          <h2>FNRI fulfillment</h2>
+          <div class="summary-num tabular" id="fnriScore">0%</div>
+          <p class="summary-label">weekly average</p>
+          <div class="bar" style="margin-top:12px"><i class="y" id="fnriBar" style="width:0%"></i></div>
+        </div>
+        <div class="panel day-spend-panel">
+          <h2>Spend per day</h2>
+          <ul class="day-spend tabular" id="daySpend"></ul>
+        </div>
+      </aside>
     </div>
     <p style="margin-top:20px"><a href="dashboard.html" class="text-link">View full dashboard</a></p>
   </div>
@@ -426,6 +438,22 @@ try {
     document.getElementById("weekBar").style.width = Math.min(100, Math.round(spend / goal * 100)) + "%";
     document.getElementById("fnriScore").textContent = fnri + "%";
     document.getElementById("fnriBar").style.width = fnri + "%";
+    /* the per day list reads the same week array, so swaps and the
+       packed toggle keep it up to date for free */
+    var spendList = document.getElementById("daySpend");
+    if (spendList) {
+      spendList.innerHTML = "";
+      week.forEach(function (rows, i) {
+        var li = document.createElement("li");
+        if (i === cur) li.className = "is-cur";
+        var nm = document.createElement("span");
+        nm.textContent = DAYS[i];
+        var pv = document.createElement("b");
+        pv.textContent = "P" + totals(rows).price;
+        li.appendChild(nm); li.appendChild(pv);
+        spendList.appendChild(li);
+      });
+    }
   }
 
   /* Mock solving beat, then reveal. Skipped under reduced motion. */

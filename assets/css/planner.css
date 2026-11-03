@@ -70,6 +70,130 @@ select.auth-input {
   border-radius: 99px;
   border: 1px solid var(--line);
 }
+/* pc rows have room to spare, the round photo grows so the rows
+   do not feel hollow. the letter dot grows with it */
+@media (min-width: 1001px) {
+  #planMeals .meal-thumb {
+    width: 64px;
+    height: 64px;
+  }
+  #planMeals .meal-thumb .meal-dot {
+    width: 100%;
+    height: 100%;
+    font-size: 16px;
+  }
+  /* rows stretch to fill, so their look comes from the stretch and
+     the hairlines, not from stuffing the top and bottom */
+  #planMeals .meal {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+/* wide planner, planner only. profiler keeps the narrow form width
+   because it is a form. the diary sits left and the numbers stick
+   right so the page ends on one even line */
+.plan-wide {
+  width: min(1520px, 100%);
+}
+.plan-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.plan-top-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  max-width: 420px;
+}
+.plan-top-side .profile-chip {
+  margin-top: 0;
+}
+.plan-top-side .form-note {
+  margin: 0;
+  text-align: right;
+}
+.plan-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  margin-top: 24px;
+}
+.plan-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.plan-main .plan-diary {
+  margin-top: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+.plan-main #planMeals {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+.plan-main .meal {
+  flex: 1 1 auto;
+}
+.plan-rail {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 24px;
+  align-self: start;
+  position: sticky;
+  top: 90px;
+}
+.day-spend-panel {
+  display: flex;
+  flex-direction: column;
+}
+/* the rail decides how tall the whole pc layout is, so it packs a
+   little tighter than the shared panel look and the diary follows */
+@media (min-width: 1001px) {
+  .plan-rail .panel {
+    padding: 18px 20px;
+  }
+}
+.day-spend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  font-variant-numeric: tabular-nums;
+}
+.day-spend li {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 30px;
+  border-bottom: 1px solid var(--line);
+}
+.day-spend li:last-child {
+  border-bottom: 0;
+}
+.day-spend li span {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.day-spend li b {
+  font-size: 14.5px;
+  font-weight: 800;
+}
+.day-spend li.is-cur span,
+.day-spend li.is-cur b {
+  color: var(--stamp);
+}
 .week-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -272,6 +396,11 @@ select.auth-input {
   gap: 12px;
   margin: 10px 0;
 }
+/* without this the flex display wins over the hidden state and the
+   banner never leaves */
+.first-plan.is-hidden {
+  display: none;
+}
 .first-plan p {
   margin: 0;
   font-size: 13.5px;
@@ -316,6 +445,37 @@ select.auth-input {
   .profile-facts {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+}
+@media (max-width: 1000px) {
+  .plan-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .plan-rail {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+  }
+  .plan-rail .day-spend-panel {
+    grid-column: 1 / -1;
+  }
+  .plan-main .meal {
+    flex: none;
+  }
+}
+@media (max-width: 640px) {
+  .plan-rail {
+    grid-template-columns: 1fr;
+  }
+  .plan-top {
+    align-items: flex-start;
+  }
+  .plan-top-side {
+    align-items: flex-start;
+    max-width: 100%;
+  }
+  .plan-top-side .form-note {
+    text-align: left;
   }
 }
 @media (max-width: 900px) {
