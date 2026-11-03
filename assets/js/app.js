@@ -54,7 +54,7 @@
   /* Diary sample days. Prices mirror the board. Labeled as samples. */
   var thumbs = {
     arroz: "assets/img/dishes/arroz-caldo.jpg",
-    monggo: "assets/img/dishes/ginisang-monggo.jpg",
+    monggo: "assets/img/dishes/monggo.webp",
     adobo: "assets/img/dishes/adobo.jpg",
     tapsilog: "assets/img/dishes/tapsilog.jpg",
     sinigang: "assets/img/dishes/sinigang-baboy.jpg",
