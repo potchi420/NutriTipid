@@ -1,7 +1,6 @@
 /* clinic viewer, the lobby and the read-only patient report.
-   read-only means it, nothing on these pages writes student data, every
-   view just gets appended to the access log. clinic-patient also links
-   planner.css for the shared profile-head / fact / week-grid pieces
+   read-only means it, nothing here writes student data, every view
+   just gets appended to the access log
    */
 .clinic-wrap {
   width: min(880px, 100%);
@@ -117,16 +116,13 @@ button.patient-row:focus-visible {
   text-transform: uppercase;
   color: var(--muted);
 }
-/* week picker is a diary-tabs strip with no rows under it, so its own
-   bottom line goes away or you get two stacked hairlines, the box
-   closes it instead
-   */
+/* week picker is a tabs strip with no rows under it, so it closes its
+   own bottom line or the two hairlines stack up */
 .week-diary .diary-tabs {
   border-bottom: 0;
 }
-/* stretch the columns and pin the chart height on desktop so the weight
-   trend and week summary read as a pair, not chart then empty space
-   */
+/* on pc the columns stretch and the chart holds its height, the trend
+   and the week summary read as one pair that way */
 #reportBody {
   align-items: stretch;
 }

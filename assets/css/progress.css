@@ -1,4 +1,5 @@
-/* progress page. every number derives from the day rows in the script, nothing hand counted */
+/* progress page, every number here is counted the same way the plan is,
+   nothing hand typed */
 .progress-wrap {
   width: min(1520px, 100%);
   margin: 0 auto;
@@ -117,7 +118,8 @@
   padding: 3px 10px;
   white-space: nowrap;
 }
-/* Log form and weigh-in history: flat rows, dotted leaders, no inner card. */
+/* log form and the weigh in history, flat rows with dotted leaders and
+   no card inside the card */
 .log-submit {
   width: 100%;
   margin-top: 18px;
@@ -167,8 +169,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Motion: the dashboard beat, one quiet entrance per block. Charts
-   draw in once; everything rests under prefers-reduced-motion. */
+/* motion, one quiet entrance per block and the charts draw in once,
+   everything rests when the device asks for less movement */
 @media (prefers-reduced-motion: no-preference) {
   .stat-grid .stat,
   .progress-grid > .panel,
@@ -227,7 +229,7 @@
   .progress-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-  /* phones: the weigh-in panels jump right under the stat cards */
+  /* on phones the weigh in panels jump right under the stat cards */
   .side-stack {
     order: -1;
     position: static;

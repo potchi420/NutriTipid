@@ -1,4 +1,4 @@
-/* onboarding, one card three steps. same fields as profiler.html on purpose */
+/* onboarding, one card three steps and the fields repeat in all steps */
 .onboard-wrap {
   width: min(560px, 100%);
   margin: 0 auto;

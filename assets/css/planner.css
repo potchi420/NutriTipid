@@ -1,6 +1,5 @@
-/* planner, 7-day plan with swipeable day tabs. also carries the profile hub
-   styles further down, profiler.html links this file too.
-   reuses .panel, .diary, .day-tab, .meal, .bar, .big-peso from styles.css
+/* planner, the 7 day plan with its swipeable day tabs. the profile
+   edit pieces live in the same file later on, both views run off it
    */
 .field-2 {
   display: grid;
@@ -70,8 +69,9 @@ select.auth-input {
   border-radius: 99px;
   border: 1px solid var(--line);
 }
-/* pc rows have room to spare, the round photo grows so the rows
-   do not feel hollow. the letter dot grows with it */
+/* on pc the round photo grows so the rows do not feel hollow and the
+   rows fill by stretching, their look comes from the hairlines
+   */
 @media (min-width: 1001px) {
   #planMeals .meal-thumb {
     width: 64px;
@@ -82,16 +82,16 @@ select.auth-input {
     height: 100%;
     font-size: 16px;
   }
-  /* rows stretch to fill, so their look comes from the stretch and
-     the hairlines, not from stuffing the top and bottom */
   #planMeals .meal {
     padding-top: 0;
     padding-bottom: 0;
   }
 }
-/* wide planner, planner only. profiler keeps the narrow form width
-   because it is a form. the diary sits left and the numbers stick
-   right so the page ends on one even line */
+/* wide layout, the diary sits left and the numbers stick right so the
+   page ends on one even line. the rail packs a bit tighter because it
+   decides how tall the whole pc layout gets, and the profile form
+   stays narrow since a form reads better tight
+   */
 .plan-wide {
   width: min(1520px, 100%);
 }
@@ -153,8 +153,6 @@ select.auth-input {
   display: flex;
   flex-direction: column;
 }
-/* the rail decides how tall the whole pc layout is, so it packs a
-   little tighter than the shared panel look and the diary follows */
 @media (min-width: 1001px) {
   .plan-rail .panel {
     padding: 18px 20px;
@@ -235,10 +233,7 @@ select.auth-input {
   background: var(--primary);
   border-radius: 99px;
 }
-/* swap drawer extras, the sheet chrome itself lives in styles.css since
-   the add-food sheet needed the same thing. this is just the planner-side
-   candidates and pills
-   */
+/* swap drawer extras, the plan side candidates and the pills */
 .sheet-head .profile-chip {
   margin-top: 10px;
 }
@@ -290,8 +285,8 @@ select.auth-input {
   font-weight: 700;
   margin-left: 8px;
 }
-/* profile hub, identity header, fact chips, chip rows, two-panel edit grid.
-   the onboard form borrows these same classes
+/* profile hub, identity header, fact chips, chip rows and the two
+   panel edit grid
    */
 .profile-head {
   display: flex;

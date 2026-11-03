@@ -1,4 +1,4 @@
-/* dashboard, MFP style home. leans on global pieces so link after styles.css */
+/* dashboard home, the daily loop and the four number cards */
 .dash-wrap {
   width: min(1520px, 100%);
   margin: 0 auto;
@@ -55,14 +55,15 @@
   font-weight: 800;
   font-size: 16px;
 }
-/* summary strip: the four number cards share one row on pc, 2x2 on phones */
+/* summary strip, the four number cards share one row on pc and go 2x2 on phones */
 .hero-duo {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   margin-top: 24px;
 }
-/* two column body: meals scroll on the left, numbers stick right, both end on one line */
+/* two column body, meals scroll on the left, the numbers stick right,
+   both columns end on one line */
 .dash-cols {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -77,8 +78,8 @@
 .dash-main > .panel:last-child {
   flex: 1 1 auto;
 }
-/* the two stretched panels center their content so the leftover space sits
-   even top and bottom instead of pooling at the bottom edge */
+/* the two stretched panels center their content so leftover space sits
+   even up top and bottom, it does not pool at the bottom edge */
 .dash-main > .panel:last-child,
 .dash-rail > .panel:last-child {
   display: flex;
@@ -92,7 +93,7 @@
   position: sticky;
   top: 90px;
 }
-/* meals run as a 2x2 grid on pc so the column never hangs empty */
+/* meals sit as a 2x2 on pc so the left column never hangs empty */
 @media (min-width: 1101px) {
   #mealSecs {
     display: grid;
@@ -103,7 +104,7 @@
     margin-top: 0;
   }
 }
-/* week chips sit a little larger in the panel and flag the over budget day */
+/* week chips sit a bit larger in the panel and mark the over budget day */
 .week-tabs {
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -132,7 +133,7 @@
   }
 }
 @media (max-width: 560px) {
-  /* phones: the loop cards pack 2x2 so the strip stays one view */
+  /* on phones the loop cards pack 2x2 so the strip stays one view */
   .hero-duo {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -222,7 +223,7 @@
   border-radius: 99px;
   margin-right: 6px;
 }
-/* logged extras + over budget state, hero goes red. functional red only */
+/* logged extras and the over budget mark, hero goes red. functional red only */
 .hero-num.is-over {
   color: #B3261E;
 }
