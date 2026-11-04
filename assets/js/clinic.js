@@ -86,20 +86,20 @@
     maria: [
       ["Ginisang Monggo", "Chicken Adobo", "Lugaw"],
       ["Chicken Tinola", "Adobong Kangkong", "Arroz caldo w/ egg"],
-      ["Chicken Adobo", "Fried egg, half rice", "Lugaw"],
+      ["Chicken Adobo", "Fried egg and rice", "Lugaw"],
       ["Pork Menudo", "Adobong Kangkong", "Lugaw"],
-      ["Ginisang Monggo", "Adobong Kangkong", "Fried egg, half rice"],
+      ["Ginisang Monggo", "Adobong Kangkong", "Fried egg and rice"],
       ["Pork Menudo", "Pork Sinigang", "Arroz caldo w/ egg"],
       ["Chicken Tinola", "Ginisang Monggo", "Lugaw"]
     ],
     juan: [
-      ["Chop Suey", "Adobong Kangkong", "Fried egg, half rice"],
+      ["Chop Suey", "Adobong Kangkong", "Fried egg and rice"],
       ["Chicken Adobo", "Adobong Kangkong", "Lugaw"],
       ["Ginisang Monggo", "Adobong Kangkong", "Arroz caldo w/ egg"],
-      ["Pork Menudo", "Chicken Tinola", "Fried egg, half rice"],
+      ["Pork Menudo", "Chicken Tinola", "Fried egg and rice"],
       ["Chop Suey", "Adobong Kangkong", "Lugaw"],
       ["Beef Caldereta", "Chop Suey", "Arroz caldo w/ egg"],
-      ["Chicken Adobo", "Ginisang Monggo", "Fried egg, half rice"]
+      ["Chicken Adobo", "Ginisang Monggo", "Fried egg and rice"]
     ],
     andrea: [
       ["Chop Suey", "Adobong Kangkong", "Lugaw"],
@@ -107,12 +107,12 @@
       ["Ginisang Monggo", "Adobong Kangkong", "Lugaw"],
       ["Adobong Kangkong", "Chop Suey", "Lugaw"],
       ["Adobong Kangkong", "Ginisang Monggo", "Lugaw"],
-      ["Adobong Kangkong", "Chop Suey", "Fried egg, half rice"],
+      ["Adobong Kangkong", "Chop Suey", "Fried egg and rice"],
       ["Chop Suey", "Adobong Kangkong", "Lugaw"]
     ],
     carla: [
       ["Chicken Adobo", "Adobong Kangkong", "Lugaw"],
-      ["Chicken Tinola", "Adobong Kangkong", "Fried egg, half rice"],
+      ["Chicken Tinola", "Adobong Kangkong", "Fried egg and rice"],
       ["Pork Menudo", "Adobong Kangkong", "Lugaw"],
       ["Ginisang Monggo", "Adobong Kangkong", "Arroz caldo w/ egg"],
       ["Chicken Adobo", "Chop Suey", "Lugaw"],
@@ -130,10 +130,10 @@
     ],
     nico: [
       ["Beef Caldereta", "Pork Menudo", "Lugaw"],
-      ["Pork Sinigang", "Chicken Adobo", "Fried egg, half rice"],
+      ["Pork Sinigang", "Chicken Adobo", "Fried egg and rice"],
       ["Chicken Tinola", "Pork Menudo", "Lugaw"],
       ["Beef Caldereta", "Chicken Adobo", "Lugaw"],
-      ["Pork Menudo", "Chicken Adobo", "Fried egg, half rice"],
+      ["Pork Menudo", "Chicken Adobo", "Fried egg and rice"],
       ["Pork Sinigang", "Beef Caldereta", "Lugaw"],
       ["Chicken Adobo", "Chicken Tinola", "Arroz caldo w/ egg"]
     ],
@@ -142,7 +142,7 @@
       ["Chicken Tinola", "Adobong Kangkong", "Lugaw"],
       ["Pork Menudo", "Adobong Kangkong", "Lugaw"],
       ["Adobong Kangkong", "Chicken Adobo", "Lugaw"],
-      ["Ginisang Monggo", "Adobong Kangkong", "Fried egg, half rice"],
+      ["Ginisang Monggo", "Adobong Kangkong", "Fried egg and rice"],
       ["Beef Caldereta", "Adobong Kangkong", "Lugaw"],
       ["Pork Menudo", "Adobong Kangkong", "Lugaw"]
     ]
@@ -151,7 +151,7 @@
   /* canteen prices, everything rounds to fives
    */
   var PRICE = {
-    "Lugaw": 15, "Arroz caldo w/ egg": 30, "Fried egg, half rice": 20,
+    "Lugaw": 15, "Arroz caldo w/ egg": 30, "Fried egg and rice": 20,
     "Chicken Tinola": 45, "Chicken Adobo": 40, "Pork Menudo": 45,
     "Pork Sinigang": 50, "Ginisang Monggo": 35, "Adobong Kangkong": 25,
     "Beef Caldereta": 55, "Chop Suey": 35

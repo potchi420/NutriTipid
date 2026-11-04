@@ -138,25 +138,25 @@ try {
 (function () {
   "use strict";
 
-  /* Mock Module 2 pool: 11 canteen meals. Ulam prices follow the NU
-     Manila eatery survey plus the carinderia SRP matrix (tinola 40,
-     adobo 35, menudo 40, sinigang 45, monggo 25 to 35, kangkong 20,
-      caldereta 50, rice 15 a cup). Combos add half rice at P5, since
-      vendors round to fives. */
+  /* Mock Module 2 pool: 13 canteen meals. Prices follow the UNICEF
+     canteen and turo-turo tiers for Metro Manila: plain rice is 10 to
+     15 a cup, veggie and merienda pieces are 20 to 35, full meat
+     viands are 40 to 70. Every price rounds to fives, the way
+     real carinderias tag them. */
   var DISHES = [
     { name: "Lugaw", price: 15, kcal: 280, protein: 7, dot: "L", color: "#8A6D1B", img: "../assets/img/dishes/lugaw.jpg" },
     { name: "Arroz caldo w/ egg", price: 30, kcal: 420, protein: 14, dot: "A", color: "#1F9D55", al: ["Egg"], img: "../assets/img/dishes/arroz-caldo.jpg" },
-    { name: "Fried egg, half rice", price: 20, kcal: 350, protein: 12, dot: "E", color: "#B7791F", al: ["Egg"], img: "../assets/img/dishes/fried-egg.jpg" },
-    { name: "Chicken Tinola, half rice", price: 45, kcal: 460, protein: 24, dot: "T", color: "#3E8E7E", img: "../assets/img/dishes/tinola.jpg" },
-    { name: "Chicken Adobo, half rice", price: 40, kcal: 520, protein: 30, dot: "A", color: "#5F6F65", img: "../assets/img/dishes/adobo.jpg" },
-    { name: "Pork Menudo, half rice", price: 45, kcal: 540, protein: 22, dot: "M", color: "#7A4A21", img: "../assets/img/dishes/menudo.jpg" },
-    { name: "Pork Sinigang, half rice", price: 50, kcal: 480, protein: 20, dot: "S", color: "#2E7D5B", img: "../assets/img/dishes/sinigang-baboy.jpg" },
-    { name: "Ginisang Monggo, half rice", price: 35, kcal: 520, protein: 20, dot: "M", color: "#E8A415", ink: "#1A2E22", al: ["Shrimp"], img: "../assets/img/dishes/monggo.webp" },
-    { name: "Adobong Kangkong, half rice", price: 25, kcal: 320, protein: 9, dot: "K", color: "#4C7A45", img: "../assets/img/dishes/adobong-kangkong.jpg" },
-    { name: "Beef Caldereta, half rice", price: 55, kcal: 600, protein: 24, dot: "C", color: "#A34A24", img: "../assets/img/dishes/kaldereta.jpg" },
-    { name: "Chop Suey, half rice", price: 35, kcal: 380, protein: 10, dot: "C", color: "#6B8F71", img: "../assets/img/dishes/chop-suey.jpg" },
-    { name: "Sinigang na Hipon, half rice", price: 45, kcal: 380, protein: 22, dot: "H", color: "#E0876A", ink: "#1A2E22", al: ["Shrimp"], img: "../assets/img/dishes/sinigang na hipon.webp" },
-    { name: "Sinigang na Bangus, half rice", price: 45, kcal: 420, protein: 24, dot: "F", color: "#4A7E96", ink: "#FFFFFF", al: ["Fish"], img: "../assets/img/dishes/sinigang-bangus.jpg" }
+    { name: "Fried egg and rice", price: 20, kcal: 350, protein: 12, dot: "E", color: "#B7791F", al: ["Egg"], img: "../assets/img/dishes/fried-egg.jpg" },
+    { name: "Chicken Tinola", price: 45, kcal: 460, protein: 24, dot: "T", color: "#3E8E7E", img: "../assets/img/dishes/tinola.jpg" },
+    { name: "Chicken Adobo", price: 40, kcal: 520, protein: 30, dot: "A", color: "#5F6F65", img: "../assets/img/dishes/adobo.jpg" },
+    { name: "Pork Menudo", price: 45, kcal: 540, protein: 22, dot: "M", color: "#7A4A21", img: "../assets/img/dishes/menudo.jpg" },
+    { name: "Pork Sinigang", price: 50, kcal: 480, protein: 20, dot: "S", color: "#2E7D5B", img: "../assets/img/dishes/sinigang-baboy.jpg" },
+    { name: "Ginisang Monggo", price: 35, kcal: 520, protein: 20, dot: "M", color: "#E8A415", ink: "#1A2E22", al: ["Shrimp"], img: "../assets/img/dishes/monggo.webp" },
+    { name: "Adobong Kangkong", price: 25, kcal: 320, protein: 9, dot: "K", color: "#4C7A45", img: "../assets/img/dishes/adobong-kangkong.jpg" },
+    { name: "Beef Caldereta", price: 55, kcal: 600, protein: 24, dot: "C", color: "#A34A24", img: "../assets/img/dishes/kaldereta.jpg" },
+    { name: "Chop Suey", price: 35, kcal: 380, protein: 10, dot: "C", color: "#6B8F71", img: "../assets/img/dishes/chop-suey.jpg" },
+    { name: "Sinigang na Hipon", price: 45, kcal: 380, protein: 22, dot: "H", color: "#E0876A", ink: "#1A2E22", al: ["Shrimp"], img: "../assets/img/dishes/sinigang na hipon.webp" },
+    { name: "Sinigang na Bangus", price: 45, kcal: 420, protein: 24, dot: "F", color: "#4A7E96", ink: "#FFFFFF", al: ["Fish"], img: "../assets/img/dishes/sinigang-bangus.jpg" }
   ];
 
   /* The admin console writes price overrides, soft-deletes, detail
@@ -188,7 +188,7 @@ try {
   function live(d) {
     return !window.NutriTipidBoard || NutriTipidBoard.isActive(d.was || d.name);
   }
-  var SNACKS = ["Lugaw", "Fried egg, half rice", "Arroz caldo w/ egg"];
+  var SNACKS = ["Lugaw", "Fried egg and rice", "Arroz caldo w/ egg"];
   var PACKED = { name: "Packed from home", price: 0, kcal: 0, protein: 0, dot: "B", color: "#5F6F65" };
   var packedDay = [true, true, true, true, true, true, true];
   var DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];

@@ -68,17 +68,17 @@
       kcal: "1,320 kcal",
       rows: [
         ["Breakfast", "Lugaw", "Ordered at the morning stall", "P15", "280 kcal", thumbs.champorado],
-        ["Lunch", "Monggo with half rice", "Fiber holds hunger longer", "P35", "520 kcal", thumbs.monggo],
-        ["Dinner", "Chicken adobo with half rice", "30g protein, spoon of sauce", "P40", "520 kcal", thumbs.adobo]
+        ["Lunch", "Ginisang monggo", "Fiber holds hunger longer", "P35", "520 kcal", thumbs.monggo],
+        ["Dinner", "Chicken adobo", "30g protein, spoon of sauce", "P40", "520 kcal", thumbs.adobo]
       ]
     },
     {
       total: "P120 of P125",
       kcal: "1,400 kcal",
       rows: [
-        ["Breakfast", "Tapsilog with half rice", "Egg cooked with less oil", "P45", "510 kcal", thumbs.tapsilog],
-        ["Lunch", "Sinigang with half rice", "Soup stretches one serving", "P50", "480 kcal", thumbs.sinigang],
-        ["Dinner", "Ginisang gulay with half rice", "Lowest cost dinner", "P25", "410 kcal", thumbs.gulay]
+        ["Breakfast", "Tapsilog", "Egg cooked with less oil", "P45", "510 kcal", thumbs.tapsilog],
+        ["Lunch", "Pork sinigang", "Soup stretches one serving", "P50", "480 kcal", thumbs.sinigang],
+        ["Dinner", "Ginisang gulay", "Lowest cost dinner", "P25", "410 kcal", thumbs.gulay]
       ]
     },
     {
@@ -86,8 +86,8 @@
       kcal: "1,400 kcal",
       rows: [
         ["Breakfast", "Champorado with tuyo", "Small serving, high energy", "P25", "380 kcal", thumbs.champorado],
-        ["Lunch", "Pares with half rice", "Rich broth, rice split in half", "P40", "560 kcal", thumbs.pares],
-        ["Dinner", "Tinola with half rice", "Clear soup with chicken", "P45", "460 kcal", thumbs.sinigang]
+        ["Lunch", "Beef pares", "Rich broth with plenty of rice", "P40", "560 kcal", thumbs.pares],
+        ["Dinner", "Chicken tinola", "Clear soup with chicken", "P45", "460 kcal", thumbs.sinigang]
       ]
     }
   ];
@@ -145,20 +145,20 @@
       f = Math.round(v * 0.27); l = Math.round(v * 0.43); d = v - f - l;
       bNote.textContent = "At " + money(v) + ", breakfast stays light so lunch keeps protein.";
       setSplit("bFast", "bFastBar", "bFastTip", f, v, "Champorado or arroz caldo. Light and warm.");
-      setSplit("bLunch", "bLunchBar", "bLunchTip", l, v, "Monggo or sinigang with half rice. Holds protein.");
-      setSplit("bDinner", "bDinnerBar", "bDinnerTip", d, v, "Gulay or tinola with half rice.");
+      setSplit("bLunch", "bLunchBar", "bLunchTip", l, v, "Monggo or sinigang. Holds protein.");
+      setSplit("bDinner", "bDinnerBar", "bDinnerTip", d, v, "Gulay or tinola.");
     } else if (v <= 150) {
       f = Math.round(v * 0.30); l = Math.round(v * 0.40); d = v - f - l;
       bNote.textContent = "Often split " + money(f) + ", " + money(l) + ", " + money(d) + ". The planner fills exact dishes.";
       setSplit("bFast", "bFastBar", "bFastTip", f, v, "Arroz caldo with egg.");
-      setSplit("bLunch", "bLunchBar", "bLunchTip", l, v, "Monggo or sinigang with half rice.");
-      setSplit("bDinner", "bDinnerBar", "bDinnerTip", d, v, "Adobo or chicken meal with half rice.");
+      setSplit("bLunch", "bLunchBar", "bLunchTip", l, v, "Monggo or sinigang.");
+      setSplit("bDinner", "bDinnerBar", "bDinnerTip", d, v, "Adobo or chicken meal.");
     } else if (v <= 300) {
       f = Math.round(v * 0.31); l = Math.round(v * 0.38); d = v - f - l;
       bNote.textContent = "At " + money(v) + ", room for an egg or gulay add-on once a day, plus merienda.";
-      setSplit("bFast", "bFastBar", "bFastTip", f, v, "Tapsilog with half rice and egg.");
-      setSplit("bLunch", "bLunchBar", "bLunchTip", l, v, "Pares or adobo with half rice and gulay.");
-      setSplit("bDinner", "bDinnerBar", "bDinnerTip", d, v, "Tinola or sinigang with half rice.");
+      setSplit("bFast", "bFastBar", "bFastTip", f, v, "Tapsilog with egg.");
+      setSplit("bLunch", "bLunchBar", "bLunchTip", l, v, "Pares or adobo with gulay.");
+      setSplit("bDinner", "bDinnerBar", "bDinnerTip", d, v, "Tinola or sinigang.");
     } else {
       f = Math.round(v * 0.33); l = Math.round(v * 0.37); d = v - f - l;
       bNote.textContent = "At " + money(v) + ", the planner can spread variety across the week.";
@@ -186,10 +186,10 @@
      rate, then the cheapest per protein is locked. Plays on first view,
      replayable. Reduced motion and no-JS keep the final state. */
   var solData = [
-    { name: "Tinola + half rice", cost: 45, protein: 12 },
-    { name: "Ginisang gulay + half rice", cost: 25, protein: 11 },
-    { name: "Pares + half rice", cost: 40, protein: 15 },
-    { name: "Monggo + half rice", cost: 35, protein: 20 }
+    { name: "Chicken tinola", cost: 45, protein: 12 },
+    { name: "Ginisang gulay", cost: 25, protein: 11 },
+    { name: "Beef pares", cost: 40, protein: 15 },
+    { name: "Ginisang monggo", cost: 35, protein: 20 }
   ];
   solData.forEach(function (d) { d.rate = d.cost / d.protein * 10; });
   var solMax = Math.max.apply(null, solData.map(function (d) { return d.rate; }));

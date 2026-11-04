@@ -110,10 +110,13 @@ controls and success states only.
 ## 5. Mock Conventions
 
 - Deterministic mock data (rotating pools, fixed arrays), never random.
-- Prices follow the study SRPs: ulam matrix (tinola 40, adobo 35,
-  menudo 40, sinigang 45, monggo 25-35, kangkong 20, caldereta 50,
-  lugaw/rice 15) plus P5 half rice. Combos derive, never hand-priced.
-  Everything rounds to fives, like real carinderias.
+- Prices follow the UNICEF Metro Manila canteen/turo-turo tiers since
+  2026-11-03: plain rice ₱10-15 a cup, veggie and merienda pieces
+  ₱20-35, full meat viands ₱40-70. Board prices sit inside those bands
+  dish-as-served (tinola 45, adobo 40, menudo 45, monggo 35, kangkong
+  25, caldereta 55, lugaw 15) — no half-portion naming, vendors rarely
+  sell half rice. Combos derive, never hand-priced. Everything rounds
+  to fives, like real carinderias.
 - Unbuilt destinations: real rows with `Soon` pills, never dead links.
   Decorative buttons post product-voiced notices ("coming soon"), never
   404 and never the word mock in UI. Code comments may say mock; UI may not.
