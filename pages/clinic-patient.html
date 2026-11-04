@@ -41,7 +41,7 @@ try {
   </div>
 </header>
 
-<main class="clinic-wrap">
+<main class="clinic-wrap clinic-wide">
   <a class="back-link" href="clinic.html">&larr; Back to patients</a>
 
   <div class="profile-head" id="patHead">
@@ -49,22 +49,31 @@ try {
     <div class="profile-id">
       <strong id="patName">Maria Santos</strong>
       <span id="patMeta">maria@example.com &middot; Student &middot; Sharing consented</span>
+      <span class="share-pill is-hidden" id="patBmi"></span>
     </div>
     <span class="ro-text" style="margin-left:auto; align-self:center">Read-only access</span>
   </div>
 
-  <div class="profile-facts tabular" id="patFacts">
-    <div class="fact">
-      <span>BMI</span>
-      <div class="fact-num"><b id="factBmi">&mdash;</b><i id="factCat"></i></div>
+  <div class="stat-grid" id="patStats">
+    <div class="panel stat">
+      <h2>Budget</h2>
+      <div class="stat-num tabular" id="stBudget">&mdash;</div>
+      <p class="stat-cap tabular" id="stBudgetCap"></p>
     </div>
-    <div class="fact">
-      <span>Latest weight</span>
-      <div class="fact-num"><b id="factKg">&mdash;</b></div>
+    <div class="panel stat">
+      <h2>Calories</h2>
+      <div class="stat-num tabular" id="stCal">&mdash;</div>
+      <p class="stat-cap tabular" id="stCalCap"></p>
     </div>
-    <div class="fact">
-      <span>Pesos per day</span>
-      <div class="fact-num"><b id="factBudget">&mdash;</b></div>
+    <div class="panel stat">
+      <h2>Plan</h2>
+      <div class="stat-num tabular" id="stPlan">&mdash;</div>
+      <p class="stat-cap tabular" id="stPlanCap"></p>
+    </div>
+    <div class="panel stat">
+      <h2>Weight</h2>
+      <div class="stat-num tabular" id="stWeight">&mdash;</div>
+      <p class="stat-cap tabular" id="stWeightCap"></p>
     </div>
   </div>
 
@@ -72,7 +81,7 @@ try {
     <div class="diary-tabs" role="tablist" aria-label="Week to review" id="weekTabs"></div>
   </div>
 
-  <div class="week-grid" id="reportBody">
+  <div class="report-grid" id="reportBody">
     <div class="panel">
       <h2>Weight trend</h2>
       <svg id="trendChart" class="clinic-chart" viewBox="0 0 560 260" role="img" aria-label="Weight trend from logged weigh-ins"></svg>
@@ -94,12 +103,16 @@ try {
       </div>
       <p class="report-note" id="sumNote"></p>
     </div>
-  </div>
-
-  <div class="panel" style="margin-top:24px" id="planPanel">
-    <h2>Their 7-day plan</h2>
-    <div id="planLines"></div>
-    <p class="report-note">Generated around their daily budget. Prices from the canteen board.</p>
+    <div class="panel">
+      <h2>Four weeks at a glance</h2>
+      <div id="fwList"></div>
+      <p class="report-note">Every logged week sits on the same budget and calories scale.</p>
+    </div>
+    <div class="panel" id="planPanel">
+      <h2>Their 7-day plan</h2>
+      <div id="planLines"></div>
+      <p class="report-note">Generated around their daily budget. Prices from the canteen board.</p>
+    </div>
   </div>
 
   <p class="form-note" id="viewNote" style="margin-top:14px">Read-only view. This visit is written to the access log.</p>
@@ -114,14 +127,14 @@ try {
   var id = new URLSearchParams(window.location.search).get("p") || "maria";
   var p = NutriTipidClinic.find(id);
   var head = document.getElementById("patHead");
-  var facts = document.getElementById("patFacts");
+  var stats = document.getElementById("patStats");
   var body = document.getElementById("reportBody");
   var planPanel = document.getElementById("planPanel");
   var viewNote = document.getElementById("viewNote");
 
   if (!p || !p.consented) {
     head.classList.add("is-hidden");
-    facts.classList.add("is-hidden");
+    stats.classList.add("is-hidden");
     body.classList.add("is-hidden");
     planPanel.classList.add("is-hidden");
     viewNote.textContent = p && !p.consented
@@ -131,19 +144,22 @@ try {
     return;
   }
 
-  /* Identity + facts. */
+  /* Identity + the four number cards, all read from the one patient
+     record the lobby rows already use. */
   document.getElementById("patAvatar").textContent = p.initials;
   document.getElementById("patAvatar").style.background = p.color;
   document.getElementById("patName").textContent = p.name;
   document.getElementById("patMeta").textContent = p.email + " \u00B7 Student \u00B7 Sharing consented";
+  document.getElementById("stBudget").textContent = "P" + p.budget;
+  document.getElementById("stBudgetCap").textContent = "of P" + (p.budget * 7) + " for the whole week";
+  document.getElementById("stWeight").textContent = p.weight.length ? p.weight[p.weight.length - 1].kg.toFixed(1) + " kg" : "\u2014";
+  document.getElementById("stWeightCap").textContent = "logged across " + p.weight.length + " weigh-ins";
+  var pill = document.getElementById("patBmi");
   if (p.bmi) {
-    document.getElementById("factBmi").textContent = p.bmi.toFixed(1);
-    var cat = document.getElementById("factCat");
-    cat.textContent = p.bmiCat[0];
-    cat.className = p.bmiCat[1];
+    pill.textContent = p.bmi.toFixed(1) + " \u00B7 " + p.bmiCat[0];
+    pill.classList.add(p.bmiCat[1]);
+    pill.classList.remove("is-hidden");
   }
-  if (p.weight.length) document.getElementById("factKg").textContent = p.weight[p.weight.length - 1].kg.toFixed(1) + " kg";
-  document.getElementById("factBudget").textContent = "P" + p.budget;
 
   /* Week picker: review consistency across their logged weeks.
      The weight chart above stays month-wide; meters and plan follow
@@ -168,9 +184,40 @@ try {
     b.addEventListener("click", function () { renderWeek(i); });
     weekTabs.appendChild(b);
   });
+  /* every logged week lines up on one strip, the selected one goes
+     green. built once since the four weeks never change */
+  var fwList = document.getElementById("fwList");
+  p.weeks.forEach(function (w) {
+    var s = w.summary;
+    var row = document.createElement("div");
+    row.className = "fw-row";
+    var lab = document.createElement("span");
+    lab.className = "fw-label";
+    lab.textContent = w.label.replace("Week of ", "");
+    var bar = document.createElement("div");
+    bar.className = "bar";
+    var fill = document.createElement("i");
+    fill.className = s.budgetPct === 100 ? "g" : "y";
+    fill.style.width = Math.min(100, s.budgetPct) + "%";
+    bar.appendChild(fill);
+    var num = document.createElement("span");
+    num.className = "tabular";
+    num.textContent = s.budgetPct + "%";
+    row.appendChild(lab); row.appendChild(bar); row.appendChild(num);
+    fwList.appendChild(row);
+  });
+  function paintFw(cur) {
+    Array.prototype.forEach.call(fwList.children, function (r, j) {
+      r.classList.toggle("is-cur", j === cur);
+    });
+  }
   function renderWeek(i) {
     var w = p.weeks[i];
     var s = w.summary;
+    document.getElementById("stCal").textContent = s.avgKcal.toLocaleString();
+    document.getElementById("stCalCap").textContent = "avg. kcal vs " + p.kcalTarget.toLocaleString() + " target";
+    document.getElementById("stPlan").textContent = s.withinBudget + " of " + s.n;
+    document.getElementById("stPlanCap").textContent = "days within the P" + p.budget + " budget";
     calCap.textContent = s.avgKcal.toLocaleString() + " avg. vs " + p.kcalTarget.toLocaleString() + " target";
     calBar.style.width = Math.min(100, s.kcalPct) + "%";
     budCap.textContent = s.withinBudget + " of " + s.n + " days within P" + p.budget;
@@ -206,6 +253,7 @@ try {
     Array.prototype.forEach.call(weekTabs.children, function (tb, j) {
       tb.setAttribute("aria-selected", String(j === i));
     });
+    paintFw(i);
   }
   renderWeek(p.weeks.length - 1);
 

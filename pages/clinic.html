@@ -40,21 +40,53 @@ try {
   </div>
 </header>
 
-<main class="clinic-wrap">
-  <h1>Patients.</h1>
-  <p class="auth-sub">Students who consented to clinic monitoring.</p>
+<main class="clinic-wrap clinic-wide">
+  <div class="clinic-top">
+    <div>
+      <h1>Patients.</h1>
+      <p class="auth-sub">Students who consented to clinic monitoring.</p>
+    </div>
+    <input class="auth-input clinic-search" id="patientSearch" type="search" placeholder="Search a registered student" aria-label="Search a registered student">
+  </div>
 
-  <input class="auth-input" id="patientSearch" type="search" placeholder="Search a registered student" aria-label="Search a registered student" style="margin-top:20px">
+  <div class="stat-grid" id="clinicStats" hidden>
+    <div class="panel stat">
+      <h2>Sharing</h2>
+      <div class="stat-num" id="statSharing">&mdash;</div>
+      <p class="stat-cap" id="statSharingCap"></p>
+    </div>
+    <div class="panel stat">
+      <h2>Within budget</h2>
+      <div class="stat-num" id="statWithin">&mdash;</div>
+      <p class="stat-cap" id="statWithinCap"></p>
+    </div>
+    <div class="panel stat">
+      <h2>Healthy bmi</h2>
+      <div class="stat-num" id="statBmi">&mdash;</div>
+      <p class="stat-cap" id="statBmiCap"></p>
+    </div>
+    <div class="panel stat">
+      <h2>Avg budget</h2>
+      <div class="stat-num" id="statAvg">&mdash;</div>
+      <p class="stat-cap" id="statAvgCap"></p>
+    </div>
+  </div>
+
   <p class="patient-count" id="patientCount">3 patients opted in to sharing.</p>
 
-  <div class="diary" id="patientList"></div>
-  <div class="pager" id="pager"></div>
-
-  <div class="panel" style="margin-top:24px">
-    <h2>Recent access log</h2>
-    <div id="logList"></div>
-    <p class="report-note">Every patient view is written here. Clinic accounts are read-only.</p>
+  <div class="clinic-cols">
+    <div class="clinic-main">
+      <div class="diary" id="patientList"></div>
+    </div>
+    <aside class="clinic-rail">
+      <div class="panel">
+        <h2>Recent access log</h2>
+        <div id="logList"></div>
+        <p class="report-note">Every patient view is written here. Clinic accounts are read-only.</p>
+      </div>
+    </aside>
   </div>
+  <div class="pager" id="pager"></div>
 </main>
 
 <script src="../assets/js/profile.js"></script>
@@ -70,6 +102,27 @@ try {
   var pagerEl = document.getElementById("pager");
   var patients = NutriTipidClinic.patients();
   var page = 0;
+
+  /* the four cards above the roster count themselves from the same
+     patient mock, nothing extra to keep in step */
+  function renderStats() {
+    var grid = document.getElementById("clinicStats");
+    if (!grid) return;
+    var consented = patients.filter(function (p) { return p.consented; });
+    document.getElementById("statSharing").textContent = consented.length + " of " + patients.length;
+    document.getElementById("statSharingCap").textContent = "students consented to read-only sharing";
+    var within = consented.filter(function (p) { return p.summary && p.summary.budgetPct === 100; }).length;
+    document.getElementById("statWithin").textContent = within + " of " + consented.length;
+    document.getElementById("statWithinCap").textContent = "stayed in budget all 7 days last week";
+    var normal = consented.filter(function (p) { return p.bmiCat && p.bmiCat[1] === "is-ok"; }).length;
+    document.getElementById("statBmi").textContent = normal + " of " + consented.length;
+    document.getElementById("statBmiCap").textContent = "in the normal bmi range";
+    var avg = consented.length ? Math.round(consented.reduce(function (t, p) { return t + p.budget; }, 0) / consented.length) : 0;
+    document.getElementById("statAvg").textContent = "P" + avg;
+    document.getElementById("statAvgCap").textContent = "average pesos per day across consented";
+    grid.removeAttribute("hidden");
+  }
+  renderStats();
 
   function row(p) {
     if (!p.consented) {
@@ -184,7 +237,7 @@ try {
 
   function renderLog() {
     logEl.innerHTML = "";
-    var recent = NutriTipidClinic.recentLog().slice(0, 4);
+    var recent = NutriTipidClinic.recentLog().slice(0, 30);
     if (!recent.length) {
       var none = document.createElement("p");
       none.className = "denied-note";

@@ -7,6 +7,95 @@
   margin: 0 auto;
   padding: 32px max(24px, env(safe-area-inset-left)) 88px;
 }
+/* wide lobby, the roster sits left and the access log sticks right,
+   both columns end on one even line. the report page keeps the narrow
+   form width since it reads better tight */
+.clinic-wide {
+  width: min(1520px, 100%);
+}
+.clinic-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.clinic-top .clinic-search {
+  width: min(420px, 100%);
+}
+.clinic-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  margin-top: 24px;
+  align-items: stretch;
+  position: relative;
+}
+/* the rail drops out of the sizing so its height is always the
+   roster's, the log rolls inside when the records run long */
+.clinic-rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+}
+.clinic-rail .panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.clinic-rail #logList {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+/* the list rolls inside the panel when the log grows past it, the
+   note stays pinned under the rows either way */
+.clinic-rail .report-note {
+  margin-top: auto;
+  padding-top: 16px;
+}
+@media (max-width: 1000px) {
+  /* the pager rides between the roster and the log on phones, the
+     columns dissolve and the sole pager sits after the list */
+  .clinic-cols,
+  .clinic-main {
+    display: contents;
+  }
+  .clinic-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .clinic-wrap > .stat-grid,
+  .clinic-wrap > .pager {
+    margin: 0;
+  }
+  .clinic-wrap > .patient-count {
+    margin: 0 2px;
+  }
+  .clinic-wrap > .pager {
+    order: 1;
+  }
+  .clinic-rail {
+    order: 2;
+    position: static;
+    width: auto;
+  }
+  .clinic-rail #logList {
+    flex: none;
+  }
+}
+@media (max-width: 900px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 .clinic-wrap h1 {
   margin: 10px 0 0;
   font-size: clamp(32px, 5vw, 44px);
@@ -15,7 +104,7 @@
   line-height: 1.05;
 }
 .patient-count {
-  margin: 18px 2px 8px;
+  margin: 24px 2px 0;
   font-size: 13.5px;
   color: var(--muted);
 }
@@ -121,10 +210,67 @@ button.patient-row:focus-visible {
 .week-diary .diary-tabs {
   border-bottom: 0;
 }
+/* report body mirrors the student progress page, three tiles wide on
+   pc with the 7 day plan closing across all of the columns */
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+.report-grid #planPanel {
+  grid-column: 1 / -1;
+}
+.fw-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 0;
+}
+.fw-row:first-child {
+  padding-top: 2px;
+}
+.fw-row + .fw-row {
+  border-top: 1px solid var(--line);
+}
+.fw-label {
+  flex: none;
+  width: 64px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.fw-row .bar {
+  flex: 1 1 auto;
+  margin: 0;
+}
+.fw-row .tabular {
+  flex: none;
+  width: 48px;
+  text-align: right;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.fw-row.is-cur .fw-label,
+.fw-row.is-cur .tabular {
+  color: var(--stamp);
+  font-weight: 700;
+}
 /* on pc the columns stretch and the chart holds its height, the trend
    and the week summary read as one pair that way */
 #reportBody {
   align-items: stretch;
+}
+@media (max-width: 1100px) {
+  .report-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .report-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 @media (min-width: 641px) {
   #trendChart {
