@@ -34,6 +34,151 @@
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
+/* the facts panel closes the board page, the tally row gets a hairline
+   so it reads like the total under a list */
+.board-facts {
+  margin-top: 24px;
+}
+.board-facts .board-tally {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--stamp);
+}
+/* wide board, the roster runs left and the facts panel sits right so
+   the page uses the row of empty screen the old cap left behind */
+.admin-wide {
+  width: min(1520px, 100%);
+}
+.admin-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.admin-top .board-search {
+  flex: none;
+  width: min(420px, 100%);
+}
+.board-toolbar .count-line {
+  margin-left: auto;
+}
+/* the console pairs the count with the deactivate note on one line */
+.board-toolbar .diary-note {
+  margin: 0;
+}
+.board-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 24px;
+  margin-top: 24px;
+  position: relative;
+}
+.board-main .admin-list {
+  margin-top: 0;
+}
+.board-rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.board-rail .panel.admin-sec {
+  margin-top: 0;
+}
+.board-rail .board-facts {
+  margin-top: 0;
+}
+/* short last pages fill with blank rows so the roster box holds one
+   height across pages, the rail keeps its size either way */
+.meal.is-blank {
+  cursor: default;
+  min-height: 84px;
+}
+.meal.is-blank:has(.board-thumb.is-ghost) {
+  min-height: 97px;
+}
+.meal.is-blank .admin-av.is-ghost,
+.meal.is-blank .board-thumb.is-ghost {
+  background: none;
+  border: 1px dashed var(--line);
+  color: transparent;
+}
+.meal.is-blank .board-thumb.is-ghost .board-dot {
+  display: none;
+}
+.board-rail .panel.board-facts {
+  margin: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.board-rail .board-tally {
+  margin-top: auto;
+}
+@media (max-width: 1000px) {
+  .board-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .board-rail {
+    position: static;
+    width: auto;
+  }
+  .board-rail .panel.board-facts {
+    height: auto;
+  }
+  .board-rail .panel.admin-sec {
+    flex: none;
+  }
+  .board-rail #accessList {
+    flex: none;
+    overflow-y: visible;
+  }
+  /* phones hoist the roster and the rail as flat blocks of the page,
+     the pager and the note stay with the roster and the records
+     follow them */
+  .board-cols,
+  .board-main {
+    display: contents;
+  }
+  .admin-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .admin-wrap .board-toolbar {
+    margin-top: 0;
+  }
+  .admin-wrap .pager {
+    margin-top: 0;
+  }
+  #userPager,
+  #boardPager {
+    order: 1;
+  }
+  .board-rail {
+    order: 2;
+  }
+}
+/* the console rail stacks the two record panels, price history keeps
+   its natural height and the access log rolls through the rest */
+.board-rail .panel.admin-sec:last-child {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.board-rail #accessList {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
 
 /* toolbar row, the search and the count line, or the count alone pushed right */
 .board-toolbar {

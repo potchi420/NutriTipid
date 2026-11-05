@@ -199,6 +199,17 @@ try {
     list.slice(page * pageSize, page * pageSize + pageSize).forEach(function (p) {
       listEl.appendChild(row(p));
     });
+    /* blank rows pad short pages, so the roster box holds one height
+       across pages and the log rail never gets a squeeze on page two */
+    while (list.length && listEl.children.length < pageSize) {
+      var blank = document.createElement("div");
+      blank.className = "meal patient-row is-blank";
+      blank.setAttribute("aria-hidden", "true");
+      var ghost = document.createElement("span");
+      ghost.className = "clinic-avatar is-ghost";
+      blank.appendChild(ghost);
+      listEl.appendChild(blank);
+    }
     if (!list.length) {
       var empty = document.createElement("p");
       empty.className = "denied-note";

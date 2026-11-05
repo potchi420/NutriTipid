@@ -28,8 +28,7 @@ try {
     </a>
     <nav class="app-nav" aria-label="App">
       <a href="admin.html" class="header-link is-active" aria-current="page">Board</a>
-      <a href="admin-logs.html" class="header-link">Logs</a>
-      <a href="admin-users.html" class="header-link">Users</a>
+      <a href="admin-console.html" class="header-link">Console</a>
     </nav>
     <div class="header-actions">
       <button id="themeBtn" class="theme-btn" aria-label="Switch color mode">
@@ -42,20 +41,36 @@ try {
   </div>
 </header>
 
-<main class="admin-wrap">
-  <h1>Food &amp; price board.</h1>
-  <p class="auth-sub">Menu items and prices, kept from menu sheets and price surveys.</p>
-
-  <div class="board-toolbar">
+<main class="admin-wrap admin-wide">
+  <div class="admin-top">
+    <div>
+      <h1>Food &amp; price board.</h1>
+      <p class="auth-sub">Menu items and prices, kept from menu sheets and price surveys.</p>
+    </div>
     <div class="board-search">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="boardSearch" class="auth-input" type="search" placeholder="Search dishes" aria-label="Search dishes by name or allergen">
     </div>
+  </div>
+  <div class="board-toolbar">
     <button type="button" class="chip-toggle is-add" id="addDish">Add dish</button>
     <button type="button" class="chip-toggle" id="offToggle" aria-pressed="false">Show deactivated</button>
     <span class="count-line" id="boardCount" role="status"></span>
   </div>
-  <div class="diary admin-list" id="boardList"></div>
+  <div class="board-cols">
+    <div class="board-main">
+      <div class="diary admin-list" id="boardList"></div>
+    </div>
+    <aside class="board-rail">
+      <div class="panel board-facts">
+        <h2>Where the board data comes from</h2>
+        <p class="verdict">Nutritional data is drawn from the PhilFCT and FNRI food composition tables, calculated per 100g and adjusted by serving size, with the USDA database filling in any missing items.</p>
+        <p class="verdict">Dish prices reflect official canteen menu lists and price surveys, rounded to the nearest five pesos within typical range brackets: ₱10–₱15 for plain rice, ₱20–₱35 for vegetables and snack items, and ₱40–₱70 for meat entrees.</p>
+        <p class="verdict">Each dish features a badge indicating its reference source; dishes lacking a badge use calculated estimates until verified on the dish record sheet.</p>
+        <p class="verdict tabular board-tally" id="sourceTally"></p>
+      </div>
+    </aside>
+  </div>
   <div class="pager" id="boardPager"></div>
 </main>
 
@@ -212,19 +227,27 @@ try {
     return hay.indexOf(state.q.toLowerCase()) >= 0;
   }
 
+  /* the facts panel at the foot counts itself from the same rows
+     that feed the board */
+  function renderTally(rows) {
+    var mapped = rows.filter(function (d) { return d.nsrc; }).length;
+    document.getElementById("sourceTally").textContent =
+      mapped + " of " + rows.length + " dishes map to a named composition table.";
+  }
   function renderBoard() {
     var all = dishList();
+    renderTally(all);
     var pool = all.filter(function (d) { return state.showOff || B.isActive(d.key); });
     var rows = pool.filter(matches);
     var pages = Math.max(1, Math.ceil(rows.length / PAGE));
     if (state.page > pages) state.page = pages;
     boardEl.innerHTML = "";
     if (!rows.length) {
-      var none = document.createElement("p");
-      none.className = "report-note";
-      none.textContent = state.q
-        ? "No dishes match \u201C" + state.q + "\u201D. Try a shorter name."
-        : "No active dishes. Turn on \u201CShow deactivated\u201D or add one below.";
+    var none = document.createElement("p");
+    none.className = "report-note";
+    none.textContent = state.q
+      ? "No dishes match \u201C" + state.q + "\u201D. Try a shorter name."
+      : "No active dishes. Turn on \u201CShow deactivated\u201D or add one below.";
       boardEl.appendChild(none);
       countEl.textContent = "0 dishes";
       pagerEl.innerHTML = "";
@@ -233,6 +256,7 @@ try {
     rows.slice((state.page - 1) * PAGE, state.page * PAGE).forEach(function (d) {
       boardEl.appendChild(buildRow(d));
     });
+    while (boardEl.children.length < PAGE) boardEl.appendChild(blankRow());
     var offCount = all.length - all.filter(function (d) { return B.isActive(d.key); }).length;
     countEl.textContent = state.q
       ? rows.length + " of " + pool.length + " dishes match."
@@ -240,6 +264,17 @@ try {
     renderPager(pages);
   }
 
+  /* blank rows pad short pages, so the board box holds one height and
+     the facts rail never reacts to a thin page */
+  function blankRow() {
+    var div = document.createElement("div");
+    div.className = "meal is-blank";
+    div.setAttribute("aria-hidden", "true");
+    var tw = document.createElement("span");
+    tw.className = "board-thumb is-ghost";
+    div.appendChild(tw);
+    return div;
+  }
   function buildRow(d) {
     var on = B.isActive(d.key);
     var row = document.createElement("div");
@@ -559,8 +594,7 @@ try {
 </script>
 <nav class="tabbar" aria-label="App">
   <a href="admin.html" class="is-active" aria-current="page">Board</a>
-  <a href="admin-logs.html">Logs</a>
-  <a href="admin-users.html">Users</a>
+  <a href="admin-console.html">Console</a>
 </nav>
 <script src="../assets/js/theme.js"></script>
 </body>

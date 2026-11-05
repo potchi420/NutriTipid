@@ -147,6 +147,17 @@ button.patient-row:focus-visible {
   opacity: 0.6;
   cursor: default;
 }
+/* short last pages fill with blank rows so the roster box holds one
+   height across pages, the rail keeps its size either way */
+.patient-row.is-blank {
+  cursor: default;
+  min-height: 84px;
+}
+.clinic-avatar.is-ghost {
+  background: none;
+  border: 1px dashed var(--line);
+  color: transparent;
+}
 .share-pill {
   flex: none;
   font-size: 11px;
