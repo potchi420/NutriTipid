@@ -84,6 +84,48 @@ try {
   <div class="pager" id="userPager"></div>
 </main>
 
+<div class="sheet-scrim" id="userScrim"></div>
+<section class="sheet" id="userSheet" role="dialog" aria-modal="true" aria-labelledby="userTitle">
+  <div class="sheet-head">
+    <h2 id="userTitle">Edit account</h2>
+    <button type="button" class="sheet-close" id="userClose" aria-label="Close dialog">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <label class="auth-label" for="userName">Full name</label>
+  <input id="userName" class="auth-input" maxlength="60">
+  <label class="auth-label" for="userEmail">Email</label>
+  <input id="userEmail" class="auth-input" maxlength="80">
+  <label class="auth-label" for="userRole">Role</label>
+  <select id="userRole" class="auth-input">
+    <option value="Student">Student</option>
+    <option value="Clinic viewer">Clinic viewer</option>
+    <option value="Admin">Admin</option>
+  </select>
+  <p class="sheet-note">Role changes take effect the next time the account signs in.</p>
+  <div class="profile-view" id="profileView"></div>
+  <p class="sheet-note" id="userErr"></p>
+  <div class="sheet-foot">
+    <button type="button" class="btn btn-danger" id="userDelete">Delete account</button>
+    <button type="button" class="btn btn-primary auth-submit" id="userSave">Save changes</button>
+  </div>
+</section>
+
+<div class="sheet-scrim" id="delScrim"></div>
+<section class="sheet" id="delSheet" role="dialog" aria-modal="true" aria-labelledby="delTitle">
+  <div class="sheet-head">
+    <h2 id="delTitle">Delete account</h2>
+    <button type="button" class="sheet-close" id="delClose" aria-label="Close dialog">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <p class="sheet-note" id="delText"></p>
+  <div class="sheet-foot">
+    <button type="button" class="ghost-btn" id="delNo">Keep account</button>
+    <button type="button" class="btn btn-danger" id="delYes">Delete permanently</button>
+  </div>
+</section>
+
 <script src="../assets/js/clinic.js"></script>
 <script src="../assets/js/board.js"></script>
 <script>
@@ -116,15 +158,44 @@ try {
   var userPagerEl = document.getElementById("userPager");
 
   function accountList() {
-    var list = USERS.slice();
-    var seen = {};
-    USERS.forEach(function (u) { seen[u.email] = true; });
+    var meta = editMeta();
+    var deleted = buried();
+    var base = USERS.slice();
     var acc = null;
     try { acc = JSON.parse(localStorage.getItem("nutritipid-account") || "null"); } catch (e) {}
-    if (acc && acc.email && !seen[acc.email]) {
-      list.push({ name: acc.name || "Member", email: acc.email, role: acc.role === "clinic" ? "Clinic viewer" : "Student" });
+    if (acc && acc.email && !USERS.some(function (u) { return u.email === acc.email; })) {
+      base.push({ name: acc.name || "Member", email: acc.email, role: acc.role === "clinic" ? "Clinic viewer" : "Student" });
     }
-    return list;
+    var out = [];
+    base.forEach(function (u) {
+      /* deleted accounts drop off the roster entirely */
+      if (deleted.indexOf(u.email) >= 0) return;
+      /* edits ride an overlay keyed by the original email, so a renamed
+         account keeps its deactivate flag and history entries just like
+         the dish records do */
+      var m = meta[u.email] || {};
+      out.push({ key: u.email, name: m.name || u.name, email: m.email || u.email, role: m.role || u.role });
+    });
+    return out;
+  }
+
+  function readJson(key, fallback) {
+    try {
+      var v = JSON.parse(localStorage.getItem(key) || "null");
+      if (v !== null && typeof v === "object") return v;
+    } catch (e) {}
+    return fallback;
+  }
+  /* account edits ride the same overlay idea as the dish records:
+     keyed by the original email so renames never detach the flags
+     and history rows */
+  function editMeta() { return readJson("nutritipid-usermeta", {}); }
+  function buried() {
+    var d = readJson("nutritipid-deleted", []);
+    return Array.isArray(d) ? d : [];
+  }
+  function buryStore(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
   }
 
   function matches(u) {
@@ -187,7 +258,8 @@ try {
       return;
     }
     pool.slice((state.page - 1) * PAGE, state.page * PAGE).forEach(function (u) {
-      var active = off.indexOf(u.email) < 0;
+      var active = off.indexOf(u.key) < 0;
+      var self = !!(acc && acc.email === u.key && acc.role === "admin");
       var row = document.createElement("div");
       row.className = "meal is-user" + (active ? "" : " is-off");
       var code = 0;
@@ -210,17 +282,24 @@ try {
       who.appendChild(pill);
       var nums = document.createElement("div");
       nums.className = "nums";
+      var editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "ghost-btn";
+      editBtn.textContent = "Edit";
+      editBtn.setAttribute("aria-label", "Edit " + u.name);
+      if (self) editBtn.disabled = true;
+      editBtn.addEventListener("click", function () { openEdit(u); });
       var stateBtn = document.createElement("button");
       stateBtn.type = "button";
       stateBtn.className = "sheet-btn";
       stateBtn.textContent = active ? "Deactivate" : "Activate";
       stateBtn.setAttribute("aria-label", (active ? "Deactivate " : "Activate ") + u.name);
-      if (acc && acc.email === u.email && acc.role === "admin") stateBtn.disabled = true;
+      if (self) stateBtn.disabled = true;
       stateBtn.addEventListener("click", function () {
-        B.toggleDeactivated(u.email);
+        B.toggleDeactivated(u.key);
         renderUsers();
       });
-      nums.appendChild(stateBtn);
+      nums.appendChild(editBtn); nums.appendChild(stateBtn);
       row.appendChild(av); row.appendChild(who); row.appendChild(nums);
       userListEl.appendChild(row);
     });
@@ -298,6 +377,131 @@ try {
     tally.textContent = recent.length + " on record.";
   }
   renderAccess();
+
+  /* the edit and delete modals run on the shared sheet chrome */
+  var userSheet = document.getElementById("userSheet");
+  var userScrim = document.getElementById("userScrim");
+  var delSheet = document.getElementById("delSheet");
+  var delScrim = document.getElementById("delScrim");
+  var userName = document.getElementById("userName");
+  var userEmail = document.getElementById("userEmail");
+  var userRole = document.getElementById("userRole");
+  var userErr = document.getElementById("userErr");
+  var userTitle = document.getElementById("userTitle");
+  var editKey = null;
+  var lastFocus = null;
+
+  function show(sheet, scrim) {
+    sheet.classList.add("is-open");
+    scrim.classList.add("is-open");
+  }
+  function hide(sheet, scrim) {
+    sheet.classList.remove("is-open");
+    scrim.classList.remove("is-open");
+  }
+  function openEdit(u) {
+    editKey = u.key;
+    userTitle.textContent = "Edit account";
+    userName.value = u.name;
+    userEmail.value = u.email;
+    userRole.value = u.role;
+    renderProfileView(u);
+    userErr.textContent = "";
+    lastFocus = document.activeElement;
+    show(userSheet, userScrim);
+    userName.focus();
+  }
+
+  /* the profile record rides the sheet read-only: the admin edits the
+     account while body data stays in the user's hands */
+  function renderProfileView(u) {
+    var box = document.getElementById("profileView");
+    box.innerHTML = "";
+    var lines = [];
+    var p = (window.NutriTipidClinic ? NutriTipidClinic.patients() : []).filter(function (v) {
+      return v.email === u.key || v.email === u.email;
+    })[0];
+    if (!p) {
+      var none = document.createElement("p");
+      none.className = "report-note";
+      none.textContent = "No profile record on file.";
+      box.appendChild(none);
+      return;
+    }
+    lines.push(["Daily budget", "P" + p.budget + " a day"]);
+    if (p.weight && p.weight.length) {
+      lines.push(["Latest weight", p.weight[p.weight.length - 1].kg.toFixed(1) + " kg"]);
+    }
+    if (p.bmi) {
+      lines.push(["BMI", p.bmi.toFixed(1) + " \u00B7 " + p.bmiCat[0]]);
+    }
+    if (p.kcalTarget) {
+      lines.push(["Calorie target", p.kcalTarget.toLocaleString() + " kcal"]);
+    }
+    lines.push(["Clinic sharing", p.consented ? "Consented" : "Not sharing"]);
+    var title = document.createElement("p");
+    title.className = "profile-view-title";
+    title.textContent = "Profile record, read-only";
+    box.appendChild(title);
+    lines.forEach(function (l) {
+      var line = document.createElement("div");
+      line.className = "log-line";
+      var lab = document.createElement("span");
+      lab.textContent = l[0];
+      var val = document.createElement("span");
+      val.className = "tabular";
+      val.textContent = l[1];
+      line.appendChild(lab); line.appendChild(val);
+      box.appendChild(line);
+    });
+  }
+  function closeEdit() {
+    hide(userSheet, userScrim);
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+    lastFocus = null;
+  }
+  document.getElementById("userClose").addEventListener("click", closeEdit);
+  userScrim.addEventListener("click", closeEdit);
+  document.getElementById("userSave").addEventListener("click", function () {
+    var name = userName.value.trim();
+    var email = userEmail.value.trim().toLowerCase();
+    if (!name) { userErr.textContent = "Give the account a name."; return; }
+    if (email.indexOf("@") < 1) { userErr.textContent = "That email looks off."; return; }
+    var clash = accountList().some(function (a) {
+      return a.key !== editKey && (a.email === email || a.key === email);
+    });
+    if (clash) { userErr.textContent = "That email is already on the roster."; return; }
+    var meta = editMeta();
+    meta[editKey] = { name: name, email: email, role: userRole.value };
+    buryStore("nutritipid-usermeta", meta);
+    closeEdit();
+    renderUsers();
+  });
+  document.getElementById("userDelete").addEventListener("click", function () {
+    var u = accountList().filter(function (a) { return a.key === editKey; })[0];
+    if (!u) { closeEdit(); return; }
+    document.getElementById("delText").textContent = "This removes " + u.name + " (" + u.email + ") from the roster. Their own saved data stays theirs.";
+    hide(userSheet, userScrim);
+    show(delSheet, delScrim);
+  });
+  function closeDelete() {
+    hide(delSheet, delScrim);
+  }
+  document.getElementById("delClose").addEventListener("click", closeDelete);
+  delScrim.addEventListener("click", closeDelete);
+  document.getElementById("delNo").addEventListener("click", closeDelete);
+  document.getElementById("delYes").addEventListener("click", function () {
+    var gone = buried();
+    if (gone.indexOf(editKey) < 0) gone.push(editKey);
+    buryStore("nutritipid-deleted", gone);
+    closeDelete();
+    renderUsers();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (userSheet.classList.contains("is-open")) closeEdit();
+    if (delSheet.classList.contains("is-open")) closeDelete();
+  });
 })();
 </script>
 <nav class="tabbar" aria-label="App">

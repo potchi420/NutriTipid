@@ -166,12 +166,21 @@
   }
 }
 /* the console rail stacks the two record panels, price history keeps
-   its natural height and the access log rolls through the rest */
+   its natural height and the access log rolls through the rest. both
+   notes pin to their panel foot so the pair reads one way */
 .board-rail .panel.admin-sec:last-child {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+.board-rail .panel.admin-sec:not(:last-child) {
+  display: flex;
+  flex-direction: column;
+}
+.board-rail .panel.admin-sec .report-note {
+  margin-top: auto;
+  padding-top: 16px;
 }
 .board-rail #accessList {
   flex: 1 1 auto;
@@ -240,6 +249,61 @@
 .sheet-save {
   margin-top: 14px;
   width: 100%;
+}
+/* console account sheet, the destructive escape hinge sits left of the
+   save button and reads red, not primary green */
+.sheet-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 18px;
+}
+.sheet-foot .btn {
+  flex: 1 1 0;
+  width: auto;
+  margin-top: 0;
+}
+.sheet-foot .ghost-btn {
+  flex: none;
+}
+.btn-danger {
+  color: #B3261E;
+  background: var(--surface);
+  border: 1px solid #B3261E;
+  border-radius: 4px;
+  padding: 9px 14px;
+  cursor: pointer;
+  font-weight: 700;
+  font: inherit;
+}
+.btn-danger:hover {
+  background: rgba(179, 38, 30, 0.06);
+}
+/* the profile record rides the sheet as a read-only block, the admin
+   edits the account while body data stays in the user's hands */
+.profile-view {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--soft);
+  padding: 4px 16px;
+  margin-top: 14px;
+}
+.profile-view .log-line {
+  font-size: 13.5px;
+  padding: 8px 2px;
+}
+.profile-view .log-line .tabular {
+  color: var(--ink);
+  font-size: 13px;
+}
+.profile-view-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 12px 0 2px;
 }
 
 /* tag chips in the dish sheet, tapping toggles, the x removes that lookup
