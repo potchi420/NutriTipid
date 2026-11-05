@@ -458,6 +458,23 @@ select.auth-input {
     flex: none;
   }
 }
+@media (max-width: 480px) {
+  /* phones: the claim button drops to its own line so the name keeps
+     its width, and the from-home pill takes a line below the note */
+  .plan-main .meal {
+    flex-wrap: wrap;
+  }
+  .plan-main .sheet-btn {
+    order: 1;
+    flex: 1 1 100%;
+    margin-top: 10px;
+  }
+  .plan-main .swap-flag {
+    display: block;
+    width: max-content;
+    margin-top: 6px;
+  }
+}
 @media (max-width: 640px) {
   .plan-rail {
     grid-template-columns: 1fr;
