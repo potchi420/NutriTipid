@@ -311,4 +311,113 @@
       form.reset();
     });
   }
+
+  /* hero carousel: the grid pairs crossfade on a 6s beat, dots jump by
+     hand, the beat pauses while a pointer or focus sits on the hero and
+     stays off under less motion */
+  var heroWrap = document.querySelector(".hero-slides");
+  if (heroWrap) {
+    var heroSlides = heroWrap.querySelectorAll(".hero-slide");
+    var heroDots = document.querySelectorAll(".hero-dot");
+    var heroIndex = 0;
+    var heroTimer = null;
+    var heroReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function heroDraw() {
+      Array.prototype.forEach.call(heroSlides, function (s, i) {
+        s.classList.toggle("is-on", i === heroIndex);
+      });
+      Array.prototype.forEach.call(heroDots, function (d, i) {
+        d.classList.toggle("is-on", i === heroIndex);
+      });
+    }
+    function heroStep() {
+      heroIndex = (heroIndex + 1) % heroSlides.length;
+      heroDraw();
+    }
+    function heroPrev() {
+      heroIndex = (heroIndex + heroSlides.length - 1) % heroSlides.length;
+      heroDraw();
+    }
+    function heroLeft() {
+      heroPause();
+      heroPrev();
+      heroResume();
+    }
+    function heroRight() {
+      heroPause();
+      heroStep();
+      heroResume();
+    }
+    function heroPause() {
+      if (heroTimer) { clearInterval(heroTimer); heroTimer = null; }
+    }
+    function heroResume() {
+      if (!heroReduced && !heroTimer && heroSlides.length > 1) {
+        heroTimer = setInterval(heroStep, 6000);
+      }
+    }
+    if (heroSlides.length > 1) {
+      heroDraw();
+      heroResume();
+      /* phones stack the copy above the receipt, medium screens flip:
+         the flip slide's children swap by DOM because the stylesheet
+         order refused to move them inside the stacked grid */
+      function heroStack() {
+        var flips = heroWrap.querySelectorAll(".hero-grid.hero-flip");
+        Array.prototype.forEach.call(flips, function (flip) {
+          var copy = flip.querySelector(":scope > div");
+          var fig = flip.querySelector(":scope > figure");
+          if (!copy || !fig) return;
+          if (window.innerWidth <= 960) {
+            if (fig.previousElementSibling === copy) return;
+            flip.insertBefore(copy, fig);
+          } else {
+            if (fig.previousElementSibling === null) flip.insertBefore(fig, copy);
+          }
+        });
+      }
+      heroStack();
+      window.addEventListener("resize", heroStack);
+      window.addEventListener("orientationchange", heroStack);
+      Array.prototype.forEach.call(heroDots, function (d, i) {
+        d.addEventListener("click", function () {
+          heroPause();
+          heroIndex = i;
+          heroDraw();
+          heroResume();
+        });
+      });
+      heroWrap.addEventListener("pointerenter", heroPause);
+      heroWrap.addEventListener("pointerleave", heroResume);
+      heroWrap.addEventListener("focusin", heroPause);
+      heroWrap.addEventListener("focusout", heroResume);
+      var heroL = document.querySelector(".hero-arrow.l");
+      var heroR = document.querySelector(".hero-arrow.r");
+      if (heroL) heroL.addEventListener("click", heroLeft);
+      if (heroR) heroR.addEventListener("click", heroRight);
+      /* phones swap between slides, the same guard the planner diary
+         uses so vertical scrolls never fall victim to horizontal */
+      var heroX = null;
+      var heroY = null;
+      heroWrap.addEventListener("touchstart", function (e) {
+        heroX = e.touches[0].clientX;
+        heroY = e.touches[0].clientY;
+      }, { passive: true });
+      heroWrap.addEventListener("touchend", function (e) {
+        if (heroX === null) return;
+        var dx = e.changedTouches[0].clientX - heroX;
+        var dy = e.changedTouches[0].clientY - heroY;
+        heroX = null;
+        if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          if (dx < 0) heroRight(); else heroLeft();
+        }
+      }, { passive: true });
+      document.addEventListener("keydown", function (e) {
+        if (document.activeElement && heroWrap.contains(document.activeElement)) {
+          if (e.key === "ArrowLeft") heroLeft();
+          if (e.key === "ArrowRight") heroRight();
+        }
+      });
+    }
+  }
 })();

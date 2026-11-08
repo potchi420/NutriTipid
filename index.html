@@ -51,32 +51,107 @@
 
 <main id="top">
 
-  <!-- Hero: headline carries context, no badge above it -->
+  <!-- Hero slides: the grid pair crossfades, dots under; slide 1 is the one-sentence pitch -->
   <section class="wrap hero">
-    <div class="hero-grid">
-      <div>
-        <h1>Good food on<br><span class="underline-accent">any budget</span>.</h1>
-        <p class="hero-sub">NutriTipid turns canteen and carinderia meals into a 7-day plan around your pesos per day, with a price and FNRI nutrients on every dish.</p>
-        <div class="hero-cta flex flex-wrap items-center">
-          <a href="#diary" class="btn btn-primary">See Thursday on P90</a>
-          <a href="#how" class="text-link">How the plan is made</a>
-        </div>
-        <div class="proof">
-          <p>Built from various meals and FNRI standards.</p>
+    <div class="hero-slides" id="heroSlides">
+      <div class="hero-slide is-on">
+        <div class="hero-grid">
+          <div>
+            <h1>Good food on<br><span class="underline-accent">any budget</span>.</h1>
+            <p class="hero-sub">Tell it what you can spend a day. It plans the week from the canteen menu, with a price and FNRI nutrients on every dish. Log the day and the report keeps the score; the clinic follows read-only.</p>
+            <div class="hero-cta flex flex-wrap items-center">
+              <a href="#diary" class="btn btn-primary">See Thursday on P90</a>
+              <a href="#how" class="text-link">How the plan is made</a>
+            </div>
+            <div class="proof">
+              <p>Built from various meals and FNRI standards.</p>
+            </div>
+          </div>
+          <figure class="hero-figure">
+            <div class="hero-photo">
+              <img src="assets/img/dishes/pinakbet.jpg" alt="A bowl of pinakbet, Filipino vegetable stew" fetchpriority="high">
+            </div>
+            <div class="receipt" aria-label="Sample receipt for Thursday">
+              <div class="receipt-head"><strong>THU PLAN</strong><span>P90 of P100</span></div>
+              <div class="receipt-row"><span class="dish">Ginisang monggo</span><span class="dots"></span><span class="kcal">520 kcal</span><span class="peso">P35</span></div>
+              <div class="receipt-row"><span class="dish">Chicken adobo</span><span class="dots"></span><span class="kcal">520 kcal</span><span class="peso">P40</span></div>
+              <div class="receipt-row"><span class="dish">Lugaw</span><span class="dots"></span><span class="kcal">280 kcal</span><span class="peso">P15</span></div>
+              <div class="receipt-foot"><span class="total tabular">P90 total</span><span class="stamp">INSIDE BUDGET</span></div>
+            </div>
+          </figure>
         </div>
       </div>
-      <figure class="hero-figure">
-        <div class="hero-photo">
-          <img src="assets/img/dishes/pinakbet.jpg" alt="A bowl of pinakbet, Filipino vegetable stew" fetchpriority="high">
+
+      <div class="hero-slide" data-k="week">
+        <div class="hero-grid hero-flip">
+          <figure class="hero-figure">
+            <div class="receipt receipt-week" aria-label="Sample week spend">
+              <div class="receipt-head"><strong>YOUR WEEK</strong><span>P585 of P700</span></div>
+              <div class="receipt-row"><span class="dish">Mon</span><span class="dots"></span><span class="peso">P90</span></div>
+              <div class="receipt-row"><span class="dish">Tue</span><span class="dots"></span><span class="peso">P80</span></div>
+              <div class="receipt-row"><span class="dish">Wed</span><span class="dots"></span><span class="peso">P75</span></div>
+              <div class="receipt-row"><span class="dish">Thu</span><span class="dots"></span><span class="peso">P95</span></div>
+              <div class="receipt-row"><span class="dish">Fri</span><span class="dots"></span><span class="peso">P90</span></div>
+              <div class="receipt-row"><span class="dish">Sat</span><span class="dots"></span><span class="peso">P80</span></div>
+              <div class="receipt-row"><span class="dish">Sun</span><span class="dots"></span><span class="peso">P75</span></div>
+              <div class="receipt-foot"><span class="total tabular">P585 total</span><span class="stamp">INSIDE BUDGET</span></div>
+            </div>
+          </figure>
+          <div>
+            <h2 class="hero-h2">A whole week, <span class="underline-accent">priced first</span>.</h2>
+            <p class="hero-sub">The solver picks the cheapest mix that still meets protein. Tap a meal to swap, and the peso total re-adds.</p>
+            <div class="hero-cta flex flex-wrap items-center">
+              <a href="#diary" class="btn btn-primary">See Thursday on P90</a>
+              <a href="#how" class="text-link">How the plan is made</a>
+            </div>
+            <div class="proof">
+              <p>Solver runs per peso from the board, not a stock menu.</p>
+            </div>
+          </div>
         </div>
-        <div class="receipt" aria-label="Sample receipt for Thursday">
-          <div class="receipt-head"><strong>THU PLAN</strong><span>P90 of P100</span></div>
-          <div class="receipt-row"><span class="dish">Ginisang monggo</span><span class="dots"></span><span class="kcal">520 kcal</span><span class="peso">P35</span></div>
-          <div class="receipt-row"><span class="dish">Chicken adobo</span><span class="dots"></span><span class="kcal">520 kcal</span><span class="peso">P40</span></div>
-          <div class="receipt-row"><span class="dish">Lugaw</span><span class="dots"></span><span class="kcal">280 kcal</span><span class="peso">P15</span></div>
-          <div class="receipt-foot"><span class="total tabular">P90 total</span><span class="stamp">INSIDE BUDGET</span></div>
+      </div>
+
+      <div class="hero-slide" data-k="score">
+        <div class="hero-grid">
+          <div>
+            <h2 class="hero-h2">The week, <span class="underline-accent">on record</span>.</h2>
+            <p class="hero-sub">Log the day and the report answers: budget used, meals as planned, weight trend, and the micros the week missed. The clinic sees the same numbers without editing anything.</p>
+            <div class="hero-cta flex flex-wrap items-center">
+              <a href="login.html" class="btn btn-primary">Try the demo</a>
+              <a href="#faq" class="text-link">Questions, answered</a>
+            </div>
+            <div class="proof">
+              <p>Numbers come from the same day rows the student sees.</p>
+            </div>
+          </div>
+          <div class="hero-stats">
+            <div class="panel stat">
+              <h2>Budget used</h2>
+              <div class="stat-num tabular">P98</div>
+              <p class="stat-cap">per day average</p>
+            </div>
+            <div class="panel stat">
+              <h2>Meals as planned</h2>
+              <div class="stat-num tabular">90%</div>
+              <p class="stat-cap">19 of 21 days in the plan</p>
+            </div>
+            <div class="panel stat">
+              <h2>Weight</h2>
+              <div class="stat-num tabular">-2.7 kg</div>
+              <p class="stat-cap">since Sep 1</p>
+            </div>
+          </div>
         </div>
-      </figure>
+      </div>
+
+      <button type="button" class="hero-arrow l" aria-label="Previous slide">‹</button>
+      <button type="button" class="hero-arrow r" aria-label="Next slide">›</button>
+    </div>
+
+    <div class="hero-dots" role="tablist" aria-label="Hero slides">
+      <button type="button" class="hero-dot is-on" aria-label="Show slide 1"></button>
+      <button type="button" class="hero-dot" aria-label="Show slide 2"></button>
+      <button type="button" class="hero-dot" aria-label="Show slide 3"></button>
     </div>
   </section>
   

@@ -67,6 +67,172 @@
   padding-top: 72px;
   padding-bottom: 16px;
 }
+/* the three slides stack in one grid cell so the stage height is the
+   tallest slide and nothing below ever moves. crossfade is opacity
+   only, each slide gets its own composition on top of the stage */
+.hero-slides {
+  position: relative;
+  display: grid;
+}
+.hero-slide {
+  grid-area: 1 / 1;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
+    visibility 0s linear 0.45s;
+}
+.hero-slide.is-on {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) 0.08s,
+    visibility 0s linear 0.05s;
+}
+.js .hero-slide.is-on {
+  animation: hero-in 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* week slide runs mirrored with the big receipt left and no photo */
+.hero-flip .hero-grid {
+  display: grid;
+  grid-template-columns: 0.96fr 1.04fr;
+  gap: 72px;
+  align-items: start;
+}
+.hero-flip .hero-figure {
+  align-self: stretch;
+}
+/* the photo-overlap margin on .receipt does not belong to the week
+   card (no photo beside it on slide 2), the double class declares
+   this later than the base rule so both stay balanced */
+.receipt.receipt-week {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.receipt-week .receipt-row {
+  padding: 12px 20px;
+}
+.receipt-week .receipt-foot {
+  margin-top: auto;
+}
+/* score slide swaps the photo for the three number cards */
+.hero-stats {
+  align-self: start;
+  display: grid;
+  gap: 16px;
+}
+.hero-stats .panel.stat {
+  padding: 16px 20px;
+}
+.hero-stats .stat-num {
+  font-size: clamp(26px, 2.6vw, 34px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide {
+    transition: none;
+  }
+  .js .hero-slide.is-on {
+    animation: none;
+  }
+}
+/* the body.landing preflight beats single-class rules on h2, so this
+   needs the .hero scope to keep the display scale on slides 2 and 3 */
+.hero .hero-h2 {
+  margin: 0;
+  font-size: clamp(42px, 5.2vw, 62px);
+  line-height: 0.99;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+  max-width: 12ch;
+}
+/* the beat controllers: circular arrows sit in the side gutters on wide
+   screens, phones swap instead and the dots go center stage */
+.hero-arrow {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  z-index: 2;
+  align-items: center;
+  justify-content: center;
+}
+.hero-arrow.l {
+  left: -64px;
+}
+.hero-arrow.r {
+  right: -64px;
+}
+.hero-arrow:hover {
+  color: var(--ink);
+}
+@media (min-width: 1280px) {
+  .js .hero-arrow {
+    display: flex;
+  }
+}
+.hero-dots {
+  display: none;
+}
+.js .hero-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 36px;
+}
+.hero-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 0;
+  cursor: pointer;
+  transition:
+    width 0.25s cubic-bezier(0.22, 0.61, 0.36, 1),
+    background-color 0.25s ease,
+    border-color 0.25s ease;
+}
+.hero-dot.is-on {
+  width: 22px;
+  background: var(--ink);
+  border-color: var(--ink);
+}
+@media (max-width: 960px) {
+  .hero-dots {
+    margin-top: 24px;
+  }
+}
+@media (max-width: 960px) {
+  .hero-dots {
+    margin-top: 24px;
+  }
+}
 .hero-grid {
   display: grid;
   grid-template-columns: 1.04fr 0.96fr;
@@ -80,6 +246,19 @@
   }
   .hero {
     padding-top: 44px;
+  }
+  /* the mirrored slide stacks copy first like every other slide, and
+     its receipt keeps its own height instead of stretching into the
+     shared stage. the copy/receipt swap itself runs in app.js because
+     stylesheet order refused to apply inside the stacked grid */
+  .hero-flip .hero-figure {
+    align-self: auto;
+  }
+  .receipt-week {
+    height: auto;
+  }
+  .receipt-week .receipt-foot {
+    margin-top: 0;
   }
 }
 .hero h1 {
@@ -110,7 +289,7 @@
     backwards;
 }
 /* solid underline highlight instead of gradient text */
-.hero-sub {
+.hero .hero-sub {
   margin: 26px 0 0;
   font-size: 18px;
   line-height: 1.65;
