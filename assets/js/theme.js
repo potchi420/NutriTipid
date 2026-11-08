@@ -73,4 +73,14 @@
       avatar.textContent = words.slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join("");
     }
   }
+
+  /* Logged in, the logo goes back into the app instead of the landing
+     page. Signed out, it keeps pointing at the landing page. */
+  var brand = document.querySelector(".brand");
+  var appShell = document.querySelector(".user-menu") || document.body.hasAttribute("data-app");
+  if (brand && me && appShell) {
+    var home = me.role === "admin" ? "admin.html" : me.role === "clinic" ? "clinic.html" : "dashboard.html";
+    brand.setAttribute("href", home);
+    brand.setAttribute("aria-label", home === "dashboard.html" ? "NutriTipid dashboard" : "NutriTipid home");
+  }
 })();

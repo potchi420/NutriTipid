@@ -17,6 +17,7 @@ try {
 </script>
 <link rel="stylesheet" href="../assets/css/styles.css">
 <link rel="stylesheet" href="../assets/css/auth.css">
+<link rel="stylesheet" href="../assets/css/legal.css">
 </head>
 <body class="auth-page">
 
@@ -45,10 +46,24 @@ try {
       <label class="auth-label" for="confirm">Confirm password</label>
       <input class="auth-input" id="confirm" name="confirm" type="password" placeholder="Repeat the password" autocomplete="new-password" required>
 
-      <label class="agree-row" for="terms">
-        <input type="checkbox" id="terms" name="terms">
-        <span>I agree to the Terms and Privacy Policy.</span>
-      </label>
+      <div class="consent-block">
+        <label class="agree-row agree-sm is-locked" for="terms" id="termsRow">
+          <input type="checkbox" id="terms" name="terms" disabled>
+          <span>I have read and agree to the <a href="terms.html" class="link-green" data-legal="terms">Terms of Service</a>.</span>
+        </label>
+
+        <label class="agree-row agree-sm is-locked" for="privacy" id="privacyRow">
+          <input type="checkbox" id="privacy" name="privacy" disabled>
+          <span>I allow NutriTipid to keep my details on this device, as described in the <a href="privacy.html" class="link-green" data-legal="privacy">Privacy Policy</a> and the Data Privacy Act.</span>
+        </label>
+
+        <p class="consent-hint">Each box unlocks after you open its policy and read to the end.</p>
+
+        <label class="agree-row agree-main is-locked" for="agreeAll" id="agreeRow">
+          <input type="checkbox" id="agreeAll" name="agreeAll" disabled>
+          <span>I agree, create my account.</span>
+        </label>
+      </div>
 
       <button type="submit" class="btn btn-primary auth-submit" id="signupBtn">Sign up free &rarr;</button>
 
@@ -62,7 +77,23 @@ try {
     </form>
     <p class="auth-switch">Already have an account? <a href="login.html" class="link-green">Log in</a></p>
   </div>
+  <p class="auth-legal"><a href="terms.html" data-legal="terms">Terms of Service</a> &middot; <a href="privacy.html" data-legal="privacy">Privacy Policy</a></p>
 </main>
+
+<div class="legal-overlay" id="legalOverlay" hidden>
+  <div class="legal-dialog" role="dialog" aria-modal="true" aria-labelledby="legalTitle" tabindex="-1">
+    <div class="legal-dialog-head">
+      <h2 id="legalTitle">Terms of Service</h2>
+      <button type="button" class="legal-dialog-close" id="legalClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="legal-dialog-body">
+      <iframe id="legalFrame" title="Terms of Service" src="about:blank"></iframe>
+    </div>
+    <div class="legal-dialog-foot">
+      <button type="button" class="btn btn-primary btn-sm" id="legalDone" disabled>Scroll to the end</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* Signup prototype: mock only. No backend, no real registration. */
@@ -74,6 +105,9 @@ try {
   var password = document.getElementById("password");
   var confirm = document.getElementById("confirm");
   var terms = document.getElementById("terms");
+  var privacy = document.getElementById("privacy");
+  var agreeAll = document.getElementById("agreeAll");
+  var agreeRow = document.getElementById("agreeRow");
   var msg = document.getElementById("authMsg");
   var signupBtn = document.getElementById("signupBtn");
   var showBtn = document.getElementById("showBtn");
@@ -112,6 +146,129 @@ try {
     msg.textContent = "Google sign-up coming soon.";
   });
 
+  /* Two small consents unlock the main agree box. Unticking either one
+     locks it again and clears it, so the order cannot be skipped. */
+  function syncConsent() {
+    var ready = !!(terms && privacy && terms.checked && privacy.checked);
+    if (!agreeAll) return;
+    agreeAll.disabled = !ready;
+    if (agreeRow) agreeRow.classList.toggle("is-locked", !ready);
+    if (!ready) agreeAll.checked = false;
+  }
+  if (terms && privacy && agreeAll) {
+    terms.addEventListener("change", syncConsent);
+    privacy.addEventListener("change", syncConsent);
+    syncConsent();
+  }
+
+  /* The two policies open in a small dialog over the form instead of
+     sending people to another page mid-signup. */
+  var overlay = document.getElementById("legalOverlay");
+  var dialogTitle = document.getElementById("legalTitle");
+  var frame = document.getElementById("legalFrame");
+  var legalClose = document.getElementById("legalClose");
+  var legalDone = document.getElementById("legalDone");
+  var legalDialog = document.querySelector(".legal-dialog");
+  var lastFocus = null;
+  var readState = { terms: false, privacy: false };
+  var currentKind = "terms";
+
+  function setDoneState(kind) {
+    if (!legalDone) return;
+    var done = !!readState[kind];
+    legalDone.disabled = !done;
+    legalDone.textContent = done ? "Close" : "Scroll to the end";
+  }
+
+  /* Reaching the end of a policy unlocks its consent box. */
+  function unlock(kind) {
+    if (!readState[kind]) readState[kind] = true;
+    var box = kind === "privacy" ? privacy : terms;
+    var row = document.getElementById(kind + "Row");
+    if (box) box.disabled = false;
+    if (row) row.classList.remove("is-locked");
+    setDoneState(kind);
+  }
+
+  function embedUrl(href) {
+    var hash = "";
+    var cut = href.indexOf("#");
+    if (cut > -1) {
+      hash = href.slice(cut);
+      href = href.slice(0, cut);
+    }
+    return href + (href.indexOf("?") > -1 ? "&" : "?") + "embed=1" + hash;
+  }
+
+  function legalKind(href) {
+    return href.indexOf("privacy") > -1 ? "privacy" : "terms";
+  }
+
+  function openLegal(href) {
+    if (!overlay || !frame) {
+      window.location.href = href;
+      return;
+    }
+    if (overlay.hidden) lastFocus = document.activeElement;
+    currentKind = legalKind(href);
+    dialogTitle.textContent = currentKind === "privacy" ? "Privacy Policy" : "Terms of Service";
+    frame.title = dialogTitle.textContent;
+    frame.src = embedUrl(href);
+    setDoneState(currentKind);
+    overlay.hidden = false;
+    document.body.style.overflow = "hidden";
+    if (legalDialog) legalDialog.focus();
+  }
+
+  function closeLegal() {
+    if (!overlay || overlay.hidden) return;
+    overlay.hidden = true;
+    frame.src = "about:blank";
+    document.body.style.overflow = "";
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-legal]"), function (link) {
+    link.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      openLegal(link.getAttribute("data-legal") === "privacy" ? "privacy.html" : "terms.html");
+    });
+  });
+  if (legalClose) legalClose.addEventListener("click", closeLegal);
+  if (legalDone) {
+    legalDone.addEventListener("click", function () {
+      unlock(currentKind);
+      closeLegal();
+    });
+  }
+  if (overlay) {
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) closeLegal();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !overlay.hidden) {
+        e.preventDefault();
+        closeLegal();
+      }
+    });
+  }
+
+  /* The dialog's contents ask us to swap documents when one policy links
+     to the other. */
+  window.addEventListener("message", function (e) {
+    if (!e.data || e.data.type !== "nutritipid-legal" || !overlay || overlay.hidden) return;
+    if (e.data.action === "close") {
+      closeLegal();
+      return;
+    }
+    if (e.data.action === "bottom") {
+      if (!e.data.doc || e.data.doc === currentKind) unlock(currentKind);
+      return;
+    }
+    openLegal(String(e.data.href || "terms.html"));
+  });
+
   /* Mock submit: validates shape, then pretends. */
   if (form) {
     form.addEventListener("submit", function (e) {
@@ -139,6 +296,16 @@ try {
       if (!terms.checked) {
         error("Tick the terms box to continue.");
         terms.focus();
+        return;
+      }
+      if (!privacy.checked) {
+        error("Tick the privacy consent to continue.");
+        privacy.focus();
+        return;
+      }
+      if (!agreeAll.checked) {
+        error("Tick the agree box to continue.");
+        agreeAll.focus();
         return;
       }
       signupBtn.disabled = true;

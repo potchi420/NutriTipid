@@ -175,6 +175,19 @@
   font-size: 14.5px;
   margin: 20px 0 0;
 }
+.auth-legal {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+.auth-legal a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.auth-legal a:hover {
+  color: var(--ink);
+}
 .is-hidden {
   display: none;
 }
@@ -260,6 +273,44 @@
   margin: 2px 0 0;
   flex: none;
   cursor: pointer;
+}
+/* signup consent: two small boxes unlock the main agree box */
+.consent-block {
+  margin-top: 22px;
+  border-top: 1px solid var(--line);
+  padding-top: 4px;
+}
+.agree-sm {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.agree-sm input {
+  width: 16px;
+  height: 16px;
+}
+.agree-main {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+  color: var(--ink);
+  font-weight: 500;
+}
+.agree-row.is-locked {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+.agree-row.is-locked input {
+  cursor: not-allowed;
+}
+.agree-row input:disabled {
+  opacity: 0.45;
+}
+.consent-hint {
+  margin: 12px 0 0 26px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
 }
 @media (max-width: 480px) {
   .auth-wrap {
