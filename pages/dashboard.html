@@ -145,6 +145,33 @@ try {
   </div>
   <div class="sheet-list" id="addList"></div>
   <p class="sheet-note" id="addNote">Nothing added yet. Planned meals stay fixed.</p>
+  <button type="button" class="custom-toggle" id="customToggle">Add your own food</button>
+
+  <form class="custom-form" id="customForm" novalidate hidden>
+    <div class="custom-grid">
+      <label class="custom-field custom-wide">
+        <span>Food name</span>
+        <input class="auth-input" id="cfName" name="cfName" type="text" maxlength="40" placeholder="e.g. Chicken sandwich" autocomplete="off" required>
+      </label>
+      <label class="custom-field custom-wide">
+        <span>Serving size</span>
+        <input class="auth-input" id="cfServing" name="cfServing" type="text" maxlength="30" placeholder="1 cup, 1 piece" autocomplete="off">
+      </label>
+      <label class="custom-field">
+        <span>Calories per serving</span>
+        <input class="auth-input" id="cfKcal" name="cfKcal" type="number" inputmode="numeric" min="1" max="3000" step="1" placeholder="250">
+      </label>
+      <label class="custom-field">
+        <span>Price in pesos</span>
+        <input class="auth-input" id="cfPrice" name="cfPrice" type="number" inputmode="numeric" min="0" max="999" step="1" placeholder="40">
+      </label>
+    </div>
+    <p class="custom-msg" id="cfMsg" role="status" aria-live="polite"></p>
+    <div class="custom-actions">
+      <button type="button" class="sheet-btn" id="cfBack">Back</button>
+      <button type="submit" class="btn btn-primary btn-sm" id="cfSave">Save and add</button>
+    </div>
+  </form>
 </section>
 
 <script src="../assets/js/profile.js"></script>
@@ -215,12 +242,85 @@ try {
     } catch (e) {}
   }
 
+  /* Your own foods live beside the board. Board dishes keep number refs so
+     saved days stay readable; your foods use string ids. Nutrition stays
+     calories and price only, because the macros are derived from kcal. */
+  var FOODS_KEY = "nutritipid-foods";
+  var customFoods = [];
+  try {
+    var savedFoods = JSON.parse(localStorage.getItem(FOODS_KEY) || "null");
+    if (Array.isArray(savedFoods)) {
+      customFoods = savedFoods.filter(function (f) {
+        return f && typeof f.id === "string" && typeof f.n === "string" &&
+          isFinite(f.k) && isFinite(f.p);
+      }).map(function (f) {
+        return {
+          id: f.id,
+          n: f.n,
+          serving: typeof f.serving === "string" ? f.serving : "",
+          k: Number(f.k),
+          p: Number(f.p)
+        };
+      });
+    }
+  } catch (e) {}
+  function saveFoods() {
+    try {
+      localStorage.setItem(FOODS_KEY, JSON.stringify(customFoods));
+    } catch (e) {}
+  }
+  function customFood(id) {
+    for (var i = 0; i < customFoods.length; i++) {
+      if (customFoods[i].id === id) return customFoods[i];
+    }
+    return null;
+  }
+  function nextFoodId() {
+    var max = 0;
+    customFoods.forEach(function (f) {
+      var m = /^cf-(\d+)$/.exec(f.id);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    });
+    return "cf-" + (max + 1);
+  }
+  function initialOf(name) {
+    var first = String(name || "").trim().charAt(0);
+    return first ? first.toUpperCase() : "?";
+  }
+  /* One resolver for both kinds of ref. A food missing from the store still
+     renders as an empty row so it can be removed from the day. */
+  function dishFor(ref) {
+    if (typeof ref === "number") return EAT[ref] || EAT[0];
+    var f = customFood(ref);
+    if (!f) {
+      return { n: "Removed food", p: 0, k: 0, dot: "?", c: "var(--muted)", custom: true, gone: true };
+    }
+    return {
+      n: f.n,
+      p: f.p,
+      k: f.k,
+      serving: f.serving || "1 serving",
+      dot: initialOf(f.n),
+      c: "var(--stamp)",
+      ink: "var(--primary-ink)",
+      custom: true
+    };
+  }
+
   var addSheet = document.getElementById("addSheet");
   var addScrim = document.getElementById("addScrim");
   var addList = document.getElementById("addList");
   var addTitle = document.getElementById("addTitle");
   var addNote = document.getElementById("addNote");
   var addClose = document.getElementById("addClose");
+  var customToggle = document.getElementById("customToggle");
+  var customForm = document.getElementById("customForm");
+  var cfName = document.getElementById("cfName");
+  var cfServing = document.getElementById("cfServing");
+  var cfKcal = document.getElementById("cfKcal");
+  var cfPrice = document.getElementById("cfPrice");
+  var cfMsg = document.getElementById("cfMsg");
+  var cfBack = document.getElementById("cfBack");
   var addCtx = { day: idx, slot: 0 };
   var lastFocus = null;
 
@@ -230,45 +330,169 @@ try {
       ? list.length + " serving" + (list.length === 1 ? "" : "s") + " added to " + SLOTS[addCtx.slot] + " today."
       : "Nothing added yet. Planned meals stay fixed.";
   }
+  function setAddTitle() {
+    addTitle.textContent = addSheet.classList.contains("is-custom")
+      ? "Add your own food"
+      : "Add to " + SLOTS[addCtx.slot];
+  }
+  function sheetRow(dish, ref) {
+    var div = document.createElement("div");
+    div.className = "meal";
+    var dot = document.createElement("span");
+    dot.className = "meal-dot";
+    dot.style.background = dish.c;
+    if (dish.ink) dot.style.color = dish.ink;
+    dot.textContent = dish.dot;
+    dot.setAttribute("aria-hidden", "true");
+    var who = document.createElement("div");
+    who.className = "who";
+    var strong = document.createElement("strong");
+    strong.textContent = dish.n;
+    who.appendChild(strong);
+    var sub = document.createElement("span");
+    sub.textContent = dish.custom
+      ? dish.k + " kcal \u00B7 Your food"
+      : dish.k + " kcal per serving";
+    who.appendChild(sub);
+    var nums = document.createElement("div");
+    nums.className = "nums";
+    var pb = document.createElement("b");
+    pb.textContent = "P" + dish.p;
+    nums.appendChild(pb);
+    var pill = document.createElement("button");
+    pill.type = "button";
+    pill.className = "sheet-btn";
+    pill.textContent = "Add";
+    pill.setAttribute("aria-label", "Add " + dish.n + " to " + SLOTS[addCtx.slot]);
+    pill.addEventListener("click", function () {
+      addFood(ref);
+    });
+    var actions = document.createElement("div");
+    actions.className = "meal-actions";
+    actions.appendChild(pill);
+    if (dish.custom && !dish.gone) {
+      var del = document.createElement("button");
+      del.type = "button";
+      del.className = "sheet-remove";
+      del.textContent = "Remove";
+      del.setAttribute("aria-label", "Remove " + dish.n + " from your foods");
+      del.addEventListener("click", function () {
+        askRemoveFood(ref, div);
+      });
+      actions.appendChild(del);
+    }
+    div.appendChild(dot); div.appendChild(who); div.appendChild(nums); div.appendChild(actions);
+    return div;
+  }
+  /* Your foods come first, then the campus board. */
+  function renderAddList() {
+    addList.innerHTML = "";
+    customFoods.forEach(function (food) {
+      addList.appendChild(sheetRow(dishFor(food.id), food.id));
+    });
+    EAT.forEach(function (dish, di) {
+      addList.appendChild(sheetRow(dish, di));
+    });
+  }
+  function closeRemoveConfirm() {
+    var box = addList.querySelector(".remove-confirm");
+    if (box) box.remove();
+  }
+  function servingsFor(id) {
+    var count = 0;
+    Object.keys(intake).forEach(function (day) {
+      var slots = intake[day];
+      if (!slots || typeof slots !== "object") return;
+      Object.keys(slots).forEach(function (slot) {
+        if (!Array.isArray(slots[slot])) return;
+        slots[slot].forEach(function (ref) {
+          if (ref === id) count++;
+        });
+      });
+    });
+    return count;
+  }
+  /* Your foods can leave the list, but ask first and say what else goes. */
+  function askRemoveFood(id, row) {
+    if (row.nextElementSibling && row.nextElementSibling.classList.contains("remove-confirm")) {
+      row.nextElementSibling.remove();
+      return;
+    }
+    closeRemoveConfirm();
+    var food = customFood(id);
+    if (!food) return;
+    var count = servingsFor(id);
+    var box = document.createElement("div");
+    box.className = "remove-confirm";
+    var text = document.createElement("p");
+    text.className = "remove-text";
+    var strong = document.createElement("strong");
+    strong.textContent = food.n;
+    text.appendChild(document.createTextNode("Remove "));
+    text.appendChild(strong);
+    text.appendChild(document.createTextNode(" from your foods?"));
+    var detail = document.createElement("span");
+    detail.textContent = count
+      ? " " + count + " serving" + (count === 1 ? "" : "s") + " in your days will be cleared too."
+      : " It is not added to any day.";
+    text.appendChild(detail);
+    var actions = document.createElement("div");
+    actions.className = "remove-actions";
+    var keep = document.createElement("button");
+    keep.type = "button";
+    keep.className = "sheet-btn";
+    keep.textContent = "Keep";
+    keep.addEventListener("click", function () {
+      box.remove();
+      var x = row.querySelector(".sheet-remove");
+      if (x) x.focus();
+    });
+    var go = document.createElement("button");
+    go.type = "button";
+    go.className = "sheet-btn is-danger";
+    go.textContent = "Remove";
+    go.addEventListener("click", function () {
+      removeFood(id);
+    });
+    actions.appendChild(keep); actions.appendChild(go);
+    box.appendChild(text); box.appendChild(actions);
+    row.parentNode.insertBefore(box, row.nextSibling);
+    go.focus();
+  }
+  function removeFood(id) {
+    var food = customFood(id);
+    var name = food ? food.n : "Food";
+    customFoods = customFoods.filter(function (f) { return f.id !== id; });
+    saveFoods();
+    Object.keys(intake).forEach(function (day) {
+      var slots = intake[day];
+      if (!slots || typeof slots !== "object") return;
+      Object.keys(slots).forEach(function (slot) {
+        if (!Array.isArray(slots[slot])) return;
+        slots[slot] = slots[slot].filter(function (ref) { return ref !== id; });
+      });
+    });
+    saveIntake();
+    render();
+    renderAddList();
+    syncAddNote();
+    addNote.textContent = name + " removed from your foods.";
+    customToggle.focus();
+  }
+  function resetCustomForm() {
+    customForm.reset();
+    cfMsg.textContent = "";
+    cfMsg.classList.remove("is-error");
+    customForm.hidden = true;
+    addSheet.classList.remove("is-custom");
+  }
   function openAdd(slot) {
     addCtx.day = idx;
     addCtx.slot = slot;
     lastFocus = document.activeElement;
-    addTitle.textContent = "Add to " + SLOTS[slot];
-    addList.innerHTML = "";
-    EAT.forEach(function (dish, di) {
-      var div = document.createElement("div");
-      div.className = "meal";
-      var dot = document.createElement("span");
-      dot.className = "meal-dot";
-      dot.style.background = dish.c;
-      if (dish.ink) dot.style.color = dish.ink;
-      dot.textContent = dish.dot;
-      dot.setAttribute("aria-hidden", "true");
-      var who = document.createElement("div");
-      who.className = "who";
-      var strong = document.createElement("strong");
-      strong.textContent = dish.n;
-      who.appendChild(strong);
-      var sub = document.createElement("span");
-      sub.textContent = dish.k + " kcal per serving";
-      who.appendChild(sub);
-      var nums = document.createElement("div");
-      nums.className = "nums";
-      var pb = document.createElement("b");
-      pb.textContent = "P" + dish.p;
-      nums.appendChild(pb);
-      var pill = document.createElement("button");
-      pill.type = "button";
-      pill.className = "sheet-btn";
-      pill.textContent = "Add";
-      pill.setAttribute("aria-label", "Add " + dish.n + " to " + SLOTS[slot]);
-      pill.addEventListener("click", function () {
-        addFood(di);
-      });
-      div.appendChild(dot); div.appendChild(who); div.appendChild(nums); div.appendChild(pill);
-      addList.appendChild(div);
-    });
+    resetCustomForm();
+    renderAddList();
+    setAddTitle();
     syncAddNote();
     addScrim.classList.add("is-open");
     addScrim.setAttribute("aria-hidden", "false");
@@ -281,19 +505,84 @@ try {
     addScrim.setAttribute("aria-hidden", "true");
     addSheet.classList.remove("is-open");
     addSheet.setAttribute("aria-hidden", "true");
+    resetCustomForm();
     if (lastFocus && lastFocus.focus) lastFocus.focus();
   }
-  function addFood(di) {
+  function addFood(ref) {
     var list = slotList(addCtx.day, addCtx.slot);
-    list.push(di);
+    list.push(ref);
     saveIntake();
     syncAddNote();
     render();
   }
+  function openCustom() {
+    closeRemoveConfirm();
+    addSheet.classList.add("is-custom");
+    customForm.hidden = false;
+    setAddTitle();
+    cfMsg.textContent = "";
+    cfMsg.classList.remove("is-error");
+    cfName.focus();
+  }
+  function closeCustom() {
+    resetCustomForm();
+    setAddTitle();
+    customToggle.focus();
+  }
+  function customError(message, field) {
+    cfMsg.textContent = message;
+    cfMsg.classList.add("is-error");
+    if (field) field.focus();
+  }
+  customToggle.addEventListener("click", openCustom);
+  cfBack.addEventListener("click", closeCustom);
+  customForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = cfName.value.trim().replace(/\s+/g, " ");
+    var serving = cfServing.value.trim().replace(/\s+/g, " ") || "1 serving";
+    var kcal = Number(cfKcal.value);
+    var price = Number(cfPrice.value);
+    if (!name) { customError("Give your food a name.", cfName); return; }
+    if (!isFinite(kcal) || kcal <= 0) { customError("Enter the calories in one serving.", cfKcal); return; }
+    if (!isFinite(price) || price < 0) { customError("Enter the price, or 0 if it is free.", cfPrice); return; }
+    customFoods.push({
+      id: nextFoodId(),
+      n: name,
+      serving: serving,
+      k: Math.min(3000, Math.max(1, Math.round(kcal))),
+      p: Math.min(999, Math.max(0, Math.round(price)))
+    });
+    saveFoods();
+    slotList(addCtx.day, addCtx.slot).push(customFoods[customFoods.length - 1].id);
+    saveIntake();
+    render();
+    resetCustomForm();
+    renderAddList();
+    setAddTitle();
+    syncAddNote();
+    customToggle.focus();
+  });
+  [cfName, cfServing, cfKcal, cfPrice].forEach(function (field) {
+    field.addEventListener("input", function () {
+      if (!cfMsg.textContent) return;
+      cfMsg.textContent = "";
+      cfMsg.classList.remove("is-error");
+    });
+  });
   addClose.addEventListener("click", closeAdd);
   addScrim.addEventListener("click", closeAdd);
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && addSheet.classList.contains("is-open")) closeAdd();
+    if (e.key !== "Escape" || !addSheet.classList.contains("is-open")) return;
+    var confirmBox = addList.querySelector(".remove-confirm");
+    if (confirmBox) {
+      var confirmRow = confirmBox.previousElementSibling;
+      confirmBox.remove();
+      var confirmX = confirmRow && confirmRow.querySelector(".sheet-remove");
+      if (confirmX) confirmX.focus();
+      return;
+    }
+    if (addSheet.classList.contains("is-custom")) closeCustom();
+    else closeAdd();
   });
 
   function dayTotals(dishes) {
@@ -336,9 +625,9 @@ try {
 
   function render() {
     var slots = SLOTS.map(function (_, s) {
-      var rows = [{ d: EAT[DAY_MEALS[idx][s]], extra: false, key: -1 }];
-      slotList(idx, s).forEach(function (di, pos) {
-        rows.push({ d: EAT[di], extra: true, key: pos });
+      var rows = [{ d: dishFor(DAY_MEALS[idx][s]), extra: false, key: -1 }];
+      slotList(idx, s).forEach(function (ref, pos) {
+        rows.push({ d: dishFor(ref), extra: true, key: pos });
       });
       return rows;
     });
@@ -351,8 +640,8 @@ try {
     var weekSpend = 0;
     for (var wday = 0; wday <= idx; wday++) {
       for (var wslot = 0; wslot < 4; wslot++) {
-        weekSpend += EAT[DAY_MEALS[wday][wslot]].p;
-        slotRead(wday, wslot).forEach(function (di) { weekSpend += EAT[di].p; });
+        weekSpend += dishFor(DAY_MEALS[wday][wslot]).p;
+        slotRead(wday, wslot).forEach(function (ref) { weekSpend += dishFor(ref).p; });
       }
     }
     var weekLeft = budget * 7 - weekSpend;
@@ -413,8 +702,15 @@ try {
         var strong = document.createElement("strong");
         strong.textContent = d.n;
         who.appendChild(strong);
-        if (item.extra) {
-          var sub = document.createElement("span");
+        var sub;
+        if (d.custom) {
+          sub = document.createElement("span");
+          sub.textContent = d.gone
+            ? "Not in your foods anymore"
+            : (d.serving ? d.serving + " \u00B7 " : "") + "Your food";
+          who.appendChild(sub);
+        } else if (item.extra) {
+          sub = document.createElement("span");
           sub.textContent = "Extra serving";
           who.appendChild(sub);
         } else if (d.p === 0) {
@@ -503,9 +799,9 @@ try {
     weekTabs.innerHTML = "";
     DAY_MEALS.forEach(function (meals, d) {
       var spend = 0;
-      meals.forEach(function (e) { spend += EAT[e].p; });
-      slotRead(d, 0).concat(slotRead(d, 1), slotRead(d, 2), slotRead(d, 3)).forEach(function (di) {
-        spend += EAT[di].p;
+      meals.forEach(function (e) { spend += dishFor(e).p; });
+      slotRead(d, 0).concat(slotRead(d, 1), slotRead(d, 2), slotRead(d, 3)).forEach(function (ref) {
+        spend += dishFor(ref).p;
       });
       var over = spend > budget;
       if (over) overDays.push(DAY_NAMES[d]);

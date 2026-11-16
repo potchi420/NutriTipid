@@ -256,3 +256,178 @@
     padding-top: 24px;
   }
 }
+
+/* Add-food sheet: your own foods sit above the campus board, and the
+   inline form takes the sheet's place while you type. */
+.custom-toggle {
+  width: 100%;
+  margin-top: 14px;
+  padding: 11px 16px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--stamp);
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+.custom-toggle:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.custom-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.custom-form {
+  margin-top: 14px;
+}
+.custom-form[hidden] {
+  display: none;
+}
+.sheet.is-custom .sheet-list,
+.sheet.is-custom .sheet-note,
+.sheet.is-custom .custom-toggle {
+  display: none;
+}
+.custom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.custom-field {
+  display: block;
+  min-width: 0;
+}
+.custom-wide {
+  grid-column: 1 / -1;
+}
+.custom-field > span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.custom-field input {
+  padding: 11px 13px;
+  font-size: 14px;
+}
+.custom-msg {
+  min-height: 20px;
+  margin: 10px 2px 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.custom-msg.is-error {
+  color: #B3261E;
+}
+.custom-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+/* The row actions stack: Add on top, a quiet Remove for your own foods. */
+.meal-actions {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+.sheet-remove {
+  padding: 2px 4px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-radius: 2px;
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.15s ease;
+}
+.sheet-remove:hover {
+  color: #B3261E;
+  text-decoration: underline;
+}
+.sheet-remove:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+/* Removing one of your saved foods asks inline, inside the list, so the
+   day's servings and the list entry go together. */
+.remove-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--soft);
+  animation: remove-drop 0.18s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes remove-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.remove-confirm .remove-text {
+  min-width: 0;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.remove-confirm .remove-text strong {
+  color: var(--ink);
+}
+.remove-actions {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+.sheet-btn.is-danger {
+  color: #B3261E;
+  border-color: #B3261E;
+}
+.sheet-btn.is-danger:hover {
+  color: #B3261E;
+  border-color: #B3261E;
+  background: var(--surface);
+}
+@media (max-width: 480px) {
+  .remove-confirm {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .remove-actions {
+    justify-content: flex-end;
+  }
+}
+@media (max-width: 380px) {
+  .custom-grid {
+    grid-template-columns: 1fr;
+  }
+  .custom-wide {
+    grid-column: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .remove-confirm {
+    animation: none;
+  }
+}
