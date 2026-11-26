@@ -92,10 +92,7 @@ try {
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>
   </div>
-  <label class="auth-label" for="userName">Full name</label>
-  <input id="userName" class="auth-input" maxlength="60">
-  <label class="auth-label" for="userEmail">Email</label>
-  <input id="userEmail" class="auth-input" maxlength="80">
+  <div class="profile-view" id="userIdentity"></div>
   <label class="auth-label" for="userRole">Role</label>
   <select id="userRole" class="auth-input">
     <option value="Student">Student</option>
@@ -103,6 +100,7 @@ try {
     <option value="Admin">Admin</option>
   </select>
   <p class="sheet-note">Role changes take effect the next time the account signs in.</p>
+  <p class="sheet-note">Name and email belong to the account holder. Admins can change the role only.</p>
   <div class="profile-view" id="profileView"></div>
   <p class="sheet-note" id="userErr"></p>
   <div class="sheet-foot">
@@ -174,7 +172,7 @@ try {
          account keeps its deactivate flag and history entries just like
          the dish records do */
       var m = meta[u.email] || {};
-      out.push({ key: u.email, name: m.name || u.name, email: m.email || u.email, role: m.role || u.role });
+      out.push({ key: u.email, name: u.name, email: u.email, role: m.role || u.role });
     });
     return out;
   }
@@ -383,8 +381,7 @@ try {
   var userScrim = document.getElementById("userScrim");
   var delSheet = document.getElementById("delSheet");
   var delScrim = document.getElementById("delScrim");
-  var userName = document.getElementById("userName");
-  var userEmail = document.getElementById("userEmail");
+  var userIdentity = document.getElementById("userIdentity");
   var userRole = document.getElementById("userRole");
   var userErr = document.getElementById("userErr");
   var userTitle = document.getElementById("userTitle");
@@ -402,14 +399,28 @@ try {
   function openEdit(u) {
     editKey = u.key;
     userTitle.textContent = "Edit account";
-    userName.value = u.name;
-    userEmail.value = u.email;
+    renderIdentity(u);
     userRole.value = u.role;
     renderProfileView(u);
     userErr.textContent = "";
     lastFocus = document.activeElement;
     show(userSheet, userScrim);
-    userName.focus();
+    userRole.focus();
+  }
+
+  function renderIdentity(u) {
+    userIdentity.innerHTML = "";
+    [["Full name", u.name], ["Email", u.email]].forEach(function (l) {
+      var line = document.createElement("div");
+      line.className = "log-line";
+      var lab = document.createElement("span");
+      lab.textContent = l[0];
+      var val = document.createElement("span");
+      val.className = "tabular";
+      val.textContent = l[1];
+      line.appendChild(lab); line.appendChild(val);
+      userIdentity.appendChild(line);
+    });
   }
 
   /* the profile record rides the sheet read-only: the admin edits the
@@ -463,16 +474,8 @@ try {
   document.getElementById("userClose").addEventListener("click", closeEdit);
   userScrim.addEventListener("click", closeEdit);
   document.getElementById("userSave").addEventListener("click", function () {
-    var name = userName.value.trim();
-    var email = userEmail.value.trim().toLowerCase();
-    if (!name) { userErr.textContent = "Give the account a name."; return; }
-    if (email.indexOf("@") < 1) { userErr.textContent = "That email looks off."; return; }
-    var clash = accountList().some(function (a) {
-      return a.key !== editKey && (a.email === email || a.key === email);
-    });
-    if (clash) { userErr.textContent = "That email is already on the roster."; return; }
     var meta = editMeta();
-    meta[editKey] = { name: name, email: email, role: userRole.value };
+    meta[editKey] = { role: userRole.value };
     buryStore("nutritipid-usermeta", meta);
     closeEdit();
     renderUsers();
