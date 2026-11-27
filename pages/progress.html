@@ -93,6 +93,7 @@ try {
       <div class="chart-holder">
         <svg id="weightMini" class="chart-svg" viewBox="0 0 560 200" role="img" aria-label="Weight trend from the first entry to the latest"></svg>
       </div>
+      <p class="trend-call" id="weightCall" role="status"></p>
       <p class="verdict" id="weightVerdict">Down 2.7kg since Sep 1. Steady pace.</p>
       <div class="weigh-list" id="weighRows"></div>
       <div class="weigh-foot">
@@ -313,14 +314,59 @@ try {
     });
   }
 
+  /* A least squares line through the weigh-ins, carried two weeks past
+     the last entry, so the chart says where the trend is heading and
+     not only where it has been. */
+  function dayNumber(iso) {
+    var p = iso.split("-");
+    return Date.UTC(Number(p[0]), Number(p[1]) - 1, Number(p[2])) / 86400000;
+  }
+  function isoFromDay(dayNum) {
+    var d = new Date(dayNum * 86400000);
+    return d.getUTCFullYear() + "-" +
+      String(d.getUTCMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getUTCDate()).padStart(2, "0");
+  }
+  function weightForecast(rows) {
+    if (rows.length < 2) return null;
+    var base = dayNumber(rows[0].date);
+    var xs = rows.map(function (r) { return dayNumber(r.date) - base; });
+    var ys = rows.map(function (r) { return r.kg; });
+    var n = rows.length;
+    var mx = 0, my = 0, i;
+    for (i = 0; i < n; i++) { mx += xs[i]; my += ys[i]; }
+    mx /= n; my /= n;
+    var num = 0, den = 0;
+    for (i = 0; i < n; i++) {
+      num += (xs[i] - mx) * (ys[i] - my);
+      den += (xs[i] - mx) * (xs[i] - mx);
+    }
+    if (!(den > 0)) return null;
+    var slope = num / den;
+    if (!isFinite(slope)) return null;
+    var weekly = slope * 7;
+    var horizon = 14;
+    var toKg = ys[n - 1] + slope * horizon;
+    if (toKg < 25 || toKg > 220) return null;
+    return {
+      kind: Math.abs(weekly) < 0.15 ? "hold" : (weekly < 0 ? "lose" : "gain"),
+      weekly: weekly,
+      toKg: Math.round(toKg * 10) / 10,
+      toLabel: fmtDate(isoFromDay(base + xs[n - 1] + horizon))
+    };
+  }
+
   function renderWeight() {
     var svg = document.getElementById("weightMini");
     var rows = sortedWeight();
+    var fc = weightForecast(rows);
+    var slots = rows.length + (fc ? 1 : 0);
     var W = 560, H = 200, padL = 44, padR = 34, padT = 14, padB = 32;
     var kgs = rows.map(function (r) { return r.kg; });
+    if (fc) kgs.push(fc.toKg);
     var min = Math.floor(Math.min.apply(null, kgs) - 0.8);
     var max = Math.ceil(Math.max.apply(null, kgs) + 0.5);
-    function x(i) { return padL + (W - padL - padR) * (rows.length === 1 ? 0.5 : i / (rows.length - 1)); }
+    function x(i) { return padL + (W - padL - padR) * (slots === 1 ? 0.5 : i / (slots - 1)); }
     function y(kg) { return padT + (H - padT - padB) * (1 - (kg - min) / (max - min)); }
     var narrow = window.innerWidth < 640;
     var tickFs = narrow ? 21 : 12;
@@ -340,7 +386,7 @@ try {
       var c = el("circle", { cx: x(i), cy: y(r.kg), r: dotR, "class": "dot", style: "animation-delay:" + (120 + i * 90) + "ms" });
       c.appendChild(el("title", {}, r.label + ": " + r.kg.toFixed(1) + "kg"));
       svg.appendChild(c);
-      if (!narrow || i === 0 || i === rows.length - 1) {
+      if (!narrow || i === 0 || (i === rows.length - 1 && !fc)) {
         var lb = el("text", { x: x(i), y: H - 8, "class": "tick" }, r.label);
         lb.style.fontSize = tickFs + "px";
         if (i === 0) lb.setAttribute("text-anchor", "start");
@@ -349,9 +395,53 @@ try {
         svg.appendChild(lb);
       }
     });
+    if (fc) {
+      var lastRow = rows[rows.length - 1];
+      var lx = x(rows.length - 1), ly = y(lastRow.kg);
+      var fx = x(rows.length), fy = y(fc.toKg);
+      svg.appendChild(el("polyline", {
+        points: lx.toFixed(1) + "," + ly.toFixed(1) + " " + fx.toFixed(1) + "," + fy.toFixed(1),
+        "class": "trend-forecast"
+      }));
+      var fd = el("circle", { cx: fx, cy: fy, r: dotR, "class": "dot-forecast" });
+      fd.appendChild(el("title", {}, "Projected " + fc.toKg.toFixed(1) + "kg by " + fc.toLabel));
+      svg.appendChild(fd);
+      var fv = el("text", { x: fx, y: Math.max(fy - 12, 14), "text-anchor": "end", "class": "forecast-label" }, fc.toKg.toFixed(1));
+      fv.style.fontSize = (narrow ? 15 : 12) + "px";
+      svg.appendChild(fv);
+      var dl = el("text", { x: fx, y: H - 8, "text-anchor": "end", "class": "tick" }, fc.toLabel);
+      dl.style.fontSize = tickFs + "px";
+      svg.appendChild(dl);
+    }
     var change = Math.round((rows[rows.length - 1].kg - rows[0].kg) * 10) / 10;
-    document.getElementById("weightVerdict").textContent = "Down " +
-      Math.abs(change).toFixed(1) + "kg since " + rows[0].label + ". Steady pace.";
+    document.getElementById("weightVerdict").textContent = rows.length === 1
+      ? "First entry " + rows[0].label + " at " + rows[0].kg.toFixed(1) + "kg. Add another to see a trend."
+      : change === 0
+        ? "Holding at " + rows[rows.length - 1].kg.toFixed(1) + "kg since " + rows[0].label + "."
+        : (change < 0 ? "Down " : "Up ") + Math.abs(change).toFixed(1) +
+          "kg since " + rows[0].label + (change < 0 ? ". Steady pace." : ". Watch the pace.");
+    svg.setAttribute("aria-label",
+      "Weight trend from " + rows[0].label + " to " + rows[rows.length - 1].label +
+      ", " + rows[0].kg.toFixed(1) + "kg to " + rows[rows.length - 1].kg.toFixed(1) + "kg." +
+      (fc ? " Projected " + fc.toKg.toFixed(1) + "kg by " + fc.toLabel + "." : ""));
+
+    var call = document.getElementById("weightCall");
+    call.innerHTML = "";
+    if (!fc) {
+      call.textContent = "Add one more weigh-in to see where the trend is heading.";
+      return;
+    }
+    var tag = document.createElement("span");
+    tag.className = "trend-tag is-" + fc.kind;
+    tag.textContent = fc.kind === "lose" ? "Losing" : fc.kind === "gain" ? "Gaining" : "Holding";
+    var txt = document.createElement("span");
+    txt.textContent = fc.kind === "hold"
+      ? "Steady near " + rows[rows.length - 1].kg.toFixed(1) + "kg, holding through " + fc.toLabel + "."
+      : "About " + Math.abs(fc.weekly).toFixed(1) +
+        "kg a week. Predicted " + fc.toKg.toFixed(1) + "kg by " + fc.toLabel + ".";
+    call.appendChild(tag);
+    call.appendChild(document.createTextNode(" "));
+    call.appendChild(txt);
   }
 
   /* Weight stats, history rows, and the target meter. */

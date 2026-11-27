@@ -312,6 +312,36 @@
   color: var(--muted);
   line-height: 1.5;
 }
+/* Pressing Sign up without a consent marks the row itself, next to the
+   box, instead of leaving one line of text under the whole form. */
+.agree-row.is-error {
+  outline: 2px solid #B3261E;
+  outline-offset: 5px;
+  border-radius: 6px;
+}
+.consent-error {
+  margin: 14px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #B3261E;
+}
+.consent-error[hidden] {
+  display: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .agree-row.is-error {
+    animation: consent-nudge 0.22s ease;
+  }
+  @keyframes consent-nudge {
+    25% {
+      transform: translateX(-2px);
+    }
+    75% {
+      transform: translateX(2px);
+    }
+  }
+}
 @media (max-width: 480px) {
   .auth-wrap {
     padding-top: 28px;

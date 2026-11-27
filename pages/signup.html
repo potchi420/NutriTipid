@@ -63,6 +63,7 @@ try {
           <input type="checkbox" id="agreeAll" name="agreeAll" disabled>
           <span>I agree, create my account.</span>
         </label>
+        <p class="consent-error" id="consentErr" role="alert" hidden></p>
       </div>
 
       <button type="submit" class="btn btn-primary auth-submit" id="signupBtn">Sign up free &rarr;</button>
@@ -108,18 +109,60 @@ try {
   var privacy = document.getElementById("privacy");
   var agreeAll = document.getElementById("agreeAll");
   var agreeRow = document.getElementById("agreeRow");
+  var termsRow = document.getElementById("termsRow");
+  var privacyRow = document.getElementById("privacyRow");
+  var consentErr = document.getElementById("consentErr");
   var msg = document.getElementById("authMsg");
   var signupBtn = document.getElementById("signupBtn");
   var showBtn = document.getElementById("showBtn");
   var eyeOpen = document.getElementById("eyeOpen");
   var eyeClosed = document.getElementById("eyeClosed");
 
+  /* The consent boxes sit above the button, but the message line is
+     under the form. Mark the row itself, and say which box is missing
+     right beside it, so a press on Sign up never looks ignored. */
+  function clearConsentError() {
+    [termsRow, privacyRow, agreeRow].forEach(function (row) {
+      if (row) row.classList.remove("is-error");
+    });
+    [terms, privacy, agreeAll].forEach(function (box) {
+      if (!box) return;
+      box.removeAttribute("aria-invalid");
+      box.removeAttribute("aria-describedby");
+    });
+    if (consentErr) {
+      consentErr.hidden = true;
+      consentErr.textContent = "";
+    }
+  }
+  function consentError(row, box, text) {
+    clearConsentError();
+    if (row) {
+      row.classList.add("is-error");
+      if (!row.hasAttribute("tabindex")) row.setAttribute("tabindex", "-1");
+    }
+    if (box) {
+      box.setAttribute("aria-invalid", "true");
+      box.setAttribute("aria-describedby", "consentErr");
+    }
+    if (consentErr) {
+      consentErr.textContent = text;
+      consentErr.hidden = false;
+    }
+    if (row) {
+      row.scrollIntoView({ block: "center", behavior: "smooth" });
+      try { row.focus({ preventScroll: true }); } catch (e) { row.focus(); }
+    }
+  }
+
   function error(text) {
+    clearConsentError();
     msg.classList.remove("is-ok");
     msg.classList.add("is-error");
     msg.textContent = text;
   }
   function ok(text) {
+    clearConsentError();
     msg.classList.remove("is-error");
     msg.classList.add("is-ok");
     msg.textContent = text;
@@ -153,13 +196,32 @@ try {
     if (!agreeAll) return;
     agreeAll.disabled = !ready;
     if (agreeRow) agreeRow.classList.toggle("is-locked", !ready);
-    if (!ready) agreeAll.checked = false;
+    if (!ready) {
+      agreeAll.checked = false;
+      if (agreeRow) agreeRow.classList.remove("is-error");
+      agreeAll.removeAttribute("aria-invalid");
+      agreeAll.removeAttribute("aria-describedby");
+    }
   }
   if (terms && privacy && agreeAll) {
     terms.addEventListener("change", syncConsent);
     privacy.addEventListener("change", syncConsent);
     syncConsent();
   }
+  /* Ticking the box that was flagged clears its mark right away. */
+  [terms, privacy, agreeAll].forEach(function (box) {
+    if (!box) return;
+    box.addEventListener("change", function () {
+      var row = box === terms ? termsRow : box === privacy ? privacyRow : agreeRow;
+      if (row) row.classList.remove("is-error");
+      box.removeAttribute("aria-invalid");
+      box.removeAttribute("aria-describedby");
+      if (consentErr) {
+        consentErr.hidden = true;
+        consentErr.textContent = "";
+      }
+    });
+  });
 
   /* The two policies open in a small dialog over the form instead of
      sending people to another page mid-signup. */
@@ -186,7 +248,18 @@ try {
     var box = kind === "privacy" ? privacy : terms;
     var row = document.getElementById(kind + "Row");
     if (box) box.disabled = false;
-    if (row) row.classList.remove("is-locked");
+    if (row) {
+      row.classList.remove("is-locked");
+      row.classList.remove("is-error");
+    }
+    if (box) {
+      box.removeAttribute("aria-invalid");
+      box.removeAttribute("aria-describedby");
+    }
+    if (consentErr) {
+      consentErr.hidden = true;
+      consentErr.textContent = "";
+    }
     setDoneState(kind);
   }
 
@@ -294,18 +367,25 @@ try {
         return;
       }
       if (!terms.checked) {
-        error("Tick the terms box to continue.");
-        terms.focus();
+        msg.classList.remove("is-error", "is-ok");
+        msg.textContent = "";
+        consentError(termsRow, terms, terms.disabled
+          ? "Open the Terms of Service and read to the end. The box unlocks at the last line."
+          : "Tick the Terms of Service box to continue.");
         return;
       }
       if (!privacy.checked) {
-        error("Tick the privacy consent to continue.");
-        privacy.focus();
+        msg.classList.remove("is-error", "is-ok");
+        msg.textContent = "";
+        consentError(privacyRow, privacy, privacy.disabled
+          ? "Open the Privacy Policy and read to the end. The box unlocks at the last line."
+          : "Tick the Privacy Policy box to continue.");
         return;
       }
       if (!agreeAll.checked) {
-        error("Tick the agree box to continue.");
-        agreeAll.focus();
+        msg.classList.remove("is-error", "is-ok");
+        msg.textContent = "";
+        consentError(agreeRow, agreeAll, "Tick the box to confirm your account.");
         return;
       }
       signupBtn.disabled = true;
