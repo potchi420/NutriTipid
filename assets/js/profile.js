@@ -26,9 +26,12 @@
     var a = Number(p.age);
     if (!(w > 0) || !(h > 0) || !(a > 0)) return empty;
     var sex = p.sex;
+    /* goal stays authoritative, targetKg only fills in when it is missing */
+    var goal = p.goal;
+    if (!goal && Number(p.targetKg) > 0) goal = goalFromTarget(w, Number(p.targetKg));
     var bmr = 10 * w + 6.25 * h - 5 * a + (sex === "M" ? 5 : sex === "F" ? -161 : -78);
     var tdee = bmr * (parseFloat(p.activity) || 1.2);
-    var target = p.goal === "gain" ? tdee + 300 : p.goal === "hold" ? tdee : tdee - 300;
+    var target = goal === "gain" ? tdee + 300 : goal === "hold" ? tdee : tdee - 300;
     target = Math.round(target / 50) * 50;
     if (target < 1200) target = 1200;
     if (target > 2500) target = 2500;
@@ -45,7 +48,78 @@
     return kcalParts(src).target;
   }
 
-  window.NutriTipid = { kcalTarget: kcalTarget, kcalParts: kcalParts, allergies: allergies };
+  /* BMI 18.5 to 24.9 as kg for a height, rounded to 0.1
+   */
+  function round1(n) {
+    return Math.round(n * 10) / 10;
+  }
+  function healthyRange(heightCm) {
+    var m = Number(heightCm) / 100;
+    return { minKg: round1(18.5 * m * m), maxKg: round1(24.9 * m * m) };
+  }
+
+  /* nearest healthy weight, rounded toward the healthy side so the
+     suggestion always passes the range check
+   */
+  function suggestTarget(weightKg, heightCm) {
+    var w = Number(weightKg);
+    var m = Number(heightCm) / 100;
+    var r = healthyRange(heightCm);
+    if (w > r.maxKg) return Math.floor(24.9 * m * m * 10 + 1e-9) / 10;
+    if (w < r.minKg) return Math.ceil(18.5 * m * m * 10 - 1e-9) / 10;
+    return round1(w);
+  }
+
+  function goalFromTarget(weightKg, targetKg) {
+    var w = Number(weightKg);
+    var t = Number(targetKg);
+    if (t < w - 0.5) return "lose";
+    if (t > w + 0.5) return "gain";
+    return "hold";
+  }
+
+  /* kcal per kg of body weight, a rule-of-thumb approximation */
+  var KCAL_PER_KG = 7700;
+
+  /* kg per week the plan implies, negative = losing
+   */
+  function planRate(src) {
+    var k = kcalParts(src);
+    return -(k.deficit) * 7 / KCAL_PER_KG;
+  }
+
+  /* date the target is reached at that pace, from today unless fromIso is
+     given. null = hold, no pace, or the pace moves away from the target
+   */
+  function planEta(src, fromIso) {
+    var p = src || readProfile();
+    if (!p) return null;
+    var w = Number(p.weight);
+    var t = Number(p.targetKg);
+    if (!(w > 0) || !(t > 0)) return null;
+    if (goalFromTarget(w, t) === "hold") return null;
+    var rate = planRate(p);
+    if (Math.abs(rate) < 0.02 || (t - w) * rate <= 0) return null;
+    var weeks = (t - w) / rate;
+    var d = fromIso ? new Date(fromIso + "T00:00:00") : new Date();
+    if (isNaN(d.getTime())) return null;
+    d.setDate(d.getDate() + Math.ceil(weeks * 7));
+    var mm = d.getMonth() + 1;
+    var dd = d.getDate();
+    var iso = d.getFullYear() + "-" + (mm < 10 ? "0" : "") + mm + "-" + (dd < 10 ? "0" : "") + dd;
+    return { date: iso, weeks: Math.round(weeks * 10) / 10, far: weeks > 52 };
+  }
+
+  window.NutriTipid = {
+    kcalTarget: kcalTarget,
+    kcalParts: kcalParts,
+    allergies: allergies,
+    healthyRange: healthyRange,
+    suggestTarget: suggestTarget,
+    goalFromTarget: goalFromTarget,
+    planRate: planRate,
+    planEta: planEta
+  };
 
   /* allergy labels currently in effect, "None" never counts
    */

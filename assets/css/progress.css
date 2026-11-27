@@ -59,6 +59,14 @@
   stroke-width: 2;
   stroke-dasharray: 3 3;
 }
+.chart-svg .plan-line {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 6;
+  stroke-linecap: round;
+  opacity: 0.6;
+}
 .chart-svg .forecast-label {
   fill: var(--stamp);
   font-family: Inter, system-ui, sans-serif;
@@ -96,16 +104,30 @@
   border-radius: 50%;
   background: var(--muted);
 }
-.trend-tag.is-lose::before {
+.trend-tag.is-ontrack::before,
+.trend-tag.is-holding::before,
+.trend-tag.is-reached::before {
   background: var(--stamp);
 }
-.trend-tag.is-gain::before {
+.trend-tag.is-stalled::before,
+.trend-tag.is-drifting::before {
   background: var(--accent);
 }
-@media (prefers-reduced-motion: reduce) {
-  .chart-svg .trend-forecast {
-    animation: none;
-  }
+.trend-tag.is-off::before {
+  background: var(--ink);
+}
+.trend-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.trend-note:empty {
+  display: none;
 }
 .legend {
   display: flex;
@@ -114,6 +136,29 @@
   margin-top: 14px;
   font-size: 13px;
   color: var(--muted);
+}
+.legend-mini {
+  gap: 14px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+.legend[hidden] {
+  display: none;
+}
+.legend-mini span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.key-line {
+  display: inline-block;
+  width: 18px;
+  border-top: 2px dashed var(--primary);
+  opacity: 0.7;
+}
+.key-line.key-plan {
+  border-top-width: 1.5px;
+  border-top-color: var(--muted);
 }
 .meter-cap {
   margin: 6px 0 0;
@@ -188,6 +233,71 @@
 .log-submit {
   width: 100%;
   margin-top: 18px;
+}
+.weigh-today {
+  margin: 0;
+  padding: 13px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.weigh-stepper {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.weigh-stepper .auth-input {
+  flex: 1;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.weigh-stepper .auth-input::-webkit-inner-spin-button,
+.weigh-stepper .auth-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.btn-quiet {
+  background: var(--bg);
+  color: var(--ink);
+  border-color: var(--line);
+}
+.btn-quiet:hover {
+  background: var(--soft);
+}
+.step-btn {
+  flex: none;
+  min-width: 48px;
+  padding: 0 14px;
+  font-size: 20px;
+  line-height: 1;
+}
+.weigh-hint {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.weigh-hint:empty {
+  display: none;
+}
+.weigh-confirm {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.weigh-confirm p {
+  margin: 0 0 10px;
+}
+.weigh-confirm-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.log-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .weigh-list {
   margin-top: 14px;

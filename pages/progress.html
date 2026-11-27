@@ -93,7 +93,12 @@ try {
       <div class="chart-holder">
         <svg id="weightMini" class="chart-svg" viewBox="0 0 560 200" role="img" aria-label="Weight trend from the first entry to the latest"></svg>
       </div>
+      <div class="legend legend-mini" id="weightLegend" hidden>
+        <span><i class="key-line"></i>Your trend</span>
+        <span><i class="key-line key-plan"></i>Your plan</span>
+      </div>
       <p class="trend-call" id="weightCall" role="status"></p>
+      <p class="trend-note" id="weightNote"></p>
       <p class="verdict" id="weightVerdict">Down 2.7kg since Sep 1. Steady pace.</p>
       <div class="weigh-list" id="weighRows"></div>
       <div class="weigh-foot">
@@ -116,11 +121,23 @@ try {
       <section class="panel" aria-label="Log weigh-in">
         <h2>Log weigh-in</h2>
         <form id="weighForm" novalidate>
-          <label class="auth-label" for="weighDate">Date</label>
-          <input class="auth-input" id="weighDate" name="weighDate" type="date" required>
+          <span class="auth-label">Date</span>
+          <p class="weigh-today tabular" id="weighDate">Today</p>
           <label class="auth-label" for="weighKg">Weight (kg)</label>
-          <input class="auth-input tabular" id="weighKg" name="weighKg" type="number" min="30" max="200" step="0.1" placeholder="e.g. 69.5" required>
-          <button type="submit" class="btn btn-primary log-submit">+ Add entry</button>
+          <div class="weigh-stepper">
+            <button type="button" class="btn btn-sm btn-quiet step-btn" id="weighMinus" aria-label="Decrease by 0.1 kg">&minus;</button>
+            <input class="auth-input tabular" id="weighKg" name="weighKg" type="number" min="30" max="200" step="0.1" placeholder="e.g. 69.5" required>
+            <button type="button" class="btn btn-sm btn-quiet step-btn" id="weighPlus" aria-label="Increase by 0.1 kg">+</button>
+          </div>
+          <p class="weigh-hint" id="weighHint"></p>
+          <div class="weigh-confirm is-hidden" id="weighConfirm" role="group" aria-label="Confirm large change">
+            <p id="weighConfirmText"></p>
+            <div class="weigh-confirm-btns">
+              <button type="button" class="btn btn-sm btn-primary" id="weighConfirmYes">Save anyway</button>
+              <button type="button" class="btn btn-sm btn-quiet" id="weighConfirmEdit">Edit</button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary log-submit" id="weighSubmit">+ Add entry</button>
           <p class="auth-msg" id="weighMsg" role="status"></p>
         </form>
       </section>
@@ -230,15 +247,22 @@ try {
     mealsAsPlanned: 19,
     swaps: { used: 4, saved: 28 },
     targetKg: 57,
-    weight: [
-      { date: "2026-09-01", label: "Sep 1", kg: 72.5 },
-      { date: "2026-09-05", label: "Sep 5", kg: 72.1 },
-      { date: "2026-09-10", label: "Sep 10", kg: 71.8 },
-      { date: "2026-09-15", label: "Sep 15", kg: 71.0 },
-      { date: "2026-09-29", label: "Sep 29", kg: 69.8 }
-    ]
+    weight: sampleWeight()
   };
   var STORE_KEY = "nutritipid-weight";
+
+  /* Sample history, relative to today: a start entry 8 weeks back, then
+     weekly entries with the last one 3 days ago. Fixed wobble, no random. */
+  function sampleWeight() {
+    var offs = [-56, -38, -31, -24, -17, -10, -3];
+    var wob = [0, 0.15, -0.2, 0.1, -0.15, 0.2, 0];
+    var t0 = dayNumber(todayIso());
+    return offs.map(function (o, i) {
+      var iso = isoFromDay(t0 + o);
+      var kg = 72.5 - 0.05 * (o + 56) + wob[i];
+      return { date: iso, label: fmtDate(iso), kg: Math.round(kg * 10) / 10 };
+    });
+  }
 
   var budget = 100;
   try {
@@ -314,9 +338,9 @@ try {
     });
   }
 
-  /* A least squares line through the weigh-ins, carried two weeks past
-     the last entry, so the chart says where the trend is heading and
-     not only where it has been. */
+  /* Forecast model: a least squares line over the last 42 days of
+     weigh-ins, read against the goal. It needs 3 entries that span at
+     least a week, and carries the line to the target date or 28 days. */
   function dayNumber(iso) {
     var p = iso.split("-");
     return Date.UTC(Number(p[0]), Number(p[1]) - 1, Number(p[2])) / 86400000;
@@ -327,12 +351,21 @@ try {
       String(d.getUTCMonth() + 1).padStart(2, "0") + "-" +
       String(d.getUTCDate()).padStart(2, "0");
   }
-  function weightForecast(rows) {
-    if (rows.length < 2) return null;
-    var base = dayNumber(rows[0].date);
-    var xs = rows.map(function (r) { return dayNumber(r.date) - base; });
-    var ys = rows.map(function (r) { return r.kg; });
-    var n = rows.length;
+  function goalReached(kg, goal, targetKg) {
+    return (goal === "lose" && kg <= targetKg) || (goal === "gain" && kg >= targetKg);
+  }
+  function weightForecast(rows, goal, targetKg) {
+    if (!rows.length) return { ok: false };
+    var lastRow = rows[rows.length - 1];
+    var lastDay = dayNumber(lastRow.date);
+    var win = rows.filter(function (r) { return dayNumber(r.date) >= lastDay - 42; });
+    if (win.length < 3) return { ok: false };
+    var base = dayNumber(win[0].date);
+    var span = lastDay - base;
+    if (span < 7) return { ok: false };
+    var xs = win.map(function (r) { return dayNumber(r.date) - base; });
+    var ys = win.map(function (r) { return r.kg; });
+    var n = win.length;
     var mx = 0, my = 0, i;
     for (i = 0; i < n; i++) { mx += xs[i]; my += ys[i]; }
     mx /= n; my /= n;
@@ -341,32 +374,214 @@ try {
       num += (xs[i] - mx) * (ys[i] - my);
       den += (xs[i] - mx) * (xs[i] - mx);
     }
-    if (!(den > 0)) return null;
+    if (!(den > 0)) return { ok: false };
     var slope = num / den;
-    if (!isFinite(slope)) return null;
+    if (!isFinite(slope)) return { ok: false };
     var weekly = slope * 7;
-    var horizon = 14;
-    var toKg = ys[n - 1] + slope * horizon;
-    if (toKg < 25 || toKg > 220) return null;
-    return {
-      kind: Math.abs(weekly) < 0.15 ? "hold" : (weekly < 0 ? "lose" : "gain"),
-      weekly: weekly,
+    var lastKg = lastRow.kg;
+    var status;
+    if (goal === "hold") {
+      status = Math.abs(weekly) < 0.25 ? "holding" : "drifting";
+    } else {
+      var toward = goal === "lose" ? -weekly : weekly;
+      status = toward >= 0.1 ? "ontrack" : toward <= -0.1 ? "off" : "stalled";
+    }
+    var reached = goalReached(lastKg, goal, targetKg);
+    var etaDays = null, far = false, etaIso = null;
+    if (status === "ontrack" && !reached) {
+      var d = (targetKg - lastKg) / slope;
+      if (d > 364) far = true;
+      else { etaDays = Math.max(1, Math.ceil(d)); etaIso = isoFromDay(lastDay + etaDays); }
+    }
+    var horizon = etaDays !== null ? Math.min(etaDays, 28) : 28;
+    var toKg = lastKg + slope * horizon;
+    if (toKg < 25 || toKg > 220) {
+      horizon = Math.floor(((toKg < 25 ? 25 : 220) - lastKg) / slope);
+      toKg = lastKg + slope * horizon;
+    }
+    var proj = horizon >= 1 ? {
+      days: horizon,
       toKg: Math.round(toKg * 10) / 10,
-      toLabel: fmtDate(isoFromDay(base + xs[n - 1] + horizon))
+      toLabel: fmtDate(isoFromDay(lastDay + horizon))
+    } : null;
+    return {
+      ok: true, status: status, weekly: weekly, span: span, reached: reached,
+      etaIso: etaIso, etaLabel: etaIso ? fmtDate(etaIso) : null, far: far, proj: proj
     };
+  }
+
+  /* The calorie plan as a second forecast: kg a week from the profile,
+     read from the latest weigh-in. Null without a usable profile. */
+  function readProfile() {
+    try {
+      var p = JSON.parse(localStorage.getItem("nutritipid-profile") || "null");
+      if (p && typeof p === "object") return p;
+    } catch (e) {}
+    return null;
+  }
+  function planInfo(rows, goal, targetKg) {
+    var p = readProfile();
+    if (!p || !rows.length || !window.NutriTipid || !NutriTipid.planRate) return null;
+    var last = rows[rows.length - 1];
+    var cp = {};
+    for (var k in p) cp[k] = p[k];
+    cp.weight = last.kg;
+    cp.targetKg = targetKg;
+    cp.goal = goal;
+    var parts = NutriTipid.kcalParts(cp);
+    if (!parts.has) return null;
+    var rate = NutriTipid.planRate(cp);
+    var eta = NutriTipid.planEta(cp, last.date);
+    var lastDay = dayNumber(last.date);
+    var etaDays = eta && !eta.far ? Math.max(1, dayNumber(eta.date) - lastDay) : null;
+    return {
+      rate: rate, parts: parts, eta: eta, far: !!(eta && eta.far),
+      etaLabel: eta ? fmtDate(eta.date) : null,
+      steady: goal === "hold" || Math.abs(rate) < 0.05,
+      lastDay: lastDay, lastKg: last.kg,
+      horizon: etaDays !== null ? Math.min(etaDays, 28) : 28
+    };
+  }
+  function planPath(plan, days) {
+    if (!plan || days < 1) return null;
+    var kg = plan.lastKg + plan.rate / 7 * days;
+    return {
+      days: days,
+      toKg: Math.round(kg * 10) / 10,
+      toLabel: fmtDate(isoFromDay(plan.lastDay + days))
+    };
+  }
+  function signedKg(v) { return (v < 0 ? "-" : "+") + Math.abs(v).toFixed(1) + "kg"; }
+  function planWho(plan) {
+    return "Based on your plan (" + plan.parts.target.toLocaleString("en-US") + " kcal vs " +
+      plan.parts.tdee.toLocaleString("en-US") + " burned): ";
+  }
+  function planText(plan, goal, t) {
+    if (plan.steady) return planWho(plan) + "holding steady.";
+    var w = Math.abs(plan.rate).toFixed(1);
+    var pace = goal === "gain" ? "gaining about " + w + "kg a week" : "about " + w + "kg a week";
+    if (plan.far) return planWho(plan) + pace + ", more than a year at this pace.";
+    if (!plan.eta) return planWho(plan) + pace + ", which does not reach your " + t + "kg target.";
+    return planWho(plan) + pace + ", target around " + plan.etaLabel + ".";
+  }
+  function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
+  /* Plateau: a lose or gain goal with under 0.2kg of movement in 14 days. */
+  function plateauApplies(rows, goal) {
+    if (goal === "hold") return false;
+    var lastDay = dayNumber(rows[rows.length - 1].date);
+    var recent = rows.filter(function (r) { return dayNumber(r.date) >= lastDay - 14; })
+      .map(function (r) { return r.kg; });
+    return recent.length >= 2 &&
+      Math.round((Math.max.apply(null, recent) - Math.min.apply(null, recent)) * 10) / 10 < 0.2;
+  }
+  /* Rate from the last two weigh-ins, when they are 3+ days apart. */
+  function pairRate(rows) {
+    if (rows.length < 2) return null;
+    var a = rows[rows.length - 2], b = rows[rows.length - 1];
+    var d = dayNumber(b.date) - dayNumber(a.date);
+    return d >= 3 ? (b.kg - a.kg) / d * 7 : null;
+  }
+  function weightCall(rows, fc, goal, targetKg, plan) {
+    var last = rows[rows.length - 1];
+    var t = String(Math.round(targetKg * 10) / 10);
+    if (goalReached(last.kg, goal, targetKg)) {
+      return { tag: "Goal reached", cls: "is-reached", text: "At " + last.kg.toFixed(1) + "kg, past your " + t + "kg target." };
+    }
+    var planClause = plan
+      ? (plan.steady ? "your plan expects steady weight" : "your plan expects " + signedKg(plan.rate) + " a week")
+      : "";
+    if (plateauApplies(rows, goal)) {
+      return { tag: "Stalled", cls: "is-stalled", text: "No change in 2 weeks." +
+        (plan ? " " + planClause.charAt(0).toUpperCase() + planClause.slice(1) + "." : "") };
+    }
+    if (!fc.ok) {
+      if (plan) return { tag: "Plan", cls: "is-plan", text: planText(plan, goal, t) };
+      return { tag: null, text: "Add weigh-ins over at least a week to see where your trend is heading." };
+    }
+    var w = Math.abs(fc.weekly).toFixed(1);
+    var dir = fc.weekly < 0 ? "Down" : "Up";
+    var cmp = plan ? "Your weigh-ins show " + signedKg(fc.weekly) + " a week; " + planClause + ". " : "";
+    if (fc.status === "ontrack") {
+      return { tag: "On track", cls: "is-ontrack", text: plan
+        ? cmp + (fc.far ? "Reaching " + t + "kg is more than a year away at this pace." : "Target around " + fc.etaLabel + ".")
+        : "About " + w + "kg a week. " +
+          (fc.far ? "Reaching " + t + "kg is more than a year away at this pace."
+                  : "At this pace you reach " + t + "kg around " + fc.etaLabel + ".") };
+    }
+    if (fc.status === "off") {
+      return { tag: "Off track", cls: "is-off", text: cmp + (plan ? "Off track: " + dir.toLowerCase() : dir) +
+        " " + (plan ? "" : "about ") + w + "kg a week, away from your " + t + "kg target." };
+    }
+    if (fc.status === "stalled") {
+      return { tag: "Stalled", cls: "is-stalled", text: cmp + "Little change in the last " + plural(Math.max(1, Math.round(fc.span / 7)), "week") + "." };
+    }
+    if (fc.status === "holding") {
+      return { tag: "Holding", cls: "is-holding", text: cmp + "Holding near " + last.kg.toFixed(1) + "kg." };
+    }
+    return { tag: "Drifting", cls: "is-drifting", text: cmp + (dir === "Up" ? "Drifting up about " + w + "kg a week." : "Drifting down about " + w + "kg a week.") };
+  }
+  /* One note at a time, in priority order. */
+  function weightNote(rows, fc, goal, targetKg, todayIso) {
+    var last = rows[rows.length - 1];
+    var lastDay = dayNumber(last.date);
+    if (goalReached(last.kg, goal, targetKg)) {
+      return { kind: "reached", text: "Target reached. Switch your goal to Hold to keep it there." };
+    }
+    var pr = pairRate(rows);
+    if ((fc.ok && Math.abs(fc.weekly) > 1) || (pr !== null && Math.abs(pr) > 1)) {
+      return { kind: "fast", text: "Faster than the recommended 0.5 to 1kg a week. Consider talking to the University Clinic." };
+    }
+    if (plateauApplies(rows, goal)) {
+      return { kind: "plateau", text: "No change for 2 weeks. Check your logged intake against your calorie target." };
+    }
+    var age = Math.round(dayNumber(todayIso) - lastDay);
+    if (age > 10) {
+      return { kind: "stale", text: "Last weigh-in was " + age + " days ago. The forecast gets less reliable without new entries." };
+    }
+    return null;
+  }
+  function currentGoal() {
+    var p = readProfile();
+    if (p && (p.goal === "lose" || p.goal === "hold" || p.goal === "gain")) return p.goal;
+    return "lose";
+  }
+  /* Profile target first, the sample or saved target as fallback. */
+  function currentTarget() {
+    var p = readProfile();
+    if (p && Number(p.targetKg) > 0) return Number(p.targetKg);
+    return weightData.targetKg;
+  }
+  function todayIso() {
+    var now = new Date();
+    return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" +
+      String(now.getDate()).padStart(2, "0");
   }
 
   function renderWeight() {
     var svg = document.getElementById("weightMini");
     var rows = sortedWeight();
-    var fc = weightForecast(rows);
-    var slots = rows.length + (fc ? 1 : 0);
+    var goal = currentGoal();
+    var target = currentTarget();
+    var fc = weightForecast(rows, goal, target);
+    var plan = planInfo(rows, goal, target);
+    var proj = fc.ok ? fc.proj : null;
+    var ghost = null;
+    if (plan && !goalReached(rows[rows.length - 1].kg, goal, target)) {
+      if (fc.ok) ghost = proj ? planPath(plan, proj.days) : null;
+      else proj = planPath(plan, plan.horizon);
+    }
     var W = 560, H = 200, padL = 44, padR = 34, padT = 14, padB = 32;
     var kgs = rows.map(function (r) { return r.kg; });
-    if (fc) kgs.push(fc.toKg);
+    if (proj) kgs.push(proj.toKg);
+    if (ghost) kgs.push(ghost.toKg);
     var min = Math.floor(Math.min.apply(null, kgs) - 0.8);
     var max = Math.ceil(Math.max.apply(null, kgs) + 0.5);
-    function x(i) { return padL + (W - padL - padR) * (slots === 1 ? 0.5 : i / (slots - 1)); }
+    var day0 = dayNumber(rows[0].date);
+    var lastDay = dayNumber(rows[rows.length - 1].date);
+    var dayEnd = lastDay + (proj ? proj.days : 0);
+    function x(dayNum) {
+      return padL + (W - padL - padR) * (dayEnd === day0 ? 0.5 : (dayNum - day0) / (dayEnd - day0));
+    }
     function y(kg) { return padT + (H - padT - padB) * (1 - (kg - min) / (max - min)); }
     var narrow = window.innerWidth < 640;
     var tickFs = narrow ? 21 : 12;
@@ -380,14 +595,22 @@ try {
       tk.style.fontSize = tickFs + "px";
       svg.appendChild(tk);
     }
-    var line = el("polyline", { points: rows.map(function (r, i) { return x(i).toFixed(1) + "," + y(r.kg).toFixed(1); }).join(" "), "class": "trend", pathLength: "1" });
+    var line = el("polyline", { points: rows.map(function (r) { return x(dayNumber(r.date)).toFixed(1) + "," + y(r.kg).toFixed(1); }).join(" "), "class": "trend", pathLength: "1" });
     svg.appendChild(line);
+    var lastLabelX = -1e9;
+    var fxEnd = proj ? x(dayEnd) : null;
     rows.forEach(function (r, i) {
-      var c = el("circle", { cx: x(i), cy: y(r.kg), r: dotR, "class": "dot", style: "animation-delay:" + (120 + i * 90) + "ms" });
+      var rx = x(dayNumber(r.date));
+      var c = el("circle", { cx: rx, cy: y(r.kg), r: dotR, "class": "dot", style: "animation-delay:" + (120 + i * 90) + "ms" });
       c.appendChild(el("title", {}, r.label + ": " + r.kg.toFixed(1) + "kg"));
       svg.appendChild(c);
-      if (!narrow || i === 0 || (i === rows.length - 1 && !fc)) {
-        var lb = el("text", { x: x(i), y: H - 8, "class": "tick" }, r.label);
+      /* labels sit at their date, so skip one that would collide */
+      var isLast = i === rows.length - 1;
+      var show = narrow ? (i === 0 || (isLast && !proj && rx - x(day0) >= 130))
+                        : (i === 0 || rx - lastLabelX >= 56) && !(proj && i > 0 && fxEnd - rx < 60);
+      if (show) {
+        lastLabelX = rx;
+        var lb = el("text", { x: rx, y: H - 8, "class": "tick" }, r.label);
         lb.style.fontSize = tickFs + "px";
         if (i === 0) lb.setAttribute("text-anchor", "start");
         else if (i === rows.length - 1) lb.setAttribute("text-anchor", "end");
@@ -395,53 +618,80 @@ try {
         svg.appendChild(lb);
       }
     });
-    if (fc) {
+    if (proj) {
       var lastRow = rows[rows.length - 1];
-      var lx = x(rows.length - 1), ly = y(lastRow.kg);
-      var fx = x(rows.length), fy = y(fc.toKg);
+      var lx = x(lastDay), ly = y(lastRow.kg);
+      var fx = x(dayEnd), fy = y(proj.toKg);
+      if (ghost) {
+        svg.appendChild(el("polyline", {
+          points: lx.toFixed(1) + "," + ly.toFixed(1) + " " + fx.toFixed(1) + "," + y(ghost.toKg).toFixed(1),
+          "class": "plan-line"
+        }));
+      }
       svg.appendChild(el("polyline", {
         points: lx.toFixed(1) + "," + ly.toFixed(1) + " " + fx.toFixed(1) + "," + fy.toFixed(1),
         "class": "trend-forecast"
       }));
       var fd = el("circle", { cx: fx, cy: fy, r: dotR, "class": "dot-forecast" });
-      fd.appendChild(el("title", {}, "Projected " + fc.toKg.toFixed(1) + "kg by " + fc.toLabel));
+      fd.appendChild(el("title", {}, "Projected " + proj.toKg.toFixed(1) + "kg by " + proj.toLabel));
       svg.appendChild(fd);
-      var fv = el("text", { x: fx, y: Math.max(fy - 12, 14), "text-anchor": "end", "class": "forecast-label" }, fc.toKg.toFixed(1));
+      var fv = el("text", { x: fx, y: Math.max(fy - 12, 14), "text-anchor": "end", "class": "forecast-label" }, proj.toKg.toFixed(1));
       fv.style.fontSize = (narrow ? 15 : 12) + "px";
       svg.appendChild(fv);
-      var dl = el("text", { x: fx, y: H - 8, "text-anchor": "end", "class": "tick" }, fc.toLabel);
+      var dl = el("text", { x: fx, y: H - 8, "text-anchor": "end", "class": "tick" }, proj.toLabel);
       dl.style.fontSize = tickFs + "px";
       svg.appendChild(dl);
     }
     var change = Math.round((rows[rows.length - 1].kg - rows[0].kg) * 10) / 10;
     document.getElementById("weightVerdict").textContent = rows.length === 1
-      ? "First entry " + rows[0].label + " at " + rows[0].kg.toFixed(1) + "kg. Add another to see a trend."
+      ? "First entry " + rows[0].label + " at " + rows[0].kg.toFixed(1) + "kg. Add more over a week or more to see a trend."
       : change === 0
-        ? "Holding at " + rows[rows.length - 1].kg.toFixed(1) + "kg since " + rows[0].label + "."
-        : (change < 0 ? "Down " : "Up ") + Math.abs(change).toFixed(1) +
-          "kg since " + rows[0].label + (change < 0 ? ". Steady pace." : ". Watch the pace.");
+        ? "Same weight, " + rows[rows.length - 1].kg.toFixed(1) + "kg, as on " + rows[0].label + "."
+        : (change < 0 ? "Down " : "Up ") + Math.abs(change).toFixed(1) + "kg since " + rows[0].label + ".";
     svg.setAttribute("aria-label",
       "Weight trend from " + rows[0].label + " to " + rows[rows.length - 1].label +
       ", " + rows[0].kg.toFixed(1) + "kg to " + rows[rows.length - 1].kg.toFixed(1) + "kg." +
-      (fc ? " Projected " + fc.toKg.toFixed(1) + "kg by " + fc.toLabel + "." : ""));
+      (proj ? " Projected " + proj.toKg.toFixed(1) + "kg by " + proj.toLabel + "." : ""));
 
+    document.getElementById("weightLegend").hidden = !(proj && ghost);
+    var info = weightCall(rows, fc, goal, target, plan);
     var call = document.getElementById("weightCall");
     call.innerHTML = "";
-    if (!fc) {
-      call.textContent = "Add one more weigh-in to see where the trend is heading.";
-      return;
+    if (info.tag) {
+      var tag = document.createElement("span");
+      tag.className = "trend-tag " + info.cls;
+      tag.textContent = info.tag;
+      call.appendChild(tag);
+      call.appendChild(document.createTextNode(" "));
     }
-    var tag = document.createElement("span");
-    tag.className = "trend-tag is-" + fc.kind;
-    tag.textContent = fc.kind === "lose" ? "Losing" : fc.kind === "gain" ? "Gaining" : "Holding";
     var txt = document.createElement("span");
-    txt.textContent = fc.kind === "hold"
-      ? "Steady near " + rows[rows.length - 1].kg.toFixed(1) + "kg, holding through " + fc.toLabel + "."
-      : "About " + Math.abs(fc.weekly).toFixed(1) +
-        "kg a week. Predicted " + fc.toKg.toFixed(1) + "kg by " + fc.toLabel + ".";
-    call.appendChild(tag);
-    call.appendChild(document.createTextNode(" "));
+    txt.textContent = info.text;
     call.appendChild(txt);
+
+    var noteBox = document.getElementById("weightNote");
+    noteBox.innerHTML = "";
+    var note = weightNote(rows, fc, goal, target, todayIso());
+    if (note) {
+      noteBox.appendChild(document.createTextNode(note.text));
+      if (note.kind === "reached") {
+        var sw = document.createElement("button");
+        sw.type = "button";
+        sw.className = "btn btn-primary btn-sm note-btn";
+        sw.textContent = "Switch to Hold";
+        sw.addEventListener("click", switchToHold);
+        noteBox.appendChild(sw);
+      }
+    }
+  }
+
+  function switchToHold() {
+    var p = null;
+    try { p = JSON.parse(localStorage.getItem("nutritipid-profile") || "null"); } catch (e) {}
+    if (!p || typeof p !== "object") p = {};
+    p.goal = "hold";
+    try { localStorage.setItem("nutritipid-profile", JSON.stringify(p)); } catch (e) {}
+    renderWeight();
+    renderWeightSummary();
   }
 
   /* Weight stats, history rows, and the target meter. */
@@ -450,29 +700,56 @@ try {
     var first = rows[0];
     var last = rows[rows.length - 1];
     var change = Math.round((last.kg - first.kg) * 10) / 10;
-    var target = weightData.targetKg;
-    var startGap = first.kg - target;
-    var walked = first.kg - last.kg;
+    var goal = currentGoal();
+    var target = currentTarget();
+    var dirn = goal === "gain" ? -1 : 1;
+    var startGap = (first.kg - target) * dirn;
+    var walked = (first.kg - last.kg) * dirn;
     var pct = startGap > 0 ? Math.max(0, Math.min(100, Math.round(walked / startGap * 100))) : 100;
-    var toGo = Math.round((last.kg - target) * 10) / 10;
+    var toGo = Math.round((last.kg - target) * dirn * 10) / 10;
+    var dev = Math.abs(last.kg - target);
+    if (goal === "hold") pct = dev <= 1 ? 100 : Math.max(0, Math.round(100 - (dev - 1) * 25));
+    var recent = rows.filter(function (r) { return dayNumber(r.date) >= dayNumber(last.date) - 30; });
+    var month = Math.round((last.kg - recent[0].kg) * 10) / 10;
+    var monthToward = month * -dirn;
 
     document.getElementById("statCurrent").textContent = last.kg.toFixed(1) + "kg";
     document.getElementById("statCurrentCap").textContent = "Latest entry " + last.label;
     document.getElementById("statChange").textContent = (change > 0 ? "+" : "") + change.toFixed(1) + "kg";
     document.getElementById("statChangeCap").textContent = "Since " + first.label;
     document.getElementById("goalPct").textContent = pct + "%";
-    document.getElementById("goalLabel").textContent = toGo > 0
-      ? "of the way from " + first.kg.toFixed(1) + "kg to " + target + "kg"
-      : "target reached, holding at " + last.kg.toFixed(1) + "kg";
+    var tgt = String(Math.round(target * 10) / 10);
+    document.getElementById("goalLabel").textContent = goal === "hold"
+      ? (dev <= 1 ? "within 1kg of your " + tgt + "kg target" : dev.toFixed(1) + "kg from your " + tgt + "kg target")
+      : toGo > 0
+        ? "of the way from " + first.kg.toFixed(1) + "kg to " + tgt + "kg"
+        : "target reached, holding at " + last.kg.toFixed(1) + "kg";
     document.getElementById("goalBar").style.width = pct + "%";
-    var pace = Math.abs(change);
+    var pace = Math.abs(month);
+    var upDown = month < 0 ? "Down " : "Up ";
     document.getElementById("paceVal").textContent = pace.toFixed(1) + "kg";
     document.getElementById("paceBar").style.width = Math.min(100, Math.round(pace / 3 * 100)) + "%";
-    document.getElementById("paceNote").textContent = toGo <= 0
-      ? "Target reached. Keep protein on plan to hold muscle."
-      : pace > 3
-        ? "Fast loss. Add a snack day so muscle keeps up."
+    var paceMsg;
+    if (goal === "hold") {
+      paceMsg = pace < 0.5
+        ? "Holding steady. Keep protein on plan to hold muscle."
+        : upDown + pace.toFixed(1) + "kg this month. Adjust portions to stay near " + tgt + "kg.";
+    } else if (toGo <= 0) {
+      paceMsg = "Target reached. Keep protein on plan to hold muscle.";
+    } else if (monthToward < -0.2) {
+      paceMsg = upDown + pace.toFixed(1) + "kg this month, away from your target. Check intake against your calorie plan.";
+    } else if (monthToward < 0.2) {
+      paceMsg = "Little change this month. Check intake against your calorie plan.";
+    } else if (pace > 3) {
+      paceMsg = goal === "gain"
+        ? "Fast gain. Slow down so it is mostly muscle."
+        : "Fast loss. Add a snack day so muscle keeps up.";
+    } else {
+      paceMsg = goal === "gain"
+        ? "Steady gain. Keep protein on plan to build muscle."
         : "Steady loss. Keep protein on plan to hold muscle.";
+    }
+    document.getElementById("paceNote").textContent = paceMsg;
 
     var list = document.getElementById("weighRows");
     list.innerHTML = "";
@@ -611,17 +888,14 @@ try {
     });
   }
 
-  /* Log form: one entry per date, newest kept in localStorage. */
+  /* Log form: date is today, one new entry a week, big jumps confirmed. */
   var form = document.getElementById("weighForm");
-  var dateInput = document.getElementById("weighDate");
+  var dateText = document.getElementById("weighDate");
   var kgInput = document.getElementById("weighKg");
   var msg = document.getElementById("weighMsg");
-
-  (function () {
-    var now = new Date();
-    function pad(n) { return String(n).padStart(2, "0"); }
-    dateInput.value = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate());
-  })();
+  var hint = document.getElementById("weighHint");
+  var confirmBox = document.getElementById("weighConfirm");
+  var submitBtn = document.getElementById("weighSubmit");
 
   function fmtDate(d) {
     var parts = d.split("-");
@@ -629,38 +903,101 @@ try {
     return months[Number(parts[1]) - 1] + " " + Number(parts[2]);
   }
 
+  /* The latest entry is replaced while it is 6 days old or less. */
+  function weekState() {
+    var rows = sortedWeight();
+    var last = rows[rows.length - 1];
+    var today = todayIso();
+    var age = dayNumber(today) - dayNumber(last.date);
+    return { rows: rows, last: last, today: today, updating: age <= 6 };
+  }
+
+  function refreshForm() {
+    var st = weekState();
+    dateText.textContent = "Today, " + fmtDate(st.today);
+    submitBtn.textContent = st.updating ? "Update entry" : "+ Add entry";
+    hint.textContent = st.updating
+      ? "This updates your " + st.last.label + " weigh-in. Next new entry opens " +
+        fmtDate(isoFromDay(dayNumber(st.last.date) + 7)) + "."
+      : "";
+  }
+
+  function hideConfirm() {
+    confirmBox.classList.add("is-hidden");
+    submitBtn.disabled = false;
+  }
+
+  function setKg(v) {
+    kgInput.value = (Math.round(Math.min(200, Math.max(30, v)) * 10) / 10).toFixed(1);
+    hideConfirm();
+    msg.classList.remove("is-error", "is-ok");
+    msg.textContent = "";
+  }
+  function step(delta) {
+    var v = Number(kgInput.value);
+    if (!(v > 0)) v = sortedWeight().slice(-1)[0].kg;
+    setKg(v + delta);
+  }
+  document.getElementById("weighMinus").addEventListener("click", function () { step(-0.1); });
+  document.getElementById("weighPlus").addEventListener("click", function () { step(0.1); });
+  kgInput.addEventListener("input", hideConfirm);
+
+  function commitWeight(kg) {
+    var st = weekState();
+    var date = st.updating ? st.last.date : st.today;
+    var label = fmtDate(date);
+    var found = false;
+    weightData.entries = weightData.entries.map(function (r) {
+      if (r.date === date) { found = true; return { date: date, label: label, kg: kg }; }
+      return r;
+    });
+    if (!found) weightData.entries.push({ date: date, label: label, kg: kg });
+    saveWeight(weightData);
+    hideConfirm();
+    renderWeight();
+    renderWeightSummary();
+    refreshForm();
+    msg.classList.remove("is-error");
+    msg.classList.add("is-ok");
+    msg.textContent = (st.updating ? "Entry updated for " : "Entry saved for ") + label + ".";
+    kgInput.value = kg.toFixed(1);
+  }
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     msg.classList.remove("is-error", "is-ok");
-    var dv = dateInput.value;
+    msg.textContent = "";
     var kv = Number(kgInput.value);
-    if (!dv) {
-      msg.classList.add("is-error");
-      msg.textContent = "Pick a date for this entry.";
-      dateInput.focus();
-      return;
-    }
     if (!(kv >= 30 && kv <= 200)) {
       msg.classList.add("is-error");
       msg.textContent = "Weight looks off. Use 30 to 200 kg.";
       kgInput.focus();
       return;
     }
-    var label = fmtDate(dv);
     var kg = Math.round(kv * 10) / 10;
-    var found = false;
-    weightData.entries = weightData.entries.map(function (r) {
-      if (r.date === dv) { found = true; return { date: dv, label: label, kg: kg }; }
-      return r;
-    });
-    if (!found) weightData.entries.push({ date: dv, label: label, kg: kg });
-    saveWeight(weightData);
-    renderWeight();
-    renderWeightSummary();
-    msg.classList.add("is-ok");
-    msg.textContent = "Entry saved for " + label + ".";
-    kgInput.value = "";
+    var st = weekState();
+    var ref = st.updating ? st.rows[st.rows.length - 2] : st.last;
+    var jump = ref ? Math.round(Math.abs(kg - ref.kg) * 10) / 10 : 0;
+    if (jump > 2) {
+      document.getElementById("weighConfirmText").textContent =
+        "That is " + jump.toFixed(1) + "kg from your last weigh-in. Save anyway?";
+      confirmBox.classList.remove("is-hidden");
+      submitBtn.disabled = true;
+      return;
+    }
+    commitWeight(kg);
   });
+  document.getElementById("weighConfirmYes").addEventListener("click", function () {
+    var kv = Number(kgInput.value);
+    if (kv >= 30 && kv <= 200) commitWeight(Math.round(kv * 10) / 10);
+  });
+  document.getElementById("weighConfirmEdit").addEventListener("click", function () {
+    hideConfirm();
+    kgInput.focus();
+  });
+
+  kgInput.value = sortedWeight().slice(-1)[0].kg.toFixed(1);
+  refreshForm();
 
   renderTrend();
   renderWeight();

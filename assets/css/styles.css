@@ -1030,3 +1030,45 @@ input[type="range"] {
   color: var(--muted);
   line-height: 1.6;
 }
+
+/* target stepper buttons and the "Your numbers" leader rows */
+.step-btn {
+  background: var(--bg);
+  color: var(--ink);
+  border-color: var(--line);
+  min-width: 46px;
+  padding: 0 12px;
+  font-size: 18px;
+}
+.step-btn:hover {
+  border-color: var(--primary);
+}
+.panel.numbers {
+  margin-top: 16px;
+}
+.num-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 2px;
+  font-size: 14px;
+}
+.num-row + .num-row {
+  border-top: 1px solid var(--line);
+}
+.num-row .dots {
+  flex: 1;
+  min-width: 12px;
+  border-bottom: 2px dotted var(--line);
+  transform: translateY(-4px);
+}
+.num-row b {
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+@media (min-width: 641px) {
+  .profile-facts.facts-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

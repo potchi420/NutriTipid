@@ -72,11 +72,7 @@ try {
     </div>
   </div>
 
-  <div class="profile-facts tabular">
-    <div class="fact">
-      <span>BMI</span>
-      <div class="fact-num"><b id="factBmi">20.4</b><i id="factCat">Normal</i></div>
-    </div>
+  <div class="profile-facts facts-2 tabular">
     <div class="fact">
       <span>Latest weight</span>
       <div class="fact-num"><b id="factWeight">55 kg</b></div>
@@ -91,7 +87,7 @@ try {
     <div class="week-grid profile-grid">
 
       <div class="panel">
-        <h2>Body metrics &amp; goal</h2>
+        <h2>Body metrics &amp; target</h2>
         <div class="field-2">
           <div>
             <label class="auth-label" for="age">Age</label>
@@ -138,18 +134,18 @@ try {
           <option value="1.9">Athlete (2x per day)</option>
         </select>
 
-        <label class="auth-label" for="goal">Goal for the term</label>
-        <select class="auth-input" id="goal" name="goal">
-          <option value="lose" selected>Lose weight steadily</option>
-          <option value="hold">Hold weight</option>
-          <option value="gain">Gain healthy weight</option>
-        </select>
+        <label class="auth-label" for="target">Target weight <span id="targetUnit">(kg)</span></label>
+        <div class="unit-row">
+          <button type="button" class="btn btn-sm step-btn" id="targetDown" aria-label="Lower target weight">&minus;</button>
+          <input class="auth-input tabular" id="target" name="target" type="number" step="0.1" min="0" inputmode="decimal" required>
+          <button type="button" class="btn btn-sm step-btn" id="targetUp" aria-label="Raise target weight">+</button>
+        </div>
+        <p class="form-note" id="goalLine" style="margin-top:8px"></p>
 
         <label class="auth-label" for="budget">Pesos per day</label>
         <div class="big-peso tabular" id="budgetOut">P100</div>
         <input id="budget" name="budget" type="range" min="50" max="500" step="5" value="100">
         <div class="range-ends tabular"><span>P50</span><span>P500</span></div>
-        <p class="form-note" id="kcalNote">Your plan targets about 1,500 kcal a day.</p>
       </div>
 
       <div class="panel">
@@ -178,6 +174,25 @@ try {
 
     </div>
 
+    <div class="panel numbers">
+      <h2>Your numbers</h2>
+      <p class="form-note" id="numsEmpty" style="margin-top:10px">Fill in your body metrics to see your numbers.</p>
+      <div id="numsBody" class="is-hidden" style="margin-top:6px">
+        <div class="num-row"><span>BMI</span><span class="dots" aria-hidden="true"></span><b id="nBmi"></b></div>
+        <div class="num-row"><span>Healthy weight range</span><span class="dots" aria-hidden="true"></span><b id="nRange"></b></div>
+        <div class="num-row"><span>Base burn (BMR)</span><span class="dots" aria-hidden="true"></span><b id="nBmr"></b></div>
+        <div class="num-row"><span>Activity factor</span><span class="dots" aria-hidden="true"></span><b id="nAct"></b></div>
+        <div class="num-row"><span>Daily burn (TDEE)</span><span class="dots" aria-hidden="true"></span><b id="nTdee"></b></div>
+        <div class="num-row"><span>Goal adjustment</span><span class="dots" aria-hidden="true"></span><b id="nAdj"></b></div>
+        <div class="num-row"><span>Daily calorie target</span><span class="dots" aria-hidden="true"></span><b id="nTarget"></b></div>
+        <p class="form-note" id="nClamp" style="margin-top:6px"></p>
+        <div class="num-row"><span>Plan pace</span><span class="dots" aria-hidden="true"></span><b id="nPace"></b></div>
+        <div class="num-row"><span>Target date</span><span class="dots" aria-hidden="true"></span><b id="nEta"></b></div>
+        <div class="num-row"><span>Budget</span><span class="dots" aria-hidden="true"></span><b id="nBudget"></b></div>
+        <div class="num-row"><span>Split (2 meals, 1 snack)</span><span class="dots" aria-hidden="true"></span><b id="nSplit"></b></div>
+      </div>
+    </div>
+
     <button type="submit" class="btn btn-primary auth-submit" style="margin-top:24px">Save my profile &rarr;</button>
     <p class="auth-msg" id="profileMsg" role="status"></p>
   </form>
@@ -198,12 +213,9 @@ try {
   var age = document.getElementById("age");
   var sex = document.getElementById("sex");
   var activity = document.getElementById("activity");
-  var goal = document.getElementById("goal");
   var budget = document.getElementById("budget");
   var budgetOut = document.getElementById("budgetOut");
   var msg = document.getElementById("profileMsg");
-  var factBmi = document.getElementById("factBmi");
-  var factCat = document.getElementById("factCat");
   var factWeight = document.getElementById("factWeight");
   var factBudget = document.getElementById("factBudget");
 
@@ -232,14 +244,14 @@ try {
   /* Saved profile optional: same shape storage planners read. */
   var saved = readJson("nutritipid-profile", null);
   if (saved) {
-    if (typeof saved.weight === "number") weight.value = saved.weight;
+    /* weight and height are saved in kg and cm, show them in the saved unit */
     if (saved.weightUnit === "lb") weightUnit.value = "lb";
-    if (typeof saved.height === "number") height.value = saved.height;
     if (saved.heightUnit === "ft") heightUnit.value = "ft";
+    if (typeof saved.weight === "number") weight.value = saved.weightUnit === "lb" ? Math.round(saved.weight / 0.453592 * 10) / 10 : saved.weight;
+    if (typeof saved.height === "number") height.value = saved.heightUnit === "ft" ? Math.round(saved.height / 30.48 * 100) / 100 : saved.height;
     if (typeof saved.age === "number") age.value = saved.age;
     if (saved.sex) sex.value = saved.sex;
     if (saved.activity) activity.value = saved.activity;
-    if (saved.goal) goal.value = saved.goal;
     if (typeof saved.budget === "number") budget.value = saved.budget;
   }
   budgetOut.textContent = "P" + budget.value;
@@ -295,53 +307,158 @@ try {
   var consentChk = document.getElementById("consentChk");
   if (saved && saved.consent) consentChk.checked = true;
 
-  /* BMI is the reason height and weight exist in the schema. */
-  function updMetrics() {
-    var w = Number(weight.value);
-    var h = Number(height.value);
-    var kg = weightUnit.value === "lb" ? w * 0.453592 : w;
-    var cm = heightUnit.value === "ft" ? h * 30.48 : h;
-    if (kg > 0 && cm > 0) {
-      var bmi = kg / Math.pow(cm / 100, 2);
-      factBmi.textContent = bmi.toFixed(1);
-      if (bmi < 18.5) { factCat.textContent = "Underweight"; factCat.className = "is-warn"; }
-      else if (bmi < 25) { factCat.textContent = "Normal"; factCat.className = "is-ok"; }
-      else if (bmi < 30) { factCat.textContent = "Overweight"; factCat.className = "is-warn"; }
-      else { factCat.textContent = "Obese"; factCat.className = "is-alert"; }
-    } else {
-      factBmi.textContent = "\u2014";
-      factCat.textContent = "";
-      factCat.className = "";
-    }
-    factBudget.textContent = "P" + budget.value;
-    updNote();
+  /* Target weight: kg is the source of truth, the field shows the active
+     unit. Untouched = keeps following the suggested healthy weight. */
+  var LB = 0.453592;
+  var FT = 30.48;
+  var tgt = document.getElementById("target");
+  var tgtUnit = document.getElementById("targetUnit");
+  var goalLine = document.getElementById("goalLine");
+  var tKg = NaN;
+  var touched = false;
+  var wU = weightUnit.value;
+  var hU = heightUnit.value;
+
+  function round1(n) { return Math.round(n * 10) / 10; }
+  function kgNow() { var w = Number(weight.value); return weightUnit.value === "lb" ? w * LB : w; }
+  function cmNow() { var h = Number(height.value); return heightUnit.value === "ft" ? h * FT : h; }
+  function bodyOk() {
+    var kg = kgNow();
+    var cm = cmNow();
+    var a = Number(age.value);
+    return kg >= 30 && kg <= 200 && cm >= 130 && cm <= 220 && a >= 10 && a <= 100;
   }
-  var kcalNote = document.getElementById("kcalNote");
-  function updNote() {
-    if (!window.NutriTipid) return;
+  function inUnit(kg) { return round1(weightUnit.value === "lb" ? kg / LB : kg); }
+  function wtText(kg) { return inUnit(kg).toFixed(1) + weightUnit.value; }
+  function showTarget() {
+    tgtUnit.textContent = "(" + weightUnit.value + ")";
+    tgt.value = isNaN(tKg) ? "" : inUnit(tKg).toFixed(1);
+  }
+  function setTarget(v) {
+    tKg = weightUnit.value === "lb" ? v * LB : v;
+  }
+  function syncTarget() {
+    if (!touched && bodyOk()) {
+      tKg = NutriTipid.suggestTarget(kgNow(), cmNow());
+      showTarget();
+    }
+  }
+  /* unit switch converts the numbers so 55 kg never turns into 55 lb */
+  function convUnits() {
+    if (weightUnit.value !== wU) {
+      var w = Number(weight.value);
+      if (w > 0) weight.value = round1(weightUnit.value === "lb" ? w / LB : w * LB);
+      wU = weightUnit.value;
+      showTarget();
+    }
+    if (heightUnit.value !== hU) {
+      var h = Number(height.value);
+      if (h > 0) height.value = heightUnit.value === "ft" ? Math.round(h / FT * 100) / 100 : Math.round(h * FT);
+      hU = heightUnit.value;
+    }
+  }
+  function stepTarget(d) {
+    var base = isNaN(tKg) ? kgNow() : tKg;
+    setTarget(round1(inUnit(base) + d));
+    touched = true;
+    showTarget();
+    upd();
+  }
+  function planNow() {
+    var kg = kgNow();
+    var tk = round1(tKg);
     var src = {
-      age: Number(age.value),
-      sex: sex.value,
-      weight: weightUnit.value === "lb" ? Number(weight.value) * 0.453592 : Number(weight.value),
-      height: heightUnit.value === "ft" ? Number(height.value) * 30.48 : Number(height.value),
+      age: Number(age.value), sex: sex.value, weight: kg, height: cmNow(),
       activity: activity.value,
-      goal: goal.value
+      goal: isNaN(tKg) ? "hold" : NutriTipid.goalFromTarget(kg, tk),
+      targetKg: isNaN(tKg) ? undefined : tk
     };
-    var k = NutriTipid.kcalParts(src);
-    if (Math.abs(k.deficit) < 50) {
-      kcalNote.textContent = "You burn about " + k.tdee.toLocaleString() + " kcal a day. Your plan targets that burn, holding steady.";
-    } else {
-      kcalNote.textContent = "You burn about " + k.tdee.toLocaleString() + " kcal a day. Your plan targets " + k.target.toLocaleString() + " \u2014 about " + Math.abs(k.deficit).toLocaleString() + " kcal " + (k.deficit > 0 ? "deficit" : "surplus") + " a day.";
-    }
+    return { src: src, k: NutriTipid.kcalParts(src), rate: NutriTipid.planRate(src), eta: NutriTipid.planEta(src) };
   }
-  [weight, weightUnit, height, heightUnit, budget].forEach(function (el) {
-    el.addEventListener("input", updMetrics);
-    el.addEventListener("change", updMetrics);
+  function dateText(iso) {
+    var p = iso.split("-");
+    return MONTHS[Number(p[1]) - 1] + " " + Number(p[2]) + ", " + p[0];
+  }
+  /* live goal and range line under the field */
+  function updGoal() {
+    if (!bodyOk()) {
+      goalLine.textContent = "Fill in your age, weight and height to see your healthy range.";
+      return;
+    }
+    var r = NutriTipid.healthyRange(cmNow());
+    var rng = "Healthy range for your height: " + inUnit(r.minKg).toFixed(1) + " to " + wtText(r.maxKg) + ".";
+    if (isNaN(tKg)) { goalLine.textContent = rng; return; }
+    var kg = kgNow();
+    var tk = round1(tKg);
+    var g = NutriTipid.goalFromTarget(kg, tk);
+    var lead = g === "hold" ? "Goal: hold weight." : "Goal: " + g + " " + wtText(Math.abs(tk - kg)) + ".";
+    goalLine.textContent = lead + " " + rng;
+  }
+
+  if (saved && typeof saved.targetKg === "number") { tKg = saved.targetKg; touched = true; }
+  showTarget();
+  syncTarget();
+
+  /* "Your numbers": every row is derived live from the form */
+  var numsEmpty = document.getElementById("numsEmpty");
+  var numsBody = document.getElementById("numsBody");
+  var nClamp = document.getElementById("nClamp");
+  function put(id, t) { document.getElementById(id).textContent = t; }
+  function upd() {
+    updGoal();
+    budgetOut.textContent = "P" + budget.value;
+    factBudget.textContent = "P" + budget.value;
+    var ready = bodyOk();
+    numsEmpty.classList.toggle("is-hidden", ready);
+    numsBody.classList.toggle("is-hidden", !ready);
+    if (!ready) return;
+    var pl = planNow();
+    var k = pl.k;
+    var kg = kgNow();
+    var cm = cmNow();
+    var bmi = kg / Math.pow(cm / 100, 2);
+    put("nBmi", bmi.toFixed(1) + ", " + (bmi < 18.5 ? "Underweight" : bmi < 25 ? "Normal" : bmi < 30 ? "Overweight" : "Obese"));
+    var r = NutriTipid.healthyRange(cm);
+    put("nRange", inUnit(r.minKg).toFixed(1) + " to " + wtText(r.maxKg));
+    put("nBmr", k.bmr.toLocaleString() + " kcal");
+    put("nAct", "x" + (parseFloat(activity.value) || 1.2));
+    put("nTdee", k.tdee.toLocaleString() + " kcal");
+    var step = pl.src.goal === "gain" ? 300 : pl.src.goal === "hold" ? 0 : -300;
+    put("nAdj", (step > 0 ? "+" : "") + step + " kcal");
+    put("nTarget", k.target.toLocaleString() + " kcal");
+    var raw = Math.round((k.tdee + step) / 50) * 50;
+    nClamp.textContent = raw < 1200 ? "Held at the 1,200 kcal minimum." : raw > 2500 ? "Capped at the 2,500 kcal maximum." : "";
+    nClamp.classList.toggle("is-hidden", !nClamp.textContent);
+    var perWeek = Math.abs(pl.rate) / (weightUnit.value === "lb" ? LB : 1);
+    if (isNaN(tKg)) { put("nPace", "Pick a target weight"); put("nEta", "\u2014"); }
+    else if (pl.src.goal === "hold") { put("nPace", "Holding steady"); put("nEta", "\u2014"); }
+    else {
+      put("nPace", "about " + perWeek.toFixed(2) + " " + weightUnit.value + " a week");
+      put("nEta", !pl.eta ? "No steady pace" : pl.eta.far ? "More than a year at this pace" : "around " + dateText(pl.eta.date));
+    }
+    var b = Number(budget.value);
+    put("nBudget", "P" + b + " a day");
+    put("nSplit", "about P" + Math.floor(b * 0.4) + " + P" + Math.floor(b * 0.4) + " + P" + Math.floor(b * 0.2));
+  }
+  [weight, height].forEach(function (el) {
+    el.addEventListener("input", function () { syncTarget(); upd(); });
+    el.addEventListener("change", function () { syncTarget(); upd(); });
   });
-  [age, sex, activity, goal].forEach(function (el) {
-    el.addEventListener("change", updNote);
+  [weightUnit, heightUnit].forEach(function (el) {
+    el.addEventListener("change", function () { convUnits(); syncTarget(); upd(); });
   });
-  updMetrics();
+  [age, sex, activity, budget].forEach(function (el) {
+    el.addEventListener("input", upd);
+    el.addEventListener("change", upd);
+  });
+  tgt.addEventListener("input", function () {
+    touched = tgt.value !== "";
+    if (touched && Number(tgt.value) > 0) setTarget(Number(tgt.value)); else tKg = NaN;
+    upd();
+  });
+  document.getElementById("targetDown").addEventListener("click", function () { stepTarget(-0.1); });
+  document.getElementById("targetUp").addEventListener("click", function () { stepTarget(0.1); });
+  upd();
 
   /* Latest weigh-in wins if the tracker has newer data. */
   try {
@@ -382,6 +499,16 @@ try {
       fail(hUnit === "cm" ? "Height looks off. Use 130 to 220 cm." : "Height looks off. Use 3 to 8 ft.", height);
       return;
     }
+    var rg = NutriTipid.healthyRange(cm);
+    var tk = round1(tKg);
+    if (isNaN(tKg)) {
+      fail("Pick a target weight.", tgt);
+      return;
+    }
+    if (tk < rg.minKg || tk > rg.maxKg) {
+      fail("Pick a target between " + inUnit(rg.minKg).toFixed(1) + " and " + wtText(rg.maxKg) + ", the healthy range for your height.", tgt);
+      return;
+    }
     try {
       localStorage.setItem("nutritipid-profile", JSON.stringify({
         age: a, sex: sex.value,
@@ -389,7 +516,7 @@ try {
         height: Math.round(cm), heightUnit: hUnit,
         activity: activity.value,
         activityLabel: activity.options[activity.selectedIndex].text,
-        goal: goal.value, budget: Number(budget.value),
+        targetKg: tk, goal: NutriTipid.goalFromTarget(Math.round(kg * 10) / 10, tk), budget: Number(budget.value),
         conditions: chipsIn("conRow"), allergies: chipsIn("allRow"),
         consent: consentChk.checked
       }));
