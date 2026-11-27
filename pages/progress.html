@@ -93,12 +93,13 @@ try {
       <div class="chart-holder">
         <svg id="weightMini" class="chart-svg" viewBox="0 0 560 200" role="img" aria-label="Weight trend from the first entry to the latest"></svg>
       </div>
-      <div class="legend legend-mini" id="weightLegend" hidden>
+      <div class="legend" id="weightLegend" hidden>
         <span><i class="key-line"></i>Your trend</span>
         <span><i class="key-line key-plan"></i>Your plan</span>
       </div>
-      <p class="trend-call" id="weightCall" role="status"></p>
-      <p class="trend-note" id="weightNote"></p>
+      <p class="verdict" id="weightCall" role="status"></p>
+      <p class="verdict" id="weightNote"></p>
+      <button type="button" class="btn btn-primary btn-sm note-action is-hidden" id="weightAction">Switch goal to Hold</button>
       <p class="verdict" id="weightVerdict">Down 2.7kg since Sep 1. Steady pace.</p>
       <div class="weigh-list" id="weighRows"></div>
       <div class="weigh-foot">
@@ -122,22 +123,22 @@ try {
         <h2>Log weigh-in</h2>
         <form id="weighForm" novalidate>
           <span class="auth-label">Date</span>
-          <p class="weigh-today tabular" id="weighDate">Today</p>
+          <span class="weigh-date tabular" id="weighDate">Today</span>
           <label class="auth-label" for="weighKg">Weight (kg)</label>
-          <div class="weigh-stepper">
-            <button type="button" class="btn btn-sm btn-quiet step-btn" id="weighMinus" aria-label="Decrease by 0.1 kg">&minus;</button>
+          <div class="unit-row">
+            <button type="button" class="btn btn-sm step-btn" id="weighMinus" aria-label="Decrease by 0.1 kg">&minus;</button>
             <input class="auth-input tabular" id="weighKg" name="weighKg" type="number" min="30" max="200" step="0.1" placeholder="e.g. 69.5" required>
-            <button type="button" class="btn btn-sm btn-quiet step-btn" id="weighPlus" aria-label="Increase by 0.1 kg">+</button>
+            <button type="button" class="btn btn-sm step-btn" id="weighPlus" aria-label="Increase by 0.1 kg">+</button>
           </div>
-          <p class="weigh-hint" id="weighHint"></p>
+          <p class="verdict" id="weighHint"></p>
           <div class="weigh-confirm is-hidden" id="weighConfirm" role="group" aria-label="Confirm large change">
             <p id="weighConfirmText"></p>
             <div class="weigh-confirm-btns">
               <button type="button" class="btn btn-sm btn-primary" id="weighConfirmYes">Save anyway</button>
-              <button type="button" class="btn btn-sm btn-quiet" id="weighConfirmEdit">Edit</button>
+              <button type="button" class="btn btn-sm" id="weighConfirmEdit">Change weight</button>
             </div>
           </div>
-          <button type="submit" class="btn btn-primary log-submit" id="weighSubmit">+ Add entry</button>
+          <button type="submit" class="btn btn-primary log-submit" id="weighSubmit">Save weigh-in</button>
           <p class="auth-msg" id="weighMsg" role="status"></p>
         </form>
       </section>
@@ -340,7 +341,9 @@ try {
 
   /* Forecast model: a least squares line over the last 42 days of
      weigh-ins, read against the goal. It needs 3 entries that span at
-     least a week, and carries the line to the target date or 28 days. */
+     least a week. The chart carries it out week by week, see buildPath. */
+  var WEEK_CAP = 84;
+  var WEEK_DEFAULT = 56;
   function dayNumber(iso) {
     var p = iso.split("-");
     return Date.UTC(Number(p[0]), Number(p[1]) - 1, Number(p[2])) / 86400000;
@@ -393,21 +396,41 @@ try {
       if (d > 364) far = true;
       else { etaDays = Math.max(1, Math.ceil(d)); etaIso = isoFromDay(lastDay + etaDays); }
     }
-    var horizon = etaDays !== null ? Math.min(etaDays, 28) : 28;
-    var toKg = lastKg + slope * horizon;
-    if (toKg < 25 || toKg > 220) {
-      horizon = Math.floor(((toKg < 25 ? 25 : 220) - lastKg) / slope);
-      toKg = lastKg + slope * horizon;
-    }
-    var proj = horizon >= 1 ? {
-      days: horizon,
-      toKg: Math.round(toKg * 10) / 10,
-      toLabel: fmtDate(isoFromDay(lastDay + horizon))
-    } : null;
     return {
-      ok: true, status: status, weekly: weekly, span: span, reached: reached,
-      etaIso: etaIso, etaLabel: etaIso ? fmtDate(etaIso) : null, far: far, proj: proj
+      ok: true, status: status, weekly: weekly, span: span, reached: reached, slope: slope,
+      etaIso: etaIso, etaDays: etaDays, etaLabel: etaIso ? fmtDate(etaIso) : null, far: far
     };
+  }
+  /* How far the chart carries the projection: the target date while it is
+     within 12 weeks, else 12 weeks; 8 weeks when there is no target date. */
+  function chartEta(fc, plan) {
+    if (fc.ok && fc.status === "ontrack" && fc.etaDays !== null) {
+      return { days: fc.etaDays, label: fc.etaLabel, src: "trend" };
+    }
+    if (plan && plan.etaDays !== null) return { days: plan.etaDays, label: plan.etaLabel, src: "plan" };
+    return null;
+  }
+  /* A straight path from the latest weigh-in: a point every 7 days, plus
+     the end. crossKg pins the end point to the target when it is reached. */
+  function buildPath(startDay, startKg, perDay, days, crossKg) {
+    var endKg = startKg + perDay * days;
+    if (endKg < 25 || endKg > 220) {
+      days = Math.floor(((endKg < 25 ? 25 : 220) - startKg) / perDay);
+      crossKg = null;
+    }
+    if (!(days >= 1)) return null;
+    var pts = [], d;
+    for (d = 7; d <= days; d += 7) pts.push({ days: d, week: d / 7 });
+    if (!pts.length || pts[pts.length - 1].days !== days) pts.push({ days: days, week: 0 });
+    pts.forEach(function (p) {
+      p.kg = Math.round((startKg + perDay * p.days) * 10) / 10;
+      p.date = isoFromDay(startDay + p.days);
+    });
+    if (crossKg !== null) {
+      pts[pts.length - 1].kg = Math.round(crossKg * 10) / 10;
+      pts[pts.length - 1].cross = true;
+    }
+    return { days: days, pts: pts };
   }
 
   /* The calorie plan as a second forecast: kg a week from the profile,
@@ -438,23 +461,13 @@ try {
       rate: rate, parts: parts, eta: eta, far: !!(eta && eta.far),
       etaLabel: eta ? fmtDate(eta.date) : null,
       steady: goal === "hold" || Math.abs(rate) < 0.05,
-      lastDay: lastDay, lastKg: last.kg,
-      horizon: etaDays !== null ? Math.min(etaDays, 28) : 28
-    };
-  }
-  function planPath(plan, days) {
-    if (!plan || days < 1) return null;
-    var kg = plan.lastKg + plan.rate / 7 * days;
-    return {
-      days: days,
-      toKg: Math.round(kg * 10) / 10,
-      toLabel: fmtDate(isoFromDay(plan.lastDay + days))
+      lastDay: lastDay, lastKg: last.kg, etaDays: etaDays
     };
   }
   function signedKg(v) { return (v < 0 ? "-" : "+") + Math.abs(v).toFixed(1) + "kg"; }
   function planWho(plan) {
-    return "Based on your plan (" + plan.parts.target.toLocaleString("en-US") + " kcal vs " +
-      plan.parts.tdee.toLocaleString("en-US") + " burned): ";
+    return plan.parts.target.toLocaleString("en-US") + " kcal against " +
+      plan.parts.tdee.toLocaleString("en-US") + " burned: ";
   }
   function planText(plan, goal, t) {
     if (plan.steady) return planWho(plan) + "holding steady.";
@@ -462,6 +475,9 @@ try {
     var pace = goal === "gain" ? "gaining about " + w + "kg a week" : "about " + w + "kg a week";
     if (plan.far) return planWho(plan) + pace + ", more than a year at this pace.";
     if (!plan.eta) return planWho(plan) + pace + ", which does not reach your " + t + "kg target.";
+    if (plan.etaDays > WEEK_CAP) {
+      return planWho(plan) + pace + ", reaching " + t + "kg around " + plan.etaLabel + ", past the end of this chart.";
+    }
     return planWho(plan) + pace + ", target around " + plan.etaLabel + ".";
   }
   function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
@@ -485,40 +501,43 @@ try {
     var last = rows[rows.length - 1];
     var t = String(Math.round(targetKg * 10) / 10);
     if (goalReached(last.kg, goal, targetKg)) {
-      return { tag: "Goal reached", cls: "is-reached", text: "At " + last.kg.toFixed(1) + "kg, past your " + t + "kg target." };
+      return { tag: "Goal reached", text: "At " + last.kg.toFixed(1) + "kg, past your " + t + "kg target." };
     }
     var planClause = plan
       ? (plan.steady ? "your plan expects steady weight" : "your plan expects " + signedKg(plan.rate) + " a week")
       : "";
     if (plateauApplies(rows, goal)) {
-      return { tag: "Stalled", cls: "is-stalled", text: "No change in 2 weeks." +
+      return { tag: "Stalled", text: "No change in 2 weeks." +
         (plan ? " " + planClause.charAt(0).toUpperCase() + planClause.slice(1) + "." : "") };
     }
     if (!fc.ok) {
-      if (plan) return { tag: "Plan", cls: "is-plan", text: planText(plan, goal, t) };
+      if (plan) return { tag: "Plan estimate", text: planText(plan, goal, t) };
       return { tag: null, text: "Add weigh-ins over at least a week to see where your trend is heading." };
     }
     var w = Math.abs(fc.weekly).toFixed(1);
     var dir = fc.weekly < 0 ? "Down" : "Up";
     var cmp = plan ? "Your weigh-ins show " + signedKg(fc.weekly) + " a week; " + planClause + ". " : "";
     if (fc.status === "ontrack") {
-      return { tag: "On track", cls: "is-ontrack", text: plan
-        ? cmp + (fc.far ? "Reaching " + t + "kg is more than a year away at this pace." : "Target around " + fc.etaLabel + ".")
+      return { tag: "On track", text: plan
+        ? cmp + (fc.far ? "Reaching " + t + "kg is more than a year away at this pace."
+                : fc.etaDays > WEEK_CAP ? "Reaching " + t + "kg around " + fc.etaLabel + ", past the end of this chart."
+                : "Target around " + fc.etaLabel + ".")
         : "About " + w + "kg a week. " +
           (fc.far ? "Reaching " + t + "kg is more than a year away at this pace."
-                  : "At this pace you reach " + t + "kg around " + fc.etaLabel + ".") };
+                  : "At this pace you reach " + t + "kg around " + fc.etaLabel +
+                    (fc.etaDays > WEEK_CAP ? ", past the end of this chart." : ".")) };
     }
     if (fc.status === "off") {
-      return { tag: "Off track", cls: "is-off", text: cmp + (plan ? "Off track: " + dir.toLowerCase() : dir) +
+      return { tag: "Off track", text: cmp + dir +
         " " + (plan ? "" : "about ") + w + "kg a week, away from your " + t + "kg target." };
     }
     if (fc.status === "stalled") {
-      return { tag: "Stalled", cls: "is-stalled", text: cmp + "Little change in the last " + plural(Math.max(1, Math.round(fc.span / 7)), "week") + "." };
+      return { tag: "Stalled", text: cmp + "Little change in the last " + plural(Math.max(1, Math.round(fc.span / 7)), "week") + "." };
     }
     if (fc.status === "holding") {
-      return { tag: "Holding", cls: "is-holding", text: cmp + "Holding near " + last.kg.toFixed(1) + "kg." };
+      return { tag: "Holding", text: cmp + "Holding near " + last.kg.toFixed(1) + "kg." };
     }
-    return { tag: "Drifting", cls: "is-drifting", text: cmp + (dir === "Up" ? "Drifting up about " + w + "kg a week." : "Drifting down about " + w + "kg a week.") };
+    return { tag: "Drifting", text: cmp + (dir === "Up" ? "Drifting up about " + w + "kg a week." : "Drifting down about " + w + "kg a week.") };
   }
   /* One note at a time, in priority order. */
   function weightNote(rows, fc, goal, targetKg, todayIso) {
@@ -564,21 +583,31 @@ try {
     var target = currentTarget();
     var fc = weightForecast(rows, goal, target);
     var plan = planInfo(rows, goal, target);
-    var proj = fc.ok ? fc.proj : null;
-    var ghost = null;
-    if (plan && !goalReached(rows[rows.length - 1].kg, goal, target)) {
-      if (fc.ok) ghost = proj ? planPath(plan, proj.days) : null;
-      else proj = planPath(plan, plan.horizon);
+    var lastRow = rows[rows.length - 1];
+    var lastDay = dayNumber(lastRow.date);
+    var reached = goalReached(lastRow.kg, goal, target);
+    var eta = chartEta(fc, plan);
+    var span = eta ? Math.min(eta.days, WEEK_CAP) : WEEK_DEFAULT;
+    var t = String(Math.round(target * 10) / 10);
+    var path = null, ghost = null;
+    if (fc.ok) {
+      path = buildPath(lastDay, lastRow.kg, fc.slope, span, eta && eta.src === "trend" && eta.days <= WEEK_CAP ? target : null);
+      if (path && plan && !reached) {
+        var planCross = plan.etaDays !== null && plan.etaDays <= path.days;
+        ghost = buildPath(lastDay, lastRow.kg, plan.rate / 7, planCross ? plan.etaDays : path.days, planCross ? target : null);
+      }
+    } else if (plan && !reached) {
+      path = buildPath(lastDay, lastRow.kg, plan.rate / 7, span, eta && eta.days <= WEEK_CAP ? target : null);
     }
+    function endOf(p) { return p.pts[p.pts.length - 1]; }
     var W = 560, H = 200, padL = 44, padR = 34, padT = 14, padB = 32;
     var kgs = rows.map(function (r) { return r.kg; });
-    if (proj) kgs.push(proj.toKg);
-    if (ghost) kgs.push(ghost.toKg);
+    if (path) kgs.push(endOf(path).kg);
+    if (ghost) kgs.push(endOf(ghost).kg);
     var min = Math.floor(Math.min.apply(null, kgs) - 0.8);
     var max = Math.ceil(Math.max.apply(null, kgs) + 0.5);
     var day0 = dayNumber(rows[0].date);
-    var lastDay = dayNumber(rows[rows.length - 1].date);
-    var dayEnd = lastDay + (proj ? proj.days : 0);
+    var dayEnd = lastDay + (path ? path.days : 0);
     function x(dayNum) {
       return padL + (W - padL - padR) * (dayEnd === day0 ? 0.5 : (dayNum - day0) / (dayEnd - day0));
     }
@@ -587,6 +616,18 @@ try {
     var tickFs = narrow ? 21 : 12;
     var gridCount = narrow ? 2 : 3;
     var dotR = narrow ? 6.5 : 5;
+    /* text boxes in use, so labels can step aside from each other */
+    var placed = [];
+    function box(bx, by, str, anchor, fs) {
+      var w = str.length * fs * 7 / 12;
+      var x0 = anchor === "end" ? bx - w : anchor === "middle" ? bx - w / 2 : bx;
+      return { x0: x0, x1: x0 + w, y: by, fs: fs };
+    }
+    function hit(r, pad) {
+      return placed.some(function (o) {
+        return r.x0 < o.x1 + pad && o.x0 < r.x1 + pad && Math.abs(r.y - o.y) < (r.fs + o.fs) * 0.55;
+      });
+    }
     svg.innerHTML = "";
     for (var g = 0; g <= gridCount; g++) {
       var gv = min + (max - min) * g / gridCount;
@@ -595,10 +636,20 @@ try {
       tk.style.fontSize = tickFs + "px";
       svg.appendChild(tk);
     }
+    if (target >= min && target <= max) {
+      var ty = y(target);
+      svg.appendChild(el("line", { x1: padL, y1: ty, x2: W - padR, y2: ty, "class": "grid target-line" }));
+      /* below the line when the trend comes down to it and there is room */
+      var tly = lastRow.kg > target && ty + 17 <= H - 8 - tickFs * 1.1 ? ty + 17 : ty - 8;
+      var tl = el("text", { x: W - padR, y: tly, "text-anchor": "end", "class": "tick" }, "Target " + t + "kg");
+      tl.style.fontSize = tickFs + "px";
+      svg.appendChild(tl);
+      placed.push(box(W - padR, tly, "Target " + t + "kg", "end", tickFs));
+    }
     var line = el("polyline", { points: rows.map(function (r) { return x(dayNumber(r.date)).toFixed(1) + "," + y(r.kg).toFixed(1); }).join(" "), "class": "trend", pathLength: "1" });
     svg.appendChild(line);
-    var lastLabelX = -1e9;
-    var fxEnd = proj ? x(dayEnd) : null;
+    var fxEnd = path ? x(dayEnd) : null;
+    var lastBox = box(x(lastDay), H - 8, lastRow.label, "end", tickFs);
     rows.forEach(function (r, i) {
       var rx = x(dayNumber(r.date));
       var c = el("circle", { cx: rx, cy: y(r.kg), r: dotR, "class": "dot", style: "animation-delay:" + (120 + i * 90) + "ms" });
@@ -606,41 +657,90 @@ try {
       svg.appendChild(c);
       /* labels sit at their date, so skip one that would collide */
       var isLast = i === rows.length - 1;
-      var show = narrow ? (i === 0 || (isLast && !proj && rx - x(day0) >= 130))
-                        : (i === 0 || rx - lastLabelX >= 56) && !(proj && i > 0 && fxEnd - rx < 60);
+      var rAnchor = i === 0 ? "start" : isLast ? "end" : "middle";
+      var show = narrow ? (i === 0 || (isLast && !path && rx - x(day0) >= 130))
+                        : (i === 0 || (!hit(box(rx, H - 8, r.label, rAnchor, tickFs), 4) &&
+                            (isLast || box(rx, H - 8, r.label, rAnchor, tickFs).x1 + 4 < lastBox.x0))) &&
+                          !(path && i > 0 && fxEnd - rx < 60);
       if (show) {
-        lastLabelX = rx;
         var lb = el("text", { x: rx, y: H - 8, "class": "tick" }, r.label);
         lb.style.fontSize = tickFs + "px";
         if (i === 0) lb.setAttribute("text-anchor", "start");
         else if (i === rows.length - 1) lb.setAttribute("text-anchor", "end");
         else lb.setAttribute("text-anchor", "middle");
         svg.appendChild(lb);
+        placed.push(box(rx, H - 8, r.label, rAnchor, tickFs));
       }
     });
-    if (proj) {
-      var lastRow = rows[rows.length - 1];
+    if (path) {
       var lx = x(lastDay), ly = y(lastRow.kg);
-      var fx = x(dayEnd), fy = y(proj.toKg);
+      var poly = function (p) {
+        return lx.toFixed(1) + "," + ly.toFixed(1) + p.pts.map(function (q) {
+          return " " + x(lastDay + q.days).toFixed(1) + "," + y(q.kg).toFixed(1);
+        }).join("");
+      };
       if (ghost) {
-        svg.appendChild(el("polyline", {
-          points: lx.toFixed(1) + "," + ly.toFixed(1) + " " + fx.toFixed(1) + "," + y(ghost.toKg).toFixed(1),
-          "class": "plan-line"
-        }));
+        svg.appendChild(el("polyline", { points: poly(ghost), "class": "plan-line" }));
+        ghost.pts.forEach(function (q) {
+          var pc = el("circle", { cx: x(lastDay + q.days), cy: y(q.kg), r: dotR * 0.6, "class": "dot-plan" });
+          pc.appendChild(el("title", {}, q.week ? "Plan, week " + q.week + ": about " + q.kg.toFixed(1) + "kg"
+                                                : "Plan: about " + q.kg.toFixed(1) + "kg"));
+          svg.appendChild(pc);
+        });
       }
-      svg.appendChild(el("polyline", {
-        points: lx.toFixed(1) + "," + ly.toFixed(1) + " " + fx.toFixed(1) + "," + fy.toFixed(1),
-        "class": "trend-forecast"
-      }));
-      var fd = el("circle", { cx: fx, cy: fy, r: dotR, "class": "dot-forecast" });
-      fd.appendChild(el("title", {}, "Projected " + proj.toKg.toFixed(1) + "kg by " + proj.toLabel));
-      svg.appendChild(fd);
-      var fv = el("text", { x: fx, y: Math.max(fy - 12, 14), "text-anchor": "end", "class": "forecast-label" }, proj.toKg.toFixed(1));
-      fv.style.fontSize = (narrow ? 15 : 12) + "px";
-      svg.appendChild(fv);
-      var dl = el("text", { x: fx, y: H - 8, "text-anchor": "end", "class": "tick" }, proj.toLabel);
+      svg.appendChild(el("polyline", { points: poly(path), "class": "trend-forecast" }));
+      var pts = path.pts;
+      pts.forEach(function (q) {
+        var fd = el("circle", { cx: x(lastDay + q.days), cy: y(q.kg), r: dotR, "class": "dot-forecast" });
+        fd.appendChild(el("title", {}, q.cross ? "Target " + t + "kg around " + fmtDate(q.date)
+          : (q.week ? "Week " + q.week + ": about " : "About ") + q.kg.toFixed(1) + "kg, " + fmtDate(q.date)));
+        svg.appendChild(fd);
+      });
+      var end = endOf(path);
+      var dl = el("text", { x: fxEnd, y: H - 8, "text-anchor": "end", "class": "tick" }, fmtDate(end.date));
       dl.style.fontSize = tickFs + "px";
       svg.appendChild(dl);
+      placed.push(box(fxEnd, H - 8, fmtDate(end.date), "end", tickFs));
+      /* one middle date on wide screens, under a labelled week */
+      if (!narrow) {
+        var mid = null, midAt = (x(lastDay) + fxEnd) / 2;
+        pts.forEach(function (q) {
+          if (q === end || (q.week !== 4 && q.week !== 8)) return;
+          var qx = x(lastDay + q.days);
+          if (hit(box(qx, H - 8, fmtDate(q.date), "middle", tickFs), 10)) return;
+          if (!mid || Math.abs(qx - midAt) < Math.abs(mid.x - midAt)) mid = { x: qx, q: q };
+        });
+        if (mid) {
+          var ml = el("text", { x: mid.x, y: H - 8, "text-anchor": "middle", "class": "tick" }, fmtDate(mid.q.date));
+          ml.style.fontSize = tickFs + "px";
+          svg.appendChild(ml);
+          placed.push(box(mid.x, H - 8, fmtDate(mid.q.date), "middle", tickFs));
+        }
+      }
+      /* weight labels: week 4, week 8 and the end; the end wins a clash */
+      var cands = [];
+      pts.forEach(function (q, i) {
+        if (q === end) cands.unshift({ q: q, i: i, last: true });
+        else if (!narrow && (q.week === 4 || q.week === 8)) cands.push({ q: q, i: i, last: false });
+      });
+      cands.forEach(function (c) {
+        var cx2 = x(lastDay + c.q.days), cy2 = y(c.q.kg);
+        var fs = narrow ? 15 : 12, anchor = c.last ? "end" : "middle";
+        var prev = c.i ? pts[c.i - 1].kg : lastRow.kg;
+        var tries = prev > c.q.kg ? [cy2 + 18, cy2 - 12] : [cy2 - 12, cy2 + 18];
+        var str = c.q.kg.toFixed(1), pick = null, k;
+        for (k = 0; k < 2 && !pick; k++) {
+          if (tries[k] < 12 || tries[k] > H - padB + 8) continue;
+          var bx = box(cx2, tries[k], str, anchor, fs);
+          if (!hit(bx, 6)) pick = bx;
+        }
+        if (!pick && c.last) pick = box(cx2, Math.max(cy2 - 12, 14), str, anchor, fs);
+        if (!pick) return;
+        placed.push(pick);
+        var fv = el("text", { x: cx2, y: pick.y, "text-anchor": anchor, "class": "forecast-label" }, str);
+        fv.style.fontSize = fs + "px";
+        svg.appendChild(fv);
+      });
     }
     var change = Math.round((rows[rows.length - 1].kg - rows[0].kg) * 10) / 10;
     document.getElementById("weightVerdict").textContent = rows.length === 1
@@ -651,38 +751,31 @@ try {
     svg.setAttribute("aria-label",
       "Weight trend from " + rows[0].label + " to " + rows[rows.length - 1].label +
       ", " + rows[0].kg.toFixed(1) + "kg to " + rows[rows.length - 1].kg.toFixed(1) + "kg." +
-      (proj ? " Projected " + proj.toKg.toFixed(1) + "kg by " + proj.toLabel + "." : ""));
+      (path ? (endOf(path).cross
+        ? " Projected to reach " + t + "kg around " + fmtDate(endOf(path).date) + "."
+        : " Projected about " + endOf(path).kg.toFixed(1) + "kg by " + fmtDate(endOf(path).date) +
+          (eta && eta.days > WEEK_CAP ? ", then target " + t + "kg around " + eta.label : "") + ".") : ""));
 
-    document.getElementById("weightLegend").hidden = !(proj && ghost);
+    document.getElementById("weightLegend").hidden = !(path && ghost);
     var info = weightCall(rows, fc, goal, target, plan);
     var call = document.getElementById("weightCall");
     call.innerHTML = "";
     if (info.tag) {
-      var tag = document.createElement("span");
-      tag.className = "trend-tag " + info.cls;
-      tag.textContent = info.tag;
-      call.appendChild(tag);
+      /* the status is the first words of the sentence, in ink */
+      var lead = document.createElement("b");
+      lead.textContent = info.tag + ".";
+      call.appendChild(lead);
       call.appendChild(document.createTextNode(" "));
     }
-    var txt = document.createElement("span");
-    txt.textContent = info.text;
-    call.appendChild(txt);
+    call.appendChild(document.createTextNode(info.text));
 
     var noteBox = document.getElementById("weightNote");
-    noteBox.innerHTML = "";
+    var action = document.getElementById("weightAction");
     var note = weightNote(rows, fc, goal, target, todayIso());
-    if (note) {
-      noteBox.appendChild(document.createTextNode(note.text));
-      if (note.kind === "reached") {
-        var sw = document.createElement("button");
-        sw.type = "button";
-        sw.className = "btn btn-primary btn-sm note-btn";
-        sw.textContent = "Switch to Hold";
-        sw.addEventListener("click", switchToHold);
-        noteBox.appendChild(sw);
-      }
-    }
+    noteBox.textContent = note ? note.text : "";
+    action.classList.toggle("is-hidden", !(note && note.kind === "reached"));
   }
+  document.getElementById("weightAction").addEventListener("click", switchToHold);
 
   function switchToHold() {
     var p = null;
@@ -915,7 +1008,7 @@ try {
   function refreshForm() {
     var st = weekState();
     dateText.textContent = "Today, " + fmtDate(st.today);
-    submitBtn.textContent = st.updating ? "Update entry" : "+ Add entry";
+    submitBtn.textContent = st.updating ? "Update weigh-in" : "Save weigh-in";
     hint.textContent = st.updating
       ? "This updates your " + st.last.label + " weigh-in. Next new entry opens " +
         fmtDate(isoFromDay(dayNumber(st.last.date) + 7)) + "."
@@ -980,7 +1073,8 @@ try {
     var jump = ref ? Math.round(Math.abs(kg - ref.kg) * 10) / 10 : 0;
     if (jump > 2) {
       document.getElementById("weighConfirmText").textContent =
-        "That is " + jump.toFixed(1) + "kg from your last weigh-in. Save anyway?";
+        "That is " + jump.toFixed(1) + "kg from your last weigh-in.";
+      document.getElementById("weighConfirmYes").textContent = "Save " + kg.toFixed(1) + "kg anyway";
       confirmBox.classList.remove("is-hidden");
       submitBtn.disabled = true;
       return;

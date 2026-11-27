@@ -1031,26 +1031,50 @@ input[type="range"] {
   line-height: 1.6;
 }
 
-/* target stepper buttons and the "Your numbers" leader rows */
+/* target and weigh-in stepper, and the "Your numbers" leader rows */
+.unit-row {
+  display: flex;
+  gap: 8px;
+}
+.unit-row .auth-input {
+  flex: 1;
+  min-width: 0;
+}
 .step-btn {
+  flex: none;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 18px;
+  line-height: 1;
   background: var(--bg);
   color: var(--ink);
   border-color: var(--line);
-  min-width: 46px;
-  padding: 0 12px;
-  font-size: 18px;
 }
 .step-btn:hover {
   border-color: var(--primary);
 }
+.step-btn + .auth-input {
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.step-btn + .auth-input::-webkit-inner-spin-button,
+.step-btn + .auth-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 .panel.numbers {
   margin-top: 16px;
+}
+.panel.numbers .summary-num {
+  margin-top: 12px;
 }
 .num-row {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  padding: 10px 2px;
+  padding: 11px 2px;
   font-size: 14px;
 }
 .num-row + .num-row {

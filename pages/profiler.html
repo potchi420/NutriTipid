@@ -177,15 +177,16 @@ try {
     <div class="panel numbers">
       <h2>Your numbers</h2>
       <p class="form-note" id="numsEmpty" style="margin-top:10px">Fill in your body metrics to see your numbers.</p>
-      <div id="numsBody" class="is-hidden" style="margin-top:6px">
+      <div id="numsBody" class="is-hidden">
+        <div class="summary-num tabular" id="nTarget"></div>
+        <p class="summary-label">daily calorie target</p>
+        <p class="form-note" id="nClamp"></p>
         <div class="num-row"><span>BMI</span><span class="dots" aria-hidden="true"></span><b id="nBmi"></b></div>
         <div class="num-row"><span>Healthy weight range</span><span class="dots" aria-hidden="true"></span><b id="nRange"></b></div>
         <div class="num-row"><span>Base burn (BMR)</span><span class="dots" aria-hidden="true"></span><b id="nBmr"></b></div>
         <div class="num-row"><span>Activity factor</span><span class="dots" aria-hidden="true"></span><b id="nAct"></b></div>
         <div class="num-row"><span>Daily burn (TDEE)</span><span class="dots" aria-hidden="true"></span><b id="nTdee"></b></div>
         <div class="num-row"><span>Goal adjustment</span><span class="dots" aria-hidden="true"></span><b id="nAdj"></b></div>
-        <div class="num-row"><span>Daily calorie target</span><span class="dots" aria-hidden="true"></span><b id="nTarget"></b></div>
-        <p class="form-note" id="nClamp" style="margin-top:6px"></p>
         <div class="num-row"><span>Plan pace</span><span class="dots" aria-hidden="true"></span><b id="nPace"></b></div>
         <div class="num-row"><span>Target date</span><span class="dots" aria-hidden="true"></span><b id="nEta"></b></div>
         <div class="num-row"><span>Budget</span><span class="dots" aria-hidden="true"></span><b id="nBudget"></b></div>
