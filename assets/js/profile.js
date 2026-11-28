@@ -110,22 +110,83 @@
     return { date: iso, weeks: Math.round(weeks * 10) / 10, far: weeks > 52 };
   }
 
+  /* the seven general allergen groups, in display order. hints are the
+     one-line help text for the pickers
+   */
+  var ALLERGEN_GROUPS = ["Shellfish", "Fish", "Egg", "Milk", "Peanut", "Wheat", "Soy"];
+  var ALLERGEN_HINTS = {
+    Shellfish: "shrimp (hipon), crab, squid, mussels (tahong), bagoong alamang, oyster sauce",
+    Fish: "fish, patis (fish sauce), bagoong isda, dilis",
+    Egg: "chicken egg, quail egg (itlog pugo), salted egg",
+    Milk: "milk, cheese, butter, evaporated or condensed milk",
+    Peanut: "peanuts, peanut sauce (kare-kare), peanut butter",
+    Wheat: "bread, pancit canton/miki, breading, flour, toyo",
+    Soy: "toyo (soy sauce), tokwa, taho, tausi"
+  };
+
+  /* old saved values map forward ("Shrimp" is now Shellfish). admin added
+     lookups from nutritipid-allergens stay valid, anything else is dropped
+   */
+  function normalizeAllergens(list) {
+    var known = ALLERGEN_GROUPS.slice();
+    try {
+      var store = JSON.parse(localStorage.getItem("nutritipid-allergens") || "null");
+      if (store && Array.isArray(store.list)) {
+        store.list.forEach(function (a) {
+          if (typeof a === "string" && a.trim() && known.indexOf(a.trim()) < 0) known.push(a.trim());
+        });
+      }
+    } catch (e) {}
+    var res = [];
+    (Array.isArray(list) ? list : []).forEach(function (v) {
+      if (typeof v !== "string") return;
+      var t = v.trim();
+      if (!t || t.toLowerCase() === "none") return;
+      if (t.toLowerCase() === "shrimp") t = "Shellfish";
+      var hit = null;
+      known.forEach(function (k) { if (k.toLowerCase() === t.toLowerCase()) hit = k; });
+      if (hit && res.indexOf(hit) < 0) res.push(hit);
+    });
+    return res;
+  }
+
+  /* allergy groups currently in effect, "None" never counts
+   */
+  function allergies() {
+    var p = readProfile();
+    if (!p || !Array.isArray(p.allergies)) return [];
+    return normalizeAllergens(p.allergies);
+  }
+
+  /* the user's groups that a dish carries, empty with no profile or no hit
+   */
+  function allergenConflicts(dishAllergens) {
+    var mine = allergies();
+    if (!mine.length) return [];
+    var has = normalizeAllergens(dishAllergens);
+    return mine.filter(function (a) { return has.indexOf(a) >= 0; });
+  }
+
+  /* one line of reason text for a blocked dish, "" when nothing conflicts
+   */
+  function allergenReason(conflicts) {
+    if (!conflicts || !conflicts.length) return "";
+    return "Contains " + conflicts.join(", ") + ", on your allergy list.";
+  }
+
   window.NutriTipid = {
     kcalTarget: kcalTarget,
     kcalParts: kcalParts,
     allergies: allergies,
+    normalizeAllergens: normalizeAllergens,
+    allergenConflicts: allergenConflicts,
+    allergenReason: allergenReason,
+    allergenGroups: ALLERGEN_GROUPS.slice(),
+    allergenHints: ALLERGEN_HINTS,
     healthyRange: healthyRange,
     suggestTarget: suggestTarget,
     goalFromTarget: goalFromTarget,
     planRate: planRate,
     planEta: planEta
   };
-
-  /* allergy labels currently in effect, "None" never counts
-   */
-  function allergies() {
-    var p = readProfile();
-    if (!p || !Array.isArray(p.allergies)) return [];
-    return p.allergies.filter(function (v) { return v && v !== "None"; });
-  }
 })();

@@ -146,6 +146,7 @@ try {
   </div>
   <div class="sheet-list" id="addList"></div>
   <p class="sheet-note" id="addNote">Nothing added yet. Planned meals stay fixed.</p>
+  <p class="sheet-note" id="addAlNote"></p>
   <button type="button" class="custom-toggle" id="customToggle">Add your own food</button>
 
   <form class="custom-form" id="customForm" novalidate hidden>
@@ -166,6 +167,18 @@ try {
         <span>Price in pesos</span>
         <input class="auth-input" id="cfPrice" name="cfPrice" type="number" inputmode="numeric" min="0" max="999" step="1" placeholder="40">
       </label>
+      <div class="custom-field custom-wide" role="group" aria-labelledby="cfAlLabel">
+        <span id="cfAlLabel">Contains (optional)</span>
+        <div class="chip-row" id="cfAl">
+          <button type="button" class="chip" data-val="Shellfish" aria-pressed="false">Shellfish</button>
+          <button type="button" class="chip" data-val="Fish" aria-pressed="false">Fish</button>
+          <button type="button" class="chip" data-val="Egg" aria-pressed="false">Egg</button>
+          <button type="button" class="chip" data-val="Milk" aria-pressed="false">Milk</button>
+          <button type="button" class="chip" data-val="Peanut" aria-pressed="false">Peanut</button>
+          <button type="button" class="chip" data-val="Wheat" aria-pressed="false">Wheat</button>
+          <button type="button" class="chip" data-val="Soy" aria-pressed="false">Soy</button>
+        </div>
+      </div>
     </div>
     <p class="custom-msg" id="cfMsg" role="status" aria-live="polite"></p>
     <div class="custom-actions">
@@ -176,6 +189,8 @@ try {
 </section>
 
 <script src="../assets/js/profile.js"></script>
+<script src="../assets/js/board.js"></script>
+<script src="../assets/js/foods.js"></script>
 <script>
 /* Dashboard home prototype: mock only. One week object, day cycler. */
 (function () {
@@ -190,15 +205,31 @@ try {
     }
   } catch (e) {}
 
+  /* short display names and visuals live here, allergens come from the
+     shared catalogue through src. Pandesal is not on the board, so it
+     carries its own tag */
   var EAT = [
-    { n: "Lugaw", p: 15, k: 280, dot: "L", c: "#8A6D1B" },
-    { n: "Monggo", p: 35, k: 520, dot: "M", c: "#E8A415", ink: "#1A2E22" },
-    { n: "Adobo", p: 40, k: 520, dot: "A", c: "#5F6F65" },
-    { n: "Tinola", p: 45, k: 460, dot: "T", c: "#3E8E7E" },
-    { n: "Kangkong", p: 25, k: 320, dot: "K", c: "#4C7A45" },
-    { n: "Arroz caldo w/ egg", p: 30, k: 420, dot: "A", c: "#1F9D55" },
-    { n: "Pandesal & kapeng barako", p: 0, k: 240, dot: "B", c: "#5F6F65" }
+    { n: "Lugaw", p: 15, k: 280, dot: "L", c: "#8A6D1B", src: "Lugaw" },
+    { n: "Monggo", p: 35, k: 520, dot: "M", c: "#E8A415", ink: "#1A2E22", src: "Ginisang Monggo" },
+    { n: "Adobo", p: 40, k: 520, dot: "A", c: "#5F6F65", src: "Chicken Adobo" },
+    { n: "Tinola", p: 45, k: 460, dot: "T", c: "#3E8E7E", src: "Chicken Tinola" },
+    { n: "Kangkong", p: 25, k: 320, dot: "K", c: "#4C7A45", src: "Adobong Kangkong" },
+    { n: "Arroz caldo w/ egg", p: 30, k: 420, dot: "A", c: "#1F9D55", src: "Arroz caldo w/ egg" },
+    { n: "Pandesal & kapeng barako", p: 0, k: 240, dot: "B", c: "#5F6F65", al: ["Wheat"] }
   ];
+  /* allergen groups of a dish: custom foods carry their own, board dishes
+     read the catalogue with any admin edit on top */
+  function alOf(dish) {
+    if (dish.custom || !dish.src) return dish.al || [];
+    var meta = window.NutriTipidBoard ? NutriTipidBoard.metaOf(dish.src) : null;
+    if (meta && Array.isArray(meta.al)) return meta.al;
+    var list = window.NutriTipidFoods || [];
+    for (var i = 0; i < list.length; i++) if (list[i].name === dish.src) return list[i].al || [];
+    return [];
+  }
+  function blockedBy(dish) {
+    return window.NutriTipid ? NutriTipid.allergenConflicts(alOf(dish)) : [];
+  }
   /* Slots follow the paper: budget covers what is bought on campus
      (2 meals + a snack); breakfast is from home at P0. Saturday shows
      the bought-breakfast + over-budget day on purpose. */
@@ -260,7 +291,8 @@ try {
           n: f.n,
           serving: typeof f.serving === "string" ? f.serving : "",
           k: Number(f.k),
-          p: Number(f.p)
+          p: Number(f.p),
+          al: window.NutriTipid ? NutriTipid.normalizeAllergens(f.al) : []
         };
       });
     }
@@ -304,6 +336,7 @@ try {
       dot: initialOf(f.n),
       c: "var(--stamp)",
       ink: "var(--primary-ink)",
+      al: f.al || [],
       custom: true
     };
   }
@@ -322,6 +355,13 @@ try {
   var cfPrice = document.getElementById("cfPrice");
   var cfMsg = document.getElementById("cfMsg");
   var cfBack = document.getElementById("cfBack");
+  var cfAl = document.getElementById("cfAl");
+  cfAl.addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest(".chip") : null;
+    if (!b || !cfAl.contains(b)) return;
+    var on = b.classList.toggle("is-on");
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
   var addCtx = { day: idx, slot: 0 };
   var lastFocus = null;
 
@@ -336,9 +376,11 @@ try {
       ? "Add your own food"
       : "Add to " + SLOTS[addCtx.slot];
   }
+  var rowSeq = 0;
   function sheetRow(dish, ref) {
+    var bad = blockedBy(dish);
     var div = document.createElement("div");
-    div.className = "meal";
+    div.className = "meal" + (bad.length ? " is-blocked" : "");
     var dot = document.createElement("span");
     dot.className = "meal-dot";
     dot.style.background = dish.c;
@@ -355,6 +397,14 @@ try {
       ? dish.k + " kcal \u00B7 Your food"
       : dish.k + " kcal per serving";
     who.appendChild(sub);
+    var why = null;
+    if (bad.length) {
+      why = document.createElement("span");
+      why.id = "addWhy" + (rowSeq++);
+      why.className = "reason";
+      why.textContent = NutriTipid.allergenReason(bad);
+      who.appendChild(why);
+    }
     var nums = document.createElement("div");
     nums.className = "nums";
     var pb = document.createElement("b");
@@ -365,7 +415,12 @@ try {
     pill.className = "sheet-btn";
     pill.textContent = "Add";
     pill.setAttribute("aria-label", "Add " + dish.n + " to " + SLOTS[addCtx.slot]);
+    if (bad.length) {
+      pill.setAttribute("aria-disabled", "true");
+      pill.setAttribute("aria-describedby", why.id);
+    }
     pill.addEventListener("click", function () {
+      if (pill.getAttribute("aria-disabled") === "true") return;
       addFood(ref);
     });
     var actions = document.createElement("div");
@@ -482,6 +537,10 @@ try {
   }
   function resetCustomForm() {
     customForm.reset();
+    Array.prototype.forEach.call(cfAl.children, function (b) {
+      b.classList.remove("is-on");
+      b.setAttribute("aria-pressed", "false");
+    });
     cfMsg.textContent = "";
     cfMsg.classList.remove("is-error");
     customForm.hidden = true;
@@ -495,6 +554,7 @@ try {
     renderAddList();
     setAddTitle();
     syncAddNote();
+    document.getElementById("addAlNote").textContent = window.NutriTipidAllergenNote || "";
     addScrim.classList.add("is-open");
     addScrim.setAttribute("aria-hidden", "false");
     addSheet.classList.add("is-open");
@@ -510,6 +570,7 @@ try {
     if (lastFocus && lastFocus.focus) lastFocus.focus();
   }
   function addFood(ref) {
+    if (blockedBy(dishFor(ref)).length) return;
     var list = slotList(addCtx.day, addCtx.slot);
     list.push(ref);
     saveIntake();
@@ -546,12 +607,19 @@ try {
     if (!name) { customError("Give your food a name.", cfName); return; }
     if (!isFinite(kcal) || kcal <= 0) { customError("Enter the calories in one serving.", cfKcal); return; }
     if (!isFinite(price) || price < 0) { customError("Enter the price, or 0 if it is free.", cfPrice); return; }
+    var contains = [];
+    Array.prototype.forEach.call(cfAl.children, function (b) {
+      if (b.classList.contains("is-on")) contains.push(b.getAttribute("data-val"));
+    });
+    var hit = window.NutriTipid ? NutriTipid.allergenConflicts(contains) : [];
+    if (hit.length) { customError(NutriTipid.allergenReason(hit) + " It was not saved or added.", null); return; }
     customFoods.push({
       id: nextFoodId(),
       n: name,
       serving: serving,
       k: Math.min(3000, Math.max(1, Math.round(kcal))),
-      p: Math.min(999, Math.max(0, Math.round(price)))
+      p: Math.min(999, Math.max(0, Math.round(price))),
+      al: contains
     });
     saveFoods();
     slotList(addCtx.day, addCtx.slot).push(customFoods[customFoods.length - 1].id);
@@ -836,8 +904,6 @@ try {
     <a href="planner.html">Planner</a>
     <a href="progress.html">Progress</a>
   </nav>
-<script src="../assets/js/board.js"></script>
-<script src="../assets/js/foods.js"></script>
 <script src="../assets/js/assistant.js"></script>
 <script src="../assets/js/theme.js"></script>
 </body>

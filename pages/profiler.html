@@ -161,12 +161,16 @@ try {
         </div>
         <span class="auth-label">Allergies</span>
         <div class="chip-row" id="allRow">
-          <button type="button" class="chip" data-val="Shrimp">Shrimp</button>
-          <button type="button" class="chip" data-val="Egg">Egg</button>
+          <button type="button" class="chip" data-val="Shellfish">Shellfish</button>
           <button type="button" class="chip" data-val="Fish">Fish</button>
+          <button type="button" class="chip" data-val="Egg">Egg</button>
+          <button type="button" class="chip" data-val="Milk">Milk</button>
           <button type="button" class="chip" data-val="Peanut">Peanut</button>
+          <button type="button" class="chip" data-val="Wheat">Wheat</button>
+          <button type="button" class="chip" data-val="Soy">Soy</button>
           <button type="button" class="chip is-on" data-val="None">None</button>
         </div>
+        <p class="form-note">Patis counts as Fish. Toyo counts as Soy and Wheat. Bagoong alamang and oyster sauce count as Shellfish.</p>
         <label class="agree-row" for="consentChk">
           <input type="checkbox" id="consentChk" name="consentChk">
           <span>University Clinic staff may view my progress read-only during counseling.</span>
@@ -200,8 +204,8 @@ try {
   </form>
 </main>
 
-<script src="../assets/js/board.js"></script>
 <script src="../assets/js/profile.js"></script>
+<script src="../assets/js/board.js"></script>
 <script>
 /* Profiler prototype: mock only. Saves to localStorage, then planner.
    Rehydrates saved values so editing never shows blank defaults. */
@@ -303,7 +307,10 @@ try {
     });
   }
   if (saved && Array.isArray(saved.conditions) && saved.conditions.length) chipsOut("conRow", saved.conditions);
-  if (saved && Array.isArray(saved.allergies) && saved.allergies.length) chipsOut("allRow", saved.allergies);
+  if (saved && Array.isArray(saved.allergies) && saved.allergies.length) {
+    var savedAl = NutriTipid.normalizeAllergens(saved.allergies);
+    chipsOut("allRow", savedAl.length ? savedAl : ["None"]);
+  }
   chipWire("conRow");
   chipWire("allRow");
   var consentChk = document.getElementById("consentChk");

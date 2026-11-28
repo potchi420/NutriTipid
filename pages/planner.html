@@ -130,10 +130,12 @@ try {
   </div>
   <div class="sheet-list" id="swapList"></div>
   <p class="sheet-note" id="swapNote">Suggestions rank protein per peso inside the same pool.</p>
+  <p class="sheet-note" id="swapAlNote"></p>
 </section>
 
 <script src="../assets/js/profile.js"></script>
 <script src="../assets/js/board.js"></script>
+<script src="../assets/js/foods.js"></script>
 <script>
 /* Planner prototype: mock only. No LP solver, deterministic picks. */
 (function () {
@@ -144,21 +146,28 @@ try {
      15 a cup, veggie and merienda pieces are 20 to 35, full meat
      viands are 40 to 70. Every price rounds to fives, the way
      real carinderias tag them. */
-  var DISHES = [
-    { name: "Lugaw", price: 15, kcal: 280, protein: 7, dot: "L", color: "#8A6D1B", img: "../assets/img/dishes/lugaw.jpg" },
-    { name: "Arroz caldo w/ egg", price: 30, kcal: 420, protein: 14, dot: "A", color: "#1F9D55", al: ["Egg"], img: "../assets/img/dishes/arroz-caldo.jpg" },
-    { name: "Fried egg and rice", price: 20, kcal: 350, protein: 12, dot: "E", color: "#B7791F", al: ["Egg"], img: "../assets/img/dishes/fried-egg.jpg" },
-    { name: "Chicken Tinola", price: 45, kcal: 460, protein: 24, dot: "T", color: "#3E8E7E", img: "../assets/img/dishes/tinola.jpg" },
-    { name: "Chicken Adobo", price: 40, kcal: 520, protein: 30, dot: "A", color: "#5F6F65", img: "../assets/img/dishes/adobo.jpg" },
-    { name: "Pork Menudo", price: 45, kcal: 540, protein: 22, dot: "M", color: "#7A4A21", img: "../assets/img/dishes/menudo.jpg" },
-    { name: "Pork Sinigang", price: 50, kcal: 480, protein: 20, dot: "S", color: "#2E7D5B", img: "../assets/img/dishes/sinigang-baboy.jpg" },
-    { name: "Ginisang Monggo", price: 35, kcal: 520, protein: 20, dot: "M", color: "#E8A415", ink: "#1A2E22", al: ["Shrimp"], img: "../assets/img/dishes/monggo.webp" },
-    { name: "Adobong Kangkong", price: 25, kcal: 320, protein: 9, dot: "K", color: "#4C7A45", img: "../assets/img/dishes/adobong-kangkong.jpg" },
-    { name: "Beef Caldereta", price: 55, kcal: 600, protein: 24, dot: "C", color: "#A34A24", img: "../assets/img/dishes/kaldereta.jpg" },
-    { name: "Chop Suey", price: 35, kcal: 380, protein: 10, dot: "C", color: "#6B8F71", img: "../assets/img/dishes/chop-suey.jpg" },
-    { name: "Sinigang na Hipon", price: 45, kcal: 380, protein: 22, dot: "H", color: "#E0876A", ink: "#1A2E22", al: ["Shrimp"], img: "../assets/img/dishes/sinigang na hipon.webp" },
-    { name: "Sinigang na Bangus", price: 45, kcal: 420, protein: 24, dot: "F", color: "#4A7E96", ink: "#FFFFFF", al: ["Fish"], img: "../assets/img/dishes/sinigang-bangus.jpg" }
-  ];
+  var VIS = {
+    "Lugaw": { dot: "L", color: "#8A6D1B", img: "../assets/img/dishes/lugaw.jpg" },
+    "Arroz caldo w/ egg": { dot: "A", color: "#1F9D55", img: "../assets/img/dishes/arroz-caldo.jpg" },
+    "Fried egg and rice": { dot: "E", color: "#B7791F", img: "../assets/img/dishes/fried-egg.jpg" },
+    "Chicken Tinola": { dot: "T", color: "#3E8E7E", img: "../assets/img/dishes/tinola.jpg" },
+    "Chicken Adobo": { dot: "A", color: "#5F6F65", img: "../assets/img/dishes/adobo.jpg" },
+    "Pork Menudo": { dot: "M", color: "#7A4A21", img: "../assets/img/dishes/menudo.jpg" },
+    "Pork Sinigang": { dot: "S", color: "#2E7D5B", img: "../assets/img/dishes/sinigang-baboy.jpg" },
+    "Ginisang Monggo": { dot: "M", color: "#E8A415", ink: "#1A2E22", img: "../assets/img/dishes/monggo.webp" },
+    "Adobong Kangkong": { dot: "K", color: "#4C7A45", img: "../assets/img/dishes/adobong-kangkong.jpg" },
+    "Beef Caldereta": { dot: "C", color: "#A34A24", img: "../assets/img/dishes/kaldereta.jpg" },
+    "Chop Suey": { dot: "C", color: "#6B8F71", img: "../assets/img/dishes/chop-suey.jpg" },
+    "Sinigang na Hipon": { dot: "H", color: "#E0876A", ink: "#1A2E22", img: "../assets/img/dishes/sinigang na hipon.webp" },
+    "Sinigang na Bangus": { dot: "F", color: "#4A7E96", ink: "#FFFFFF", img: "../assets/img/dishes/sinigang-bangus.jpg" }
+  };
+  var DISHES = window.NutriTipidFoods.map(function (f) {
+    var v = VIS[f.name] || {};
+    return {
+      name: f.name, price: f.price, kcal: f.kcal, protein: f.protein, cat: f.cat,
+      al: (f.al || []).slice(), dot: v.dot, color: v.color, ink: v.ink, img: v.img
+    };
+  });
 
   /* The admin console writes price overrides, soft-deletes, detail
      edits, and new dishes here; the board applies all of it before
@@ -209,14 +218,15 @@ try {
   } catch (e) {}
   document.getElementById("planTitle").textContent = "Your week on P" + budget + " a day.";
 
-  /* Allergens from the profile steer both the weekly board and the
-     swap drawer. Every pool falls back to unfiltered if a flag set
-     would empty it, so the page can never dead-end. */
+  /* Allergens from the profile steer the weekly board and the swap
+     drawer. A blocked dish never enters a plan; if a pool empties, the
+     slot is shown as packed from home instead. */
   var avoid = window.NutriTipid ? NutriTipid.allergies() : [];
+  function conflictsOf(d) {
+    return window.NutriTipid ? NutriTipid.allergenConflicts(d.al || []) : [];
+  }
   function ok(d) {
-    if (!d.al || !avoid.length) return true;
-    for (var i = 0; i < d.al.length; i++) if (avoid.indexOf(d.al[i]) >= 0) return false;
-    return true;
+    return !conflictsOf(d).length;
   }
   var avoidNote = document.getElementById("avoidNote");
   if (avoid.length) {
@@ -247,15 +257,14 @@ try {
     for (var i = 0; i < DISHES.length; i++) if (DISHES[i].name === n) return DISHES[i];
     return DISHES[0];
   }
-  function mains() {
+  function mainsAll() {
     return DISHES.filter(function (d) {
       var snack = SNACKS.indexOf(d.name) >= 0 || (d.extra && d.cat === "Rice meal");
       return !snack && live(d);
     })
       .sort(function (a, b) { return (b.protein / b.price) - (a.protein / a.price); });
   }
-  var MAINS = mains().filter(ok);
-  if (!MAINS.length) MAINS = mains();
+  var MAINS = mainsAll().filter(ok);
   function cheapest(list) {
     return list.reduce(function (a, b) { return b.price < a.price ? b : a; });
   }
@@ -269,16 +278,19 @@ try {
        Breakfast is from home by default (P0) until claimed on campus. */
     var caps = [Math.floor(b * 0.4), Math.floor(b * 0.4), Math.floor(b * 0.2)];
     var snackList = SNACKS.map(byName).filter(function (d) { return ok(d) && live(d); });
-    if (!snackList.length) snackList = SNACKS.map(byName);
+    function row(slot, list, cap, off) {
+      if (!list.length) return { slot: slot, dish: PACKED, packed: true };
+      return { slot: slot, dish: pickFit(list, cap, off) };
+    }
     var rows = [];
     if (packedDay[i]) {
       rows.push({ slot: MEALS[0], dish: PACKED, packed: true });
     } else {
-      rows.push({ slot: MEALS[0], dish: pickFit(snackList, Math.floor(b * 0.4), i + 3) });
+      rows.push(row(MEALS[0], snackList, Math.floor(b * 0.4), i + 3));
     }
-    rows.push({ slot: MEALS[1], dish: pickFit(MAINS, caps[0], i) });
-    rows.push({ slot: MEALS[2], dish: pickFit(MAINS, caps[1], i + 1) });
-    rows.push({ slot: MEALS[3], dish: pickFit(snackList, caps[2], i + 2) });
+    rows.push(row(MEALS[1], MAINS, caps[0], i));
+    rows.push(row(MEALS[2], MAINS, caps[1], i + 1));
+    rows.push(row(MEALS[3], snackList, caps[2], i + 2));
     return rows;
   }
   var week = DAYS.map(function (_, i) { return buildDay(budget, i); });
@@ -508,12 +520,10 @@ try {
   var lastFocus = null;
   function poolFor(slot) {
     if (slot === 0 || slot === 3) {
-      var pool = SNACKS.map(byName)
+      return SNACKS.map(byName)
         .concat(DISHES.filter(function (d) { return d.extra && d.cat === "Rice meal" && live(d); }));
-      var safe = pool.filter(ok);
-      return safe.length ? safe : pool;
     }
-    return MAINS;
+    return mainsAll();
   }
   function deltaText(o, c) {
     var dp = c.price - o.price;
@@ -529,20 +539,22 @@ try {
     lastFocus = document.activeElement;
     swapTitle.textContent = "Swap " + DAYS[cur] + " " + row.slot.toLowerCase();
     swapOrig.textContent = row.dish.name + " \u00B7 P" + row.dish.price + " \u00B7 " + row.dish.protein + "g protein";
-    var cand = poolFor(slot).filter(function (d) { return d.name !== row.dish.name; })
-      .sort(function (x, y) { return (y.protein / y.price) - (x.protein / x.price); })
-      .slice(0, 3);
+    var all = poolFor(slot).filter(function (d) { return d.name !== row.dish.name; })
+      .sort(function (x, y) { return (y.protein / y.price) - (x.protein / x.price); });
+    var cand = all.filter(ok).slice(0, 3).concat(all.filter(function (d) { return !ok(d); }).slice(0, 3));
     swapList.innerHTML = "";
-    cand.forEach(function (d) {
+    cand.forEach(function (d, ci) {
+      var bad = conflictsOf(d);
       var div = document.createElement("div");
-      div.className = "meal swap-cand";
+      div.className = "meal swap-cand" + (bad.length ? " is-blocked" : "");
       var who = document.createElement("div");
       who.className = "who";
       var strong = document.createElement("strong");
       strong.textContent = d.name;
       var note = document.createElement("span");
       note.className = "reason";
-      note.textContent = deltaText(row.dish, d);
+      note.textContent = bad.length ? NutriTipid.allergenReason(bad) : deltaText(row.dish, d);
+      note.id = "swapWhy" + ci;
       who.appendChild(strong); who.appendChild(note);
       var nums = document.createElement("div");
       nums.className = "nums";
@@ -553,13 +565,21 @@ try {
       use.type = "button";
       use.className = "sheet-btn";
       use.textContent = "Use";
-      use.addEventListener("click", function () { acceptSwap(d); });
+      if (bad.length) {
+        use.setAttribute("aria-disabled", "true");
+        use.setAttribute("aria-describedby", note.id);
+      }
+      use.addEventListener("click", function () {
+        if (use.getAttribute("aria-disabled") === "true") return;
+        acceptSwap(d);
+      });
       div.appendChild(who); div.appendChild(nums); div.appendChild(use);
       swapList.appendChild(div);
     });
     swapNote.textContent = swapsUsed === 0
       ? "Suggestions rank protein per peso inside the same pool."
       : "Ranking is protein per peso. " + swapsUsed + " accepted this week.";
+    document.getElementById("swapAlNote").textContent = window.NutriTipidAllergenNote || "";
     swapSheet.classList.add("is-open");
     swapScrim.classList.add("is-open");
     swapSheet.setAttribute("aria-hidden", "false");
@@ -575,6 +595,7 @@ try {
     lastFocus = null;
   }
   function acceptSwap(d) {
+    if (!ok(d)) return;
     var rows = week[swapCtx.day];
     if (rows[swapCtx.slot].dish.name !== d.name) {
       rows[swapCtx.slot].dish = d;
@@ -600,7 +621,6 @@ try {
     <a href="planner.html" class="is-active" aria-current="page">Planner</a>
     <a href="progress.html">Progress</a>
   </nav>
-<script src="../assets/js/foods.js"></script>
 <script src="../assets/js/assistant.js"></script>
 <script src="../assets/js/theme.js"></script>
 </body>

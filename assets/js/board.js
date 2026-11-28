@@ -78,9 +78,17 @@
     try { localStorage.setItem("nutritipid-deactivated", JSON.stringify(d)); } catch (e) {}
     return d.indexOf(email) < 0;
   }
+  /* saved dish allergens migrate on read (Shrimp is now Shellfish) */
+  function normAl(list) {
+    var N = window.NutriTipid;
+    if (N && N.normalizeAllergens) return N.normalizeAllergens(list);
+    return Array.isArray(list) ? list.map(function (a) { return a === "Shrimp" ? "Shellfish" : a; }) : [];
+  }
   function extraDishes() {
     var d = readJson("nutritipid-dishes", null);
-    return d && Array.isArray(d.extras) ? d.extras : [];
+    var list = d && Array.isArray(d.extras) ? d.extras : [];
+    list.forEach(function (x) { if (x && Array.isArray(x.al)) x.al = normAl(x.al); });
+    return list;
   }
   function addExtra(dish) {
     var d = readJson("nutritipid-dishes", null);
@@ -103,7 +111,9 @@
   }
   function metaOf(name) {
     var e = dishMetas()[name];
-    return e && typeof e === "object" ? e : null;
+    if (!e || typeof e !== "object") return null;
+    if (Array.isArray(e.al)) e.al = normAl(e.al);
+    return e;
   }
   function setDishMeta(name, patch) {
     var edits = dishMetas();
@@ -154,12 +164,24 @@
     return true;
   }
 
-  /* allergen lookup, ships with the base three, admin owns it after that
+  /* allergen lookup, ships with the seven general groups, admin owns it
+     after that. an older saved list is migrated once: Shrimp becomes
+     Shellfish, custom entries stay, the base groups are ensured
    */
-  var BASE_ALLERGENS = ["Shrimp", "Egg", "Fish"];
+  var BASE_ALLERGENS = ["Shellfish", "Fish", "Egg", "Milk", "Peanut", "Wheat", "Soy"];
   function allStore() {
     var a = readJson("nutritipid-allergens", null);
-    if (!a || !Array.isArray(a.list)) a = { list: BASE_ALLERGENS.slice() };
+    if (!a || !Array.isArray(a.list)) return { v: 2, list: BASE_ALLERGENS.slice() };
+    if (a.v !== 2) {
+      var list = BASE_ALLERGENS.slice();
+      a.list.forEach(function (n) {
+        if (typeof n !== "string") return;
+        var t = n.trim() === "Shrimp" ? "Shellfish" : n.trim();
+        if (t && list.indexOf(t) < 0) list.push(t);
+      });
+      a = { v: 2, list: list };
+      try { localStorage.setItem("nutritipid-allergens", JSON.stringify(a)); } catch (e) {}
+    }
     return a;
   }
   function allergens() {

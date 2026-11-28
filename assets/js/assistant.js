@@ -49,11 +49,15 @@
   ];
   var SNACKS = ["Lugaw", "Fried egg and rice", "Arroz caldo w/ egg"];
   var VEG = ["Adobong Kangkong", "Chop Suey"];
+  /* words people type for each of the seven groups, toyo counts for two */
   var ALLERGEN_WORDS = {
-    shrimp: ["shrimp", "hipon", "prawn", "prawns"],
-    egg: ["egg", "eggs", "itlog"],
-    fish: ["fish", "isda", "bangus"],
-    peanut: ["peanut", "peanuts", "mani"]
+    shellfish: ["shellfish", "shrimp", "hipon", "prawn", "prawns", "crab", "alimango", "squid", "pusit", "mussels", "tahong", "bagoong alamang", "oyster sauce"],
+    fish: ["fish", "isda", "bangus", "patis", "bagoong isda", "dilis"],
+    egg: ["egg", "eggs", "itlog", "itlog pugo", "salted egg"],
+    milk: ["milk", "gatas", "cheese", "keso", "butter"],
+    peanut: ["peanut", "peanuts", "mani", "peanut butter"],
+    wheat: ["wheat", "bread", "tinapay", "flour", "harina", "toyo"],
+    soy: ["soy", "toyo", "tokwa", "taho", "tausi"]
   };
   /* mirrors the dashboard: EAT as [pesos, kcal] and Thursday's planned meals */
   var EAT = [[15, 280], [35, 520], [40, 520], [45, 460], [25, 320], [30, 420], [0, 240]];
@@ -113,11 +117,20 @@
   function hit(list, name) {
     return list.some(function (v) { return String(v).toLowerCase() === String(name).toLowerCase(); });
   }
-  function conflicts(al, avoid) {
-    return (al || []).filter(function (a) { return hit(avoid, a); });
+  /* the profile check is the shared one from profile.js, extra holds
+     groups named in the question itself ("no fish") */
+  function conflicts(al, extra) {
+    var N = W.NutriTipid;
+    if (!N || !N.allergenConflicts) return [];
+    var res = N.allergenConflicts(al).slice();
+    var has = N.normalizeAllergens(al);
+    (extra || []).forEach(function (a) {
+      if (hit(has, a) && !hit(res, a)) res.push(a);
+    });
+    return res;
   }
   function allergenLabels() {
-    var base = ["Shrimp", "Egg", "Fish", "Peanut"];
+    var base = W.NutriTipid && W.NutriTipid.allergenGroups ? W.NutriTipid.allergenGroups.slice() : ["Shellfish", "Fish", "Egg", "Milk", "Peanut", "Wheat", "Soy"];
     var B = W.NutriTipidBoard;
     if (B && B.allergens) {
       B.allergens().forEach(function (a) { if (!hit(base, a)) base.push(a); });
@@ -426,7 +439,7 @@
       if (isSnack(d)) items.push("It sits in the breakfast and snack pool, which is capped at P" + s + " for a snack.");
       else items.push("At P" + d.price + " it " + (d.price <= c ? "fits" : "is over") + " the P" + c + " cap for lunch and dinner.");
       items.push("It gives " + ppp(d).toFixed(2) + " g of protein per peso (" + d.protein + " g for P" + d.price + ").");
-      var bad = conflicts(d.al, env.avoid);
+      var bad = conflicts(d.al);
       if (bad.length) items.push("It lists " + joinList(bad) + ", which is on your allergy list, so the planner leaves it out.");
       if (!d.active) items.push("It is switched off on the price board right now.");
       parts.push(L(items));
@@ -463,7 +476,7 @@
     if (h.off) {
       var o = h.off, parts = [T(o.name + " is not on the NutriTipid board, so I have no calories, protein or price for it.")];
       if (o.allergens) {
-        var bad = conflicts(o.allergens, env.avoid);
+        var bad = conflicts(o.allergens);
         if (bad.length) parts.push(T(o.note + " " + joinList(bad) + " is on your allergy list, so I'd skip it or ask the cook first."));
         else parts.push(T(o.note + " Nothing on your allergy list matches that."));
       } else if (/\b(safe|allerg)/.test(t)) {
@@ -471,9 +484,9 @@
       }
       return out("food", parts, ["High protein under P50", "What can I afford today?"]);
     }
-    var d = h.dish, bad2 = conflicts(d.al, env.avoid), first;
+    var d = h.dish, bad2 = conflicts(d.al), first;
     if (/\b(safe|ok to eat|okay to eat|can i eat|allerg\w*|contain\w*)\b/.test(t)) {
-      if (bad2.length) first = d.name + " lists " + joinList(bad2) + ", which is on your allergy list.";
+      if (bad2.length) first = d.name + " is not safe for you. It lists " + joinList(bad2) + ", which is on your allergy list.";
       else if (d.al.length) first = d.name + " lists " + joinList(d.al) + ". None of it is on your allergy list.";
       else first = "No allergens are listed for " + d.name + ", so nothing on your allergy list conflicts.";
     } else if (/\bprotein\b/.test(t)) first = d.name + " has " + d.protein + " g of protein per serving.";
@@ -491,6 +504,7 @@
     else if (/\bsafe\b/.test(t) && listOf(env.prof, "conditions").length) parts2.push(T("For anything about your health conditions, ask the PCU University Clinic."));
     if (!d.active) parts2.push(N("This dish is switched off on the price board right now."));
     if (!isFinite((d.src || {}).carbs)) parts2.push(N("Carbs, fat and micronutrients are not in the dish data yet."));
+    if (W.NutriTipidAllergenNote) parts2.push(N(W.NutriTipidAllergenNote));
     parts2.push(N(ESTIMATE));
     return out("food", parts2, ["Why is " + d.name + " in my plan?", "High protein under P50"]);
   }
@@ -512,7 +526,7 @@
     }
     var parts = [T(a.name + " or " + b.name + "?"), R(rows), T(verdict)];
     [a, b].forEach(function (d) {
-      var bad = conflicts(d.al, env.avoid);
+      var bad = conflicts(d.al);
       if (bad.length) parts.push(T("Heads up: " + d.name + " lists " + joinList(bad) + ", which is on your allergy list."));
     });
     parts.push(N(ESTIMATE));
@@ -560,7 +574,7 @@
       applied.push("vegetable dishes");
     }
     var drop = avoid.length;
-    list = list.filter(function (d) { return !conflicts(d.al, avoid).length; });
+    list = list.filter(function (d) { return !conflicts(d.al, fromText).length; });
     if (drop) applied.push("no " + avoid.map(function (a) { return a.toLowerCase(); }).join(", no "));
     list.sort(function (x, y) {
       if (metric === "calories") return x.kcal - y.kcal;
@@ -584,7 +598,7 @@
     if (st.left >= 0) parts.push(T("You have P" + st.left + " left today (P" + st.spent + " of P" + st.budget + " spent) and " + kcalTxt + "."));
     else parts.push(T("You are P" + (-st.left) + " over today's P" + st.budget + " budget, and have " + kcalTxt + "."));
     var fits = live(env.cat).filter(function (d) {
-      return d.price <= st.left && d.kcal <= st.kcalLeft && !conflicts(d.al, env.avoid).length;
+      return d.price <= st.left && d.kcal <= st.kcalLeft && !conflicts(d.al).length;
     }).sort(function (x, y) { return ppp(y) - ppp(x); }).slice(0, 3);
     if (fits.length) {
       parts.push(T("Dishes that fit both" + (env.avoid.length ? ", without your allergens" : "") + ":"));
@@ -682,7 +696,7 @@
     var raw = String(text == null ? "" : text).slice(0, 200);
     var t = norm(raw);
     var env = { raw: raw, t: t, prof: profile(), cat: catalogue() };
-    env.avoid = listOf(env.prof, "allergies");
+    env.avoid = W.NutriTipid && W.NutriTipid.allergies ? W.NutriTipid.allergies() : [];
     if (!t) return fallback(env, false);
     var low = lowCal(t);
     if (low || MED.some(function (re) { return re.test(t); })) return medical(low);
