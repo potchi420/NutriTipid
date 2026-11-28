@@ -50,7 +50,8 @@ try {
         <div class="field-2" style="margin-top:14px">
           <div>
             <label class="auth-label" for="age">Age</label>
-            <input class="auth-input tabular" id="age" name="age" type="number" min="10" max="100" value="21" required>
+            <input class="auth-input tabular" id="age" name="age" type="number" min="18" max="100" value="21" aria-describedby="ageMsg" required>
+            <p class="auth-msg is-error" id="ageMsg" role="alert" style="margin:6px 0 0; min-height:0; font-size:13px" hidden></p>
           </div>
           <div>
             <label class="auth-label" for="sex">Sex</label>
@@ -279,7 +280,7 @@ try {
     var kg = kgNow();
     var cm = cmNow();
     var a = Number(age.value);
-    return kg >= 30 && kg <= 200 && cm >= 130 && cm <= 220 && a >= 10 && a <= 100;
+    return kg >= 30 && kg <= 200 && cm >= 130 && cm <= 220 && a >= 18 && a <= 100;
   }
   function inUnit(kg) { return round1(weightUnit.value === "lb" ? kg / LB : kg); }
   function wtText(kg) { return inUnit(kg).toFixed(1) + weightUnit.value; }
@@ -387,6 +388,18 @@ try {
   document.getElementById("targetUp").addEventListener("click", function () { stepTarget(0.1); });
   upd();
 
+  /* adults only: the note stays next to the field, saved data is left as is */
+  var ageMsg = document.getElementById("ageMsg");
+  function checkAge() {
+    var a = Number(age.value);
+    var young = a > 0 && a < 18;
+    ageMsg.textContent = young ? "NutriTipid is for adults 18 and over." : "";
+    ageMsg.hidden = !young;
+  }
+  age.addEventListener("input", checkAge);
+  age.addEventListener("change", checkAge);
+  checkAge();
+
   function fail(text, el) {
     msg.classList.add("is-error");
     msg.textContent = text;
@@ -397,8 +410,13 @@ try {
     e.preventDefault();
     msg.classList.remove("is-error");
     var a = Number(age.value);
-    if (!(a > 0) || a < 10 || a > 100) {
-      fail("Age looks off. Use 10 to 100.", age);
+    if (a > 0 && a < 18) {
+      checkAge();
+      fail("NutriTipid is for adults 18 and over.", age);
+      return;
+    }
+    if (!(a > 0) || a > 100) {
+      fail("Age looks off. Use 18 to 100.", age);
       return;
     }
     var w = Number(weight.value);

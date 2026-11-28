@@ -18,6 +18,7 @@ try {
 <link rel="stylesheet" href="../assets/css/styles.css">
 <link rel="stylesheet" href="../assets/css/auth.css">
 <link rel="stylesheet" href="../assets/css/progress.css">
+<link rel="stylesheet" href="../assets/css/assistant.css">
 </head>
 <body>
 
@@ -285,6 +286,10 @@ try {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch (e) {}
   }
   var weightData = loadWeight();
+  /* read only weigh-ins and target for the assistant */
+  window.NutriTipidWeightLog = function () {
+    return { targetKg: currentTarget(), entries: sortedWeight() };
+  };
 
   function sortedWeight() {
     return weightData.entries.slice().sort(function (a, b) {
@@ -392,7 +397,7 @@ try {
     var reached = goalReached(lastKg, goal, targetKg);
     var etaDays = null, far = false, etaIso = null;
     if (status === "ontrack" && !reached) {
-      var d = (targetKg - lastKg) / slope;
+      var d = (targetKg - lastKg) / slope;  
       if (d > 364) far = true;
       else { etaDays = Math.max(1, Math.ceil(d)); etaIso = isoFromDay(lastDay + etaDays); }
     }
@@ -1114,6 +1119,9 @@ try {
   });
 })();
 </script>
+<script src="../assets/js/board.js"></script>
+<script src="../assets/js/foods.js"></script>
+<script src="../assets/js/assistant.js"></script>
 <script src="../assets/js/theme.js"></script>
 </body>
 </html>
